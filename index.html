@@ -247,6 +247,8 @@ section{margin-bottom:32px}
 /* AUTH */
 .auth-overlay{z-index:200}
 .auth-modal{max-width:420px;text-align:center}
+/* ป็อปอัพลืมรหัสผ่าน/ตั้งรหัสใหม่ ต้องขึ้นทับหน้า auth (z-index:200) ไม่งั้นกดแล้วเหมือนไม่มีอะไรเกิดขึ้น */
+#forgotOverlay,#pwOverlay{z-index:300}
 .auth-logo{width:72px;height:72px;border-radius:18px;background:linear-gradient(150deg,var(--accent),var(--accent-hover));display:grid;place-items:center;font-size:38px;margin:0 auto 15px;box-shadow:var(--shadow-2)}
 .auth-modal h3{justify-content:center;font-size:23px;margin-bottom:4px}
 .auth-modal h3 .src{color:var(--accent)}
