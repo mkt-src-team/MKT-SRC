@@ -722,7 +722,11 @@ button.cal-filter i{width:9px;height:9px;border-radius:3px;display:inline-block}
     <div class="field"><label>วันกำหนดส่ง *</label><input type="date" id="editDue"></div>
     <div class="field"><label>ไอคอนงาน</label><div class="emoji-pick" id="editEmojiPick"></div></div>
     <div class="field">
-      <label>เชคลิสต์</label>
+      <label>เชคลิสต์ (พิมพ์แล้ว Enter เพื่อเพิ่ม)</label>
+      <div class="add-check" id="editAddCheckBox">
+        <input id="editCheck" placeholder="เพิ่มหัวข้อย่อย..." onkeydown="if(event.key==='Enter'){event.preventDefault();addEditCheck()}">
+        <button class="btn-ghost btn-sm" onclick="addEditCheck()">＋ เพิ่ม</button>
+      </div>
       <div id="editCheckList" style="margin-top:8px"></div>
     </div>
     <div class="modal-foot">
@@ -1871,6 +1875,7 @@ function renderTaskCard(t) {
   const admin = isAdmin();
   const mine = !!currentUser && t.who === currentUser.id;
   const canTick = admin || mine;
+  const canChecklist = canEditChecklist(t);
   const id = sid(t.id);
   const st = taskStatus(t), over = isOverdue(t);
   const who = memberById(t.who);
@@ -1920,9 +1925,9 @@ function renderTaskCard(t) {
         <label class="check">
           <input type="checkbox" ${c.on?"checked":""} ${canTick?"":"disabled"} onchange="toggleCheck('${id}',${i},this)">
           <span class="ctext">${esc(c.text)}</span>
-          ${admin?`<button class="del-check" title="ลบหัวข้อย่อย" onclick="event.preventDefault();delCheck('${id}',${i})">🗑</button>`:""}
+          ${canChecklist?`<button class="del-check" title="ลบหัวข้อย่อย" onclick="event.preventDefault();delCheck('${id}',${i})">🗑</button>`:""}
         </label>`).join("")}
-      ${admin?`<div class="add-check">
+      ${canChecklist?`<div class="add-check">
         <input placeholder="เพิ่มหัวข้อย่อย..." onkeydown="if(event.key==='Enter'){addCheck('${id}',this)}">
         <button class="btn-ghost btn-sm" onclick="addCheck('${id}',this.previousElementSibling)">＋ เพิ่ม</button>
       </div>`:""}
@@ -2317,6 +2322,12 @@ function renderEditChecks() {
       <button class="del-check" onclick="event.preventDefault();editChecks.splice(${i},1);renderEditChecks()">🗑</button>
     </label>`).join("") || `<div style="font-size:12px;color:var(--txt-3);padding:6px 2px">ยังไม่มีเชคลิสต์</div>`;
 }
+function addEditCheck() {
+  const inp = document.getElementById("editCheck");
+  const v = inp.value.trim(); if (!v) return;
+  editChecks.push({text:v, on:false});
+  inp.value = ""; inp.focus(); renderEditChecks();
+}
 function updateTask() {
   const tid = document.getElementById("editTaskId").value;
   const t = state.tasks.find(x=>x.id===tid);
@@ -2362,14 +2373,17 @@ function toggleCheck(tid, i, el) {
   t.checks[i].on = on;   // แสดงผลทันที
   checkOp(tid, "toggle", { idx:i, on });
 }
+function canEditChecklist(t) { return canManageTasks() || (!!t && !!currentUser && t.who === currentUser.id && can("edit_own_task")); }
 function addCheck(tid, inp) {
-  if (!canManageTasks()) { toast("ไม่มีสิทธิ์","🔒"); return; }
+  const t = state.tasks.find(x=>x.id===tid);
+  if (!canEditChecklist(t)) { toast("ไม่มีสิทธิ์","🔒"); return; }
   const v = inp.value.trim(); if (!v) return;
   inp.value = "";
   checkOp(tid, "add", { text:v });
 }
 function delCheck(tid, i) {
-  if (!canManageTasks()) { toast("ไม่มีสิทธิ์","🔒"); return; }
+  const t = state.tasks.find(x=>x.id===tid);
+  if (!canEditChecklist(t)) { toast("ไม่มีสิทธิ์","🔒"); return; }
   checkOp(tid, "del", { idx:i });
 }
 async function completeTask(tid) {
