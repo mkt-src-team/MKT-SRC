@@ -517,21 +517,14 @@ button.cal-filter i{width:9px;height:9px;border-radius:3px;display:inline-block}
   <div class="header-right">
     <div class="theme-picker" id="themePicker">
       <button class="combo" id="themeCombo" onclick="toggleThemeMenu(event)">
-        <span>🎨&nbsp; <span id="themeLabel">กำหนดเอง</span></span>
+        <span><span id="themeIcon">🖥️</span>&nbsp; <span id="themeLabel">ตามระบบ</span></span>
         <span class="chev">˅</span>
       </button>
       <div class="combo-flyout" id="themeMenu">
-        <div class="flyout-title">เลือกโหมดสี</div>
-        <div class="combo-item" data-m="light" onclick="setMode('light')">สว่าง<span class="sub">ใช้สีอ่อนแบบ Windows Light</span></div>
-        <div class="combo-item" data-m="dark" onclick="setMode('dark')">มืด<span class="sub">ใช้สีเข้มแบบ Windows Dark</span></div>
-        <div class="combo-item" data-m="custom" onclick="setMode('custom')">กำหนดเอง<span class="sub">ตั้งสีแอปแยกต่างหาก</span></div>
-        <div id="customSub" style="display:none">
-          <div class="flyout-sep"></div>
-          <div class="flyout-title">โหมดแอปเริ่มต้น</div>
-          <div class="combo-item" data-c="light" onclick="setCustomApp('light')">สว่าง</div>
-          <div class="combo-item" data-c="dark" onclick="setCustomApp('dark')">มืด</div>
-          <div class="combo-item" data-c="system" onclick="setCustomApp('system')">ตามระบบ<span class="sub">เปลี่ยนตาม setting Windows ของคุณ</span></div>
-        </div>
+        <div class="flyout-title">ธีม</div>
+        <div class="combo-item" data-m="light" onclick="setMode('light')">☀️ สว่าง</div>
+        <div class="combo-item" data-m="dark" onclick="setMode('dark')">🌙 มืด</div>
+        <div class="combo-item" data-m="system" onclick="setMode('system')">🖥️ ตามระบบ<span class="sub">เปลี่ยนตามอุปกรณ์ของคุณ</span></div>
       </div>
     </div>
     <div class="actions" id="headerActions"></div>
@@ -2670,30 +2663,29 @@ function pickEmoji(prefix, i) {
 
 /* ============ THEME ============ */
 const THEME_KEY="mkt_theme_v1", THEME_APP_KEY="mkt_theme_app_v1";
-let themeMode="custom", customApp="system";
+let themeMode="system";
 function initTheme(){
-  themeMode = lsGet(THEME_KEY) || "custom";
-  customApp = lsGet(THEME_APP_KEY) || "system";
+  const raw = lsGet(THEME_KEY);
+  if (raw === "custom") { themeMode = lsGet(THEME_APP_KEY) || "system"; lsSet(THEME_KEY, themeMode); }
+  else themeMode = raw || "system";
   applyTheme(); renderThemeMenu();
-  if (window.matchMedia) { try { window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change",()=>{ if(themeMode==="custom"&&customApp==="system") applyTheme(); }); } catch(e) {} }
+  if (window.matchMedia) { try { window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change",()=>{ if(themeMode==="system") applyTheme(); }); } catch(e) {} }
 }
 function resolveTheme(){
   if (themeMode==="light") return "light";
   if (themeMode==="dark") return "dark";
-  if (customApp==="system") return (window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches)?"dark":"light";
-  return customApp;
+  return (window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches)?"dark":"light";
 }
 function applyTheme(){
   document.documentElement.setAttribute("data-theme",resolveTheme());
   const lbl = document.getElementById("themeLabel");
-  if (lbl) lbl.textContent = (themeMode==="custom")?(customApp==="system"?"ตามระบบ":(customApp==="light"?"สว่าง (กำหนดเอง)":"มืด (กำหนดเอง)")):(themeMode==="light"?"สว่าง":"มืด");
+  const icon = document.getElementById("themeIcon");
+  if (lbl) lbl.textContent = themeMode==="system"?"ตามระบบ":(themeMode==="light"?"สว่าง":"มืด");
+  if (icon) icon.textContent = themeMode==="system"?"🖥️":(themeMode==="light"?"☀️":"🌙");
 }
-function setMode(m){ themeMode=m; lsSet(THEME_KEY,m); applyTheme(); renderThemeMenu(); }
-function setCustomApp(v){ customApp=v; lsSet(THEME_APP_KEY,v); applyTheme(); renderThemeMenu(); }
+function setMode(m){ themeMode=m; lsSet(THEME_KEY,m); applyTheme(); renderThemeMenu(); closeThemeMenu(); }
 function renderThemeMenu(){
   document.querySelectorAll("#themeMenu .combo-item[data-m]").forEach(el=>el.classList.toggle("on",el.getAttribute("data-m")===themeMode));
-  document.querySelectorAll("#themeMenu .combo-item[data-c]").forEach(el=>el.classList.toggle("on",themeMode==="custom"&&el.getAttribute("data-c")===customApp));
-  const sub = document.getElementById("customSub"); if (sub) sub.style.display = (themeMode==="custom")?"block":"none";
 }
 function toggleThemeMenu(e){ if(e)e.stopPropagation(); const m=document.getElementById("themeMenu"),c=document.getElementById("themeCombo"),o=m.classList.toggle("show"); c.classList.toggle("open",o); }
 function closeThemeMenu(){ const m=document.getElementById("themeMenu"); if(m){ m.classList.remove("show"); document.getElementById("themeCombo").classList.remove("open"); } }
