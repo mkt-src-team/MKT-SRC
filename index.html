@@ -1813,7 +1813,7 @@ function loginStatusChip(m) {
     const d = Math.floor((new Date(todayStr()) - new Date(m.lastLoginDate)) / 86400000);
     return d > 0 ? ` (ล่าสุด ${d} วันก่อน)` : "";
   })() : (!m.lastLoginDate ? " (ยังไม่เคยเข้าระบบ)" : "");
-  return `<div class="chip-link" style="border-color:${color}"><span style="color:${color};font-weight:600">${label}${esc(daysAgo)}</span><span style="color:var(--txt-2);font-size:11px">🔑 เข้าระบบสะสม ${m.loginCount||0} ครั้ง</span></div>`;
+  return `<div class="chip-link" style="border-color:${color}"><span style="color:${color};font-weight:600">${label}${esc(daysAgo)}</span><span style="color:var(--txt-2);font-size:11px">🔑 เข้าระบบ ${m.loginCount||0}/7 วันล่าสุด</span></div>`;
 }
 function renderTeam() {
   const g = document.getElementById("teamGrid");
