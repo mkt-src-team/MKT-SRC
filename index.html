@@ -401,8 +401,10 @@ main{padding:20px 24px}
 .cal-cell:hover{border-color:var(--accent)}
 .cal-cell.out{opacity:.42}
 .cal-cell.today{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.cal-cell.has-overdue{background:var(--danger-tint);border-color:var(--danger);border-width:2px}
 .cal-num{display:flex;justify-content:space-between;align-items:center;font-size:12px;font-weight:700;color:var(--txt-2);margin-bottom:4px}
 .cal-cell.today .cal-num>span:first-child{background:var(--accent);color:var(--accent-contrast);border-radius:50%;width:21px;height:21px;display:grid;place-items:center}
+.cal-cell.has-overdue .cal-num>span:first-child{background:var(--danger);color:#fff;border-radius:50%;width:21px;height:21px;display:grid;place-items:center}
 .cal-add{opacity:0;cursor:pointer;font-size:13px;color:var(--accent);transition:.12s;padding:0 3px}
 .cal-cell:hover .cal-add{opacity:1}
 .ev-chip{font-size:11px;padding:3px 6px;border-radius:5px;margin-bottom:3px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-left:3px solid var(--txt-3);background:var(--layer-2);transition:.1s}
@@ -414,6 +416,7 @@ main{padding:20px 24px}
 .ev-chip.t-meeting{background:var(--layer-2);border-color:var(--txt-2)}
 .ev-chip.t-deadline{background:var(--burgundy-tint);border-color:var(--burgundy)}
 .ev-chip.t-task{background:var(--accent-tint);border-color:var(--accent);font-weight:600}
+.ev-chip.t-task.overdue{background:var(--danger);border-color:var(--danger);color:#fff;font-weight:700}
 .stat-link{text-align:left;font:inherit;color:inherit;cursor:pointer;width:100%}
 button.stat-link{border:1px solid var(--stroke);padding:15px 17px;border-radius:8px;background:var(--layer);font-weight:400}
 button.stat-link:hover{border-color:var(--accent)}
@@ -834,6 +837,19 @@ button.cal-filter i{width:9px;height:9px;border-radius:3px;display:inline-block}
     <div id="profileInfo"></div>
     <div class="modal-foot">
       <button class="btn-ghost" onclick="closeModal('profileOverlay')">ปิด</button>
+    </div>
+  </div>
+</div>
+
+<!-- DAY DETAIL MODAL -->
+<div class="overlay" id="dayDetailOverlay">
+  <div class="modal" style="max-width:440px">
+    <h3 id="dayDetailTitle">🗓️ รายการวันนี้</h3>
+    <p class="desc">งานและอีเวนต์ทั้งหมดในวันนี้</p>
+    <div id="dayDetailList"></div>
+    <div class="modal-foot">
+      <button class="btn-ghost" onclick="closeModal('dayDetailOverlay')">ปิด</button>
+      <button class="btn-primary" id="dayDetailAddBtn" onclick="closeModal('dayDetailOverlay');openEventModal(dayDetailDate)">➕ เพิ่มอีเวนต์วันนี้</button>
     </div>
   </div>
 </div>
@@ -2063,11 +2079,15 @@ function renderEventCalendar() {
     const evs = calFilter === "task" ? [] : state.events.filter(e => e.date === ds && (calFilter === "all" || evType(e.type) === calFilter));
     const taskDue = (out || (calFilter !== "all" && calFilter !== "task")) ? [] : visibleTasks().filter(t => t.due === ds && taskStatus(t) !== "done");
     const maxT = calFilter === "task" ? 4 : 2;
-    cells += `<div class="cal-cell ${out?"out":""} ${ds===today?"today":""}" ${(!out && canAdd)?`onclick="openEventModal('${ds}')"`:""}>
-      <div class="cal-num"><span>${d.getDate()}</span>${(!out&&canAdd)?`<span class="cal-add" title="เพิ่มอีเวนต์">＋</span>`:""}</div>
+    const hasOverdue = !out && taskDue.some(isOverdue);
+    const dayItemCount = evs.length + taskDue.length;
+    const cellClickable = !out && (dayItemCount>0 || canAdd);
+    const cellAction = dayItemCount>0 ? `openDayDetail('${ds}')` : `openEventModal('${ds}')`;
+    cells += `<div class="cal-cell ${out?"out":""} ${ds===today?"today":""} ${hasOverdue?"has-overdue":""}" ${cellClickable?`onclick="${cellAction}"`:""}>
+      <div class="cal-num"><span>${d.getDate()}</span>${(!out&&canAdd)?`<span class="cal-add" onclick="event.stopPropagation();openEventModal('${ds}')" title="เพิ่มอีเวนต์">＋</span>`:""}</div>
       ${evs.map(e=>`<div class="ev-chip t-${evType(e.type)}" title="${esc(e.desc)}" onclick="event.stopPropagation();openEventModal('${sid(e.date)}','${sid(e.id)}')">${EV_ICON[evType(e.type)]} ${esc(e.title)}${e.time?" "+esc(e.time):""}</div>`).join("")}
-      ${taskDue.slice(0,maxT).map(t=>`<div class="ev-chip t-task" onclick="event.stopPropagation();openEditTaskModal('${sid(t.id)}')">📋 ${esc(t.title)}</div>`).join("")}
-      ${taskDue.length>maxT?`<div style="font-size:10px;color:var(--txt-3)">+${taskDue.length-maxT} งาน</div>`:""}
+      ${taskDue.slice(0,maxT).map(t=>`<div class="ev-chip t-task ${isOverdue(t)?'overdue':''}" onclick="event.stopPropagation();openEditTaskModal('${sid(t.id)}')">${isOverdue(t)?'⚠️':'📋'} ${esc(t.title)}</div>`).join("")}
+      ${taskDue.length>maxT?`<div style="font-size:10px;color:var(--txt-3);cursor:pointer" onclick="event.stopPropagation();openDayDetail('${ds}')">+${taskDue.length-maxT} งาน</div>`:""}
     </div>`;
   }
   vr.innerHTML = `
@@ -2091,6 +2111,22 @@ function renderEventCalendar() {
 }
 function calMove(n){ calCursor = new Date(calCursor.getFullYear(), calCursor.getMonth()+n, 1); routeView(); }
 function calToday(){ calCursor = new Date(); routeView(); }
+
+let dayDetailDate = null;
+function openDayDetail(ds) {
+  dayDetailDate = ds;
+  const d = new Date(ds+"T00:00:00");
+  document.getElementById("dayDetailTitle").textContent = "🗓️ " + d.toLocaleDateString("th-TH",{day:"numeric",month:"long",year:"numeric"});
+  const evs = state.events.filter(e=>e.date===ds);
+  const tasks = visibleTasks().filter(t=>t.due===ds && taskStatus(t)!=="done");
+  document.getElementById("dayDetailAddBtn").style.display = (!!currentUser && can("add_event")) ? "" : "none";
+  const rows = [
+    ...evs.map(e=>`<div class="ev-chip t-${evType(e.type)}" style="white-space:normal;margin-bottom:6px;padding:8px 10px;cursor:pointer" onclick="closeModal('dayDetailOverlay');openEventModal('${sid(e.date)}','${sid(e.id)}')">${EV_ICON[evType(e.type)]} ${esc(e.title)}${e.time?" · "+esc(e.time):""}</div>`),
+    ...tasks.map(t=>{ const who = memberById(t.who); return `<div class="ev-chip t-task ${isOverdue(t)?'overdue':''}" style="white-space:normal;margin-bottom:6px;padding:8px 10px;cursor:pointer" onclick="closeModal('dayDetailOverlay');openEditTaskModal('${sid(t.id)}')">${isOverdue(t)?'⚠️':'📋'} ${esc(t.title)}${who?" · "+esc(who.name):""}</div>`; })
+  ];
+  document.getElementById("dayDetailList").innerHTML = rows.length ? rows.join("") : `<div class="empty"><div class="e-emoji">🗓️</div><b>ไม่มีรายการในวันนี้</b></div>`;
+  document.getElementById("dayDetailOverlay").classList.add("show");
+}
 
 let editingEventId = null;
 function canEditEvent(e){ return canManageBoard() || (!!currentUser && can("add_event") && (!e || e.by === currentUser.id)); }
