@@ -1572,7 +1572,7 @@ function renderBoard() {
       </div>
       ${a.content?`<div class="board-content">${esc(a.content)}</div>`:""}
       <div class="board-actions" style="justify-content:space-between;align-items:center">
-        <span style="font-size:12px;color:var(--txt-2)" ${ackNames?`title="${esc(ackNames)}"`:""}>✅ รับทราบแล้ว ${ackedBy.length} คน</span>
+        <span style="font-size:12px;color:var(--txt-2)">✅ รับทราบแล้ว ${ackedBy.length} คน${ackNames?` <span style="color:var(--txt-3)">(${esc(ackNames)})</span>`:""}</span>
         ${currentUser?(iAcked
           ? `<span class="tag done" style="font-size:11px">✅ คุณรับทราบแล้ว</span>`
           : `<button class="btn-primary btn-sm" onclick="ackAnnouncement('${sid(a.id)}')">✅ รับทราบ</button>`):""}

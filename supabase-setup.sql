@@ -111,4 +111,34 @@ ALTER TABLE banned_emails ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "anon all banned" ON banned_emails;
 CREATE POLICY "anon all banned" ON banned_emails FOR ALL USING (TRUE) WITH CHECK (TRUE);
 
+-- 8. ตาราง events (ปฏิทินอีเวนต์ทีม Marketing)
+CREATE TABLE IF NOT EXISTS events (
+  id TEXT PRIMARY KEY,
+  title TEXT NOT NULL,
+  event_date TEXT DEFAULT '',
+  time TEXT DEFAULT '',
+  type TEXT DEFAULT 'event',
+  description TEXT DEFAULT '',
+  created_by TEXT DEFAULT '',
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+ALTER TABLE events ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "anon all events" ON events;
+CREATE POLICY "anon all events" ON events FOR ALL USING (TRUE) WITH CHECK (TRUE);
+
+-- 9. คอลัมน์ acked_by ในตาราง announcements (รายชื่อคนที่รับทราบประกาศ)
+ALTER TABLE announcements ADD COLUMN IF NOT EXISTS acked_by JSONB DEFAULT '[]'::JSONB;
+
+-- ============================================
+-- 10. GRANT สิทธิ์ให้ role anon และ authenticated
+-- (RLS policy ด้านบนอนุญาตแล้ว แต่ Postgres ต้องมี GRANT
+--  ระดับตารางด้วย ไม่งั้นจะเจอ "permission denied for table ..."
+--  แม้ policy จะเปิดกว้างแค่ไหนก็ตาม)
+-- ============================================
+GRANT USAGE ON SCHEMA public TO anon, authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON
+  members, tasks, requests, notifications, invites,
+  announcements, banned_emails, events
+  TO anon, authenticated;
+
 -- ✅ เสร็จสิ้น! ตารางครบแล้ว
