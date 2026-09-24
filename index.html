@@ -397,7 +397,10 @@ main{padding:20px 24px}
 .cal-title{font-weight:700;font-size:15px;min-width:150px;text-align:center}
 .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
 .cal-dow{text-align:center;font-size:11px;font-weight:700;color:var(--txt-3);padding:4px 0}
-.cal-cell{background:var(--layer);border:1px solid var(--stroke);border-radius:8px;min-height:98px;padding:6px;transition:.12s;overflow:hidden}
+.cal-cell{background:var(--layer);border:1px solid var(--stroke);border-radius:8px;min-height:98px;padding:6px;transition:.12s;overflow:hidden;position:relative}
+.cal-day-pop{position:fixed;width:230px;background:var(--layer);border:1px solid var(--accent);border-radius:8px;box-shadow:var(--flyout);padding:8px;z-index:90;display:none;max-height:280px;overflow-y:auto}
+.cal-day-pop.show{display:block}
+.cal-day-pop-title{font-weight:700;font-size:12px;margin-bottom:6px;color:var(--txt)}
 .cal-cell:hover{border-color:var(--accent)}
 .cal-cell.out{opacity:.42}
 .cal-cell.today{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
@@ -2081,13 +2084,12 @@ function renderEventCalendar() {
     const maxT = calFilter === "task" ? 4 : 2;
     const hasOverdue = !out && taskDue.some(isOverdue);
     const dayItemCount = evs.length + taskDue.length;
-    const cellClickable = !out && (dayItemCount>0 || canAdd);
-    const cellAction = dayItemCount>0 ? `openDayDetail('${ds}')` : `openEventModal('${ds}')`;
-    cells += `<div class="cal-cell ${out?"out":""} ${ds===today?"today":""} ${hasOverdue?"has-overdue":""}" ${cellClickable?`onclick="${cellAction}"`:""}>
+    const hoverAttrs = (!out && dayItemCount>maxT) ? `onmouseenter="showCalHoverPop(this,'${ds}')" onmouseleave="hideCalHoverPop()"` : "";
+    cells += `<div class="cal-cell ${out?"out":""} ${ds===today?"today":""} ${hasOverdue?"has-overdue":""}" ${hoverAttrs} ${(!out && canAdd)?`onclick="openEventModal('${ds}')"`:""}>
       <div class="cal-num"><span>${d.getDate()}</span>${(!out&&canAdd)?`<span class="cal-add" onclick="event.stopPropagation();openEventModal('${ds}')" title="เพิ่มอีเวนต์">＋</span>`:""}</div>
       ${evs.map(e=>`<div class="ev-chip t-${evType(e.type)}" title="${esc(e.desc)}" onclick="event.stopPropagation();openEventModal('${sid(e.date)}','${sid(e.id)}')">${EV_ICON[evType(e.type)]} ${esc(e.title)}${e.time?" "+esc(e.time):""}</div>`).join("")}
       ${taskDue.slice(0,maxT).map(t=>`<div class="ev-chip t-task ${isOverdue(t)?'overdue':''}" onclick="event.stopPropagation();openEditTaskModal('${sid(t.id)}')">${isOverdue(t)?'⚠️':'📋'} ${esc(t.title)}</div>`).join("")}
-      ${taskDue.length>maxT?`<div style="font-size:10px;color:var(--txt-3);cursor:pointer" onclick="event.stopPropagation();openDayDetail('${ds}')">+${taskDue.length-maxT} งาน</div>`:""}
+      ${taskDue.length>maxT?`<div style="font-size:10px;color:var(--txt-3);cursor:pointer" onclick="event.stopPropagation();openDayDetail('${ds}')" title="ชี้เมาส์ค้างไว้ (คอม) หรือกด (มือถือ) เพื่อดูทั้งหมด">+${taskDue.length-maxT} งาน</div>`:""}
     </div>`;
   }
   vr.innerHTML = `
@@ -2107,10 +2109,36 @@ function renderEventCalendar() {
     <div class="cal-grid">
       ${["อา.","จ.","อ.","พ.","พฤ.","ศ.","ส."].map(d=>`<div class="cal-dow">${d}</div>`).join("")}
       ${cells}
-    </div>`;
+    </div>
+    <div class="cal-day-pop" id="calHoverPop"></div>`;
 }
 function calMove(n){ calCursor = new Date(calCursor.getFullYear(), calCursor.getMonth()+n, 1); routeView(); }
 function calToday(){ calCursor = new Date(); routeView(); }
+let calHoverTimer = null;
+function showCalHoverPop(cellEl, ds) {
+  clearTimeout(calHoverTimer);
+  const pop = document.getElementById("calHoverPop");
+  if (!pop) return;
+  const d = new Date(ds+"T00:00:00");
+  const evs = state.events.filter(e=>e.date===ds);
+  const tasks = visibleTasks().filter(t=>t.due===ds && taskStatus(t)!=="done");
+  const rows = [
+    ...evs.map(e=>`<div class="ev-chip t-${evType(e.type)}" style="white-space:normal;margin-bottom:4px;cursor:pointer" onclick="document.getElementById('calHoverPop').classList.remove('show');openEventModal('${sid(e.date)}','${sid(e.id)}')">${EV_ICON[evType(e.type)]} ${esc(e.title)}${e.time?" · "+esc(e.time):""}</div>`),
+    ...tasks.map(t=>`<div class="ev-chip t-task ${isOverdue(t)?'overdue':''}" style="white-space:normal;margin-bottom:4px;cursor:pointer" onclick="document.getElementById('calHoverPop').classList.remove('show');openEditTaskModal('${sid(t.id)}')">${isOverdue(t)?'⚠️':'📋'} ${esc(t.title)}</div>`)
+  ].join("");
+  pop.innerHTML = `<div class="cal-day-pop-title">${d.getDate()} ${d.toLocaleDateString("th-TH",{month:"long"})}</div>${rows}`;
+  const r = cellEl.getBoundingClientRect();
+  pop.style.top = r.top + "px";
+  const spaceRight = window.innerWidth - r.right;
+  if (spaceRight >= 240) pop.style.left = (r.right + 4) + "px";
+  else pop.style.left = Math.max(4, r.left - 234) + "px";
+  pop.classList.add("show");
+  pop.onmouseenter = () => clearTimeout(calHoverTimer);
+  pop.onmouseleave = hideCalHoverPop;
+}
+function hideCalHoverPop() {
+  calHoverTimer = setTimeout(() => { const pop = document.getElementById("calHoverPop"); if (pop) pop.classList.remove("show"); }, 120);
+}
 
 let dayDetailDate = null;
 function openDayDetail(ds) {
