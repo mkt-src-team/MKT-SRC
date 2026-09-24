@@ -425,6 +425,20 @@ button.stat-link:hover{border-color:var(--accent)}
 .tab-count.alert{background:#c42b1c;color:#fff;border-color:transparent}
 .mine-toggle{display:inline-flex;align-items:center;gap:7px;font-size:13px;color:var(--txt-2);cursor:pointer;user-select:none}
 .mine-toggle input{width:16px;height:16px;accent-color:var(--accent)}
+.role-banner[role=button]{cursor:pointer}
+.role-banner[role=button]:hover{border-color:var(--accent)}
+.rb-toggle{margin-left:auto;font-size:12px;color:var(--accent);white-space:nowrap}
+.role-detail{margin:-8px 0 16px;padding:12px 15px;border:1px solid var(--stroke);border-top:0;border-radius:0 0 6px 6px;background:var(--layer)}
+.perm-summary{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:6px 16px;font-size:13px}
+.ps-on{color:var(--txt)} .ps-off{color:var(--txt-3)}
+.perm-bar{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:10px;padding-top:10px;border-top:1px dashed var(--stroke);font-size:11.5px;color:var(--txt-2)}
+.perm-row{display:flex;gap:10px;align-items:flex-start;padding:9px 10px;border-radius:6px;border:1px solid var(--stroke);margin-bottom:6px;cursor:pointer;background:var(--layer-2)}
+.perm-row input{width:18px;height:18px;margin-top:2px;accent-color:var(--accent);flex:none}
+.perm-row b{display:block;font-size:13.5px;font-weight:600}
+.perm-row small{display:block;font-size:11.5px;color:var(--txt-2);font-weight:400}
+.perm-row small.perm-def{color:var(--txt-3)}
+.perm-row.changed{border-color:var(--caution);background:var(--caution-tint)}
+.perm-admin-note{font-size:12px;color:var(--txt-2);margin-top:4px}
 .cal-filters{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
 button.cal-filter{display:inline-flex;align-items:center;gap:7px;padding:5px 12px;border-radius:999px;font-size:12.5px;font-weight:500;background:transparent;color:var(--txt-2);border:1px solid var(--stroke-2)}
 button.cal-filter:hover{background:var(--layer-2);color:var(--txt)}
@@ -833,6 +847,30 @@ button.cal-filter i{width:9px;height:9px;border-radius:3px;display:inline-block}
   </div>
 </div>
 
+<!-- PERMISSIONS MODAL (Boss/Dev) -->
+<div class="overlay" id="permOverlay">
+  <div class="modal" style="max-width:500px">
+    <h3 id="permTitle">⚙️ ตำแหน่งและสิทธิ์</h3>
+    <p class="desc">สิทธิ์ตั้งต้นมาจากตำแหน่ง — เปิด/ปิดเพิ่มเฉพาะคนนี้ได้ (แถบสีส้ม = ต่างจากค่าตั้งต้น)</p>
+    <div class="field">
+      <label>ตำแหน่ง</label>
+      <select id="permRank" onchange="onPermRankChange()">
+        <option value="boss">👑 Boss</option>
+        <option value="dev">💻 Dev</option>
+        <option value="employee">💼 พนักงาน</option>
+        <option value="intern">🎓 เด็กฝึกงาน</option>
+      </select>
+      <small id="permRankNote" style="display:block;color:var(--caution);margin-top:6px"></small>
+    </div>
+    <div class="field"><label>สิทธิ์</label><div id="permList"></div></div>
+    <div class="modal-foot">
+      <button class="btn-ghost" style="margin-right:auto" onclick="resetPermDefaults()">↺ คืนค่าตั้งต้น</button>
+      <button class="btn-ghost" onclick="closeModal('permOverlay')">ยกเลิก</button>
+      <button class="btn-primary" onclick="savePerms()">💾 บันทึก</button>
+    </div>
+  </div>
+</div>
+
 <div id="toast"></div>
 
 <script>
@@ -840,7 +878,7 @@ button.cal-filter i{width:9px;height:9px;border-radius:3px;display:inline-block}
 const SUPABASE_URL = "https://xvvgzesxacfwdnqkfjvu.supabase.co";
 const SUPABASE_KEY = "sb_publishable_LFQ15gE7Op7pSmRfShZsLQ_GwcTutH8";
 const SYNC_MS = 4000;
-const MEMBER_COLS = "id,name,position,emoji,email,phone,rank,status,auth_uid";
+const MEMBER_COLS = "id,name,position,emoji,email,phone,rank,status,auth_uid,perms";
 
 /* storage ที่ไม่พังเมื่อ browser บล็อก localStorage */
 function lsGet(k){ try { return localStorage.getItem(k); } catch(e) { return null; } }
@@ -875,19 +913,19 @@ const SB_ICON = {
 };
 const SIDEBAR_MENU = [
   { group:'overview', label:'ภาพรวม', items:[
-    { id:'dashboard', label:'Dashboard', icon:'dashboard', roles:['boss','dev','employee','intern'] },
-    { id:'today-tasks', label:'งาน', icon:'today', roles:['boss','dev','employee','intern'], count:true }
+    { id:'dashboard', label:'Dashboard', icon:'dashboard' },
+    { id:'today-tasks', label:'งาน', icon:'today', count:true }
   ]},
   { group:'plan', label:'วางแผน', items:[
-    { id:'event-cal', label:'ปฏิทิน', icon:'calendar', roles:['boss','dev','employee','intern'] },
-    { id:'campaign-timeline', label:'ไทม์ไลน์งาน', icon:'timeline', roles:['boss','dev','employee'] }
+    { id:'event-cal', label:'ปฏิทิน', icon:'calendar' },
+    { id:'campaign-timeline', label:'ไทม์ไลน์งาน', icon:'timeline', perm:'view_all_tasks' }
   ]}
 ];
 
 function todayCounts() {
   if (!currentUser) return { total:0, overdue:0 };
   const today = todayStr();
-  const tasks = state.tasks.filter(t => currentUser.rank !== "intern" || t.who === currentUser.id);
+  const tasks = visibleTasks();
   const overdue = tasks.filter(t => isOverdue(t)).length;
   const due = tasks.filter(t => !isOverdue(t) && taskStatus(t) !== "done" && t.due === today).length;
   return { total: overdue + due, overdue };
@@ -899,7 +937,7 @@ function renderSidebar() {
   if (!nav) return;
   const tc = todayCounts();
   nav.innerHTML = SIDEBAR_MENU.map(g => {
-    const items = g.items.filter(i => !currentUser || i.roles.includes(currentUser.rank));
+    const items = g.items.filter(i => !currentUser || !i.perm || can(i.perm));
     if (!items.length) return '';
     return `<div class="sidebar-group ${sidebarState.collapsedGroups.includes(g.group) ? 'collapsed' : ''}">
       <div class="sidebar-group-header" onclick="toggleSidebarGroup('${g.group}')"><span>${g.label}</span><span class="chevron">${SB_ICON.chevron}</span></div>
@@ -958,8 +996,31 @@ const EV_ICON = { event:"🎪", campaign:"🎯", content:"📱", launch:"🚀", 
 const TASK_EMOJIS = ["🚗","📣","🎨","💻","📊","📝","📸","🎬","🛍️","📈","🔧","⭐"];
 const MEMBER_EMOJIS = ["🙂","🧑‍💻","👩‍💼","👨‍💼","👩‍🎨","👨‍💻","👩‍🔬","🧑‍🚀","🦸","🦹","🐱","🐶","🦊","🐼","🐯"];
 function isAdmin() { return !!currentUser && (currentUser.rank==="boss" || currentUser.rank==="dev"); }
-function canCreateTask() { return !!currentUser && ["boss","dev","employee"].includes(currentUser.rank); }
-function canDeleteTaskDirect() { return isAdmin(); }
+/* ============ สิทธิ์รายบุคคล (ต้องตรงกับ supabase-perms.sql) ============ */
+const PERMS = [
+  { key:"view_all_tasks",    label:"เห็นงานของทั้งทีม",               hint:"ปิด = เห็นเฉพาะงานของตัวเอง" },
+  { key:"edit_own_task",     label:"แก้รายละเอียดงานของตัวเอง",        hint:"ปิด = ติ๊กเชคลิสต์ได้อย่างเดียว" },
+  { key:"request_task",      label:"ส่งคำขอให้ Admin อนุมัติ",         hint:"ขอสร้าง/ลบ/เปิดงานใหม่ และขอลบสมาชิก" },
+  { key:"create_task",       label:"สร้างงานได้เลย ไม่ต้องขออนุมัติ",  hint:"" },
+  { key:"delete_task",       label:"ลบงานของตัวเองได้เลย",             hint:"" },
+  { key:"reopen_task",       label:"เปิดงานที่เสร็จแล้วกลับมาทำใหม่ได้เลย", hint:"" },
+  { key:"add_event",         label:"เพิ่ม/แก้อีเวนต์ของตัวเองในปฏิทิน", hint:"" },
+  { key:"post_announcement", label:"เขียนประกาศของตัวเอง",            hint:"" }
+];
+function permDefault(rank, key) {
+  if (rank === "boss" || rank === "dev") return true;
+  if (rank === "intern") return false;
+  return ["view_all_tasks","edit_own_task","request_task","add_event"].includes(key);
+}
+function memberCan(m, key) {
+  if (!m) return false;
+  if (m.rank === "boss" || m.rank === "dev") return true;
+  const o = m.perms || {};
+  return typeof o[key] === "boolean" ? o[key] : permDefault(m.rank, key);
+}
+function can(key) { return memberCan(currentUser, key); }
+function canCreateTask() { return !!currentUser && (can("create_task") || can("request_task")); }
+function canDeleteTaskDirect(t) { return isAdmin() || (!!t && !!currentUser && t.who === currentUser.id && can("delete_task")); }
 function canApprove() { return isAdmin(); }
 function canInviteDirect() { return isAdmin(); }
 
@@ -1021,7 +1082,7 @@ function closeModal(id) { document.getElementById(id).classList.remove("show"); 
 function memberById(id) { return state.members.find(m => m.id === id); }
 
 /* ============ DB MAPPERS ============ */
-function mapMember(r){ return { id:r.id, name:r.name||"", position:r.position||"", emoji:r.emoji||"🧑‍💻", email:r.email||"", phone:r.phone||"", rank:r.rank||"employee", status:r.status||"active", authUid:r.auth_uid||null }; }
+function mapMember(r){ return { id:r.id, name:r.name||"", position:r.position||"", emoji:r.emoji||"🧑‍💻", email:r.email||"", phone:r.phone||"", rank:r.rank||"employee", status:r.status||"active", authUid:r.auth_uid||null, perms:(r.perms && typeof r.perms==="object" && !Array.isArray(r.perms)) ? r.perms : {} }; }
 function mapTask(r){ return { id:r.id, title:r.title||"", desc:r.description||"", who:r.who||"", startDate:r.start_date||"", due:r.due||"", freq:r.freq||"daily", emoji:r.emoji||"🚗", status:r.status||"doing", checks:Array.isArray(r.checks)?r.checks:[], createdAt:r.created_at||new Date().toISOString(), completedAt:r.completed_at||null, createdBy:r.created_by||"" }; }
 function mapRequest(r){ return { id:r.id, fromId:r.from_id||"", fromName:r.from_name||"", type:r.type||"create", title:r.title||"", description:r.description||"", who:r.who||"", startDate:r.start_date||"", due:r.due||"", freq:r.freq||"daily", emoji:r.emoji||"", checks:Array.isArray(r.checks)?r.checks:[], taskId:r.task_id||"", status:r.status||"pending", note:r.note||"", createdAt:r.created_at||new Date().toISOString() }; }
 function mapNotif(r){ return { id:r.id, fromId:r.from_id||"", fromName:r.from_name||"", toRank:r.to_rank||"", toId:r.to_id||"", type:r.type||"", title:r.title||"", message:r.message||"", linkId:r.link_id||"", isRead:!!r.is_read, createdAt:r.created_at||new Date().toISOString() }; }
@@ -1387,15 +1448,17 @@ function deleteNotif(id) {
 }
 
 /* ============ BOARD / ANNOUNCEMENTS ============ */
+function canPostAnn() { return isAdmin() || can("post_announcement"); }
+function canManageAnn(a) { return isAdmin() || (!!a && !!currentUser && a.authorId === currentUser.id && can("post_announcement")); }
 function openBoardModal() {
-  if (!isAdmin()) { toast("ต้องเป็น Admin","🔒"); return; }
+  if (!canPostAnn()) { toast("ไม่มีสิทธิ์เขียนประกาศ","🔒"); return; }
   document.getElementById("boardTitle").value = "";
   document.getElementById("boardContent").value = "";
   document.getElementById("boardOverlay").classList.add("show");
   setTimeout(()=>document.getElementById("boardTitle").focus(), 100);
 }
 function saveAnnouncement() {
-  if (!isAdmin()) { toast("ต้องเป็น Admin","🔒"); return; }
+  if (!canPostAnn()) { toast("ไม่มีสิทธิ์เขียนประกาศ","🔒"); return; }
   const title = document.getElementById("boardTitle").value.trim();
   const content = document.getElementById("boardContent").value.trim();
   if (!title) { toast("กรุณาใส่หัวข้อประกาศ","⚠️"); return; }
@@ -1407,7 +1470,7 @@ function saveAnnouncement() {
   renderBoard();
 }
 function deleteAnnouncementItem(id) {
-  if (!isAdmin()) return;
+  if (!canManageAnn(state.announcements.find(a => a.id === id))) return;
   if (!confirm("ลบประกาศนี้?")) return;
   state.announcements = state.announcements.filter(a => a.id !== id);
   dbw(db.from("announcements").delete().eq("id", id), "ลบประกาศไม่สำเร็จ");
@@ -1426,7 +1489,7 @@ function togglePinAnnouncement(id) {
 function renderBoard() {
   const list = document.getElementById("boardList");
   const hint = document.getElementById("boardHint");
-  if (hint) hint.innerHTML = isAdmin() ? `<button class="btn-primary btn-sm" onclick="openBoardModal()">📌 เขียนประกาศ</button>` : "";
+  if (hint) hint.innerHTML = canPostAnn() ? `<button class="btn-primary btn-sm" onclick="openBoardModal()">📌 เขียนประกาศ</button>` : "";
   const sorted = [...state.announcements].sort((a,b) => (a.isPinned!==b.isPinned) ? (a.isPinned?-1:1) : new Date(b.createdAt) - new Date(a.createdAt));
   if (sorted.length === 0) { list.innerHTML = `<div class="empty"><div class="e-emoji">📌</div><b>ยังไม่มีประกาศ</b></div>`; return; }
   list.innerHTML = sorted.map(a => {
@@ -1437,8 +1500,8 @@ function renderBoard() {
         <div class="board-meta"><span>${esc(author?author.name:a.authorName)}</span><span>${timeAgo(a.createdAt)}</span></div>
       </div>
       ${a.content?`<div class="board-content">${esc(a.content)}</div>`:""}
-      ${isAdmin()?`<div class="board-actions">
-        <button class="btn-ghost btn-sm" onclick="togglePinAnnouncement('${sid(a.id)}')">${a.isPinned?'📌 เลิกปักหมุด':'📌 ปักหมุด'}</button>
+      ${canManageAnn(a)?`<div class="board-actions">
+        ${isAdmin()?`<button class="btn-ghost btn-sm" onclick="togglePinAnnouncement('${sid(a.id)}')">${a.isPinned?'📌 เลิกปักหมุด':'📌 ปักหมุด'}</button>`:""}
         <button class="btn-danger btn-sm" onclick="deleteAnnouncementItem('${sid(a.id)}')">🗑 ลบ</button>
       </div>`:""}
     </div>`;
@@ -1457,7 +1520,8 @@ function newRequest(fields) {
   return Object.assign({ id:uid(), fromId:currentUser.id, fromName:currentUser.name, type:"create", title:"", description:"", who:"", startDate:"", due:"", freq:"daily", emoji:"", checks:[], taskId:"", status:"pending", note:"", createdAt:new Date().toISOString() }, fields);
 }
 function submitCreateRequest() {
-  if (!currentUser || currentUser.rank !== "employee") return saveTaskDirect();
+  if (!currentUser || can("create_task")) return saveTaskDirect();
+  if (!can("request_task")) { toast("ไม่มีสิทธิ์สร้างงาน","🔒"); return; }
   const f = readTaskForm(); if (!f) return;
   const req = newRequest({ type:"create", title:f.title, description:f.desc, who:f.who, startDate:f.startDate, due:f.due, freq:f.freq, emoji:state.tEmoji, checks:state.tmpChecks.map(c=>({text:c.text,on:false})) });
   closeModal("taskOverlay");
@@ -1466,19 +1530,19 @@ function submitCreateRequest() {
 function submitDeleteRequest(taskId) {
   const t = state.tasks.find(x=>x.id===taskId);
   if (!t) return;
-  if (canDeleteTaskDirect()) return delTaskDirect(taskId);
-  if (!currentUser || currentUser.rank !== "employee" || t.who !== currentUser.id) { toast("ไม่มีสิทธิ์ลบงาน","🔒"); return; }
+  if (canDeleteTaskDirect(t)) return delTaskDirect(taskId);
+  if (!currentUser || !can("request_task") || t.who !== currentUser.id) { toast("ไม่มีสิทธิ์ลบงาน","🔒"); return; }
   addRequest(newRequest({ type:"delete", title:`ขอลบงาน "${t.title}"`, taskId }), "คำขอลบงาน", `${currentUser.name} ขอลบงาน "${t.title}"`);
 }
 function submitDeleteMemberRequest(memberId) {
-  if (!currentUser || currentUser.rank !== "employee") { toast("ไม่มีสิทธิ์","🔒"); return; }
+  if (!currentUser || isAdmin() || !can("request_task")) { toast("ไม่มีสิทธิ์","🔒"); return; }
   if (memberId === currentUser.id) { toast("ลบตัวเองไม่ได้","⚠️"); return; }
   const m = memberById(memberId); if (!m) return;
   if (!confirm(`ส่งคำขอลบ "${m.name}" ให้ Admin อนุมัติ?`)) return;
   addRequest(newRequest({ type:"delete_member", title:`ขอลบสมาชิก "${m.name}"`, who:memberId }), "คำขอลบสมาชิก", `${currentUser.name} ขอลบสมาชิก "${m.name}"`);
 }
 function submitReopenRequest(taskId) {
-  if (!currentUser || currentUser.rank !== "employee") { toast("ไม่มีสิทธิ์","🔒"); return; }
+  if (!currentUser || !can("request_task")) { toast("ไม่มีสิทธิ์","🔒"); return; }
   const t = state.tasks.find(x=>x.id===taskId); if (!t) return;
   addRequest(newRequest({ type:"reopen", title:`ขอเปิดงานใหม่ "${t.title}"`, who:t.who, taskId }), "ขอเปิดงานใหม่", `${currentUser.name} ขอเปิดงานใหม่ "${t.title}" (รีเซ็ตเชคลิสต์)`);
 }
@@ -1569,7 +1633,7 @@ function renderHeader() {
       <button class="btn-ghost" onclick="openBoardModal()">📌 ประกาศ</button>
       <button class="btn-primary" onclick="openTaskModal()">➕ เพิ่มงาน</button>`;
   } else if (canCreateTask()) {
-    html += `<button class="btn-primary" onclick="openTaskModal()">➕ ขอสร้างงาน</button>`;
+    html += `<button class="btn-primary" onclick="openTaskModal()">➕ ${can("create_task")?"เพิ่มงาน":"ขอสร้างงาน"}</button>`;
   }
   html += `<button class="btn-ghost btn-sm" onclick="logout()">ออก</button>`;
   el.innerHTML = html;
@@ -1577,11 +1641,25 @@ function renderHeader() {
   if (notifOpen) renderNotifPanel();
 }
 
+let bannerOpen = false;
+function toggleRoleBanner() { bannerOpen = !bannerOpen; renderRoleBanner(); }
+function permSummaryHtml(m) {
+  const on = PERMS.filter(p => memberCan(m, p.key)), off = PERMS.filter(p => !memberCan(m, p.key));
+  return `<div class="perm-summary">
+    ${on.map(p=>`<div class="ps-on">✅ ${p.label}</div>`).join("")}
+    ${off.map(p=>`<div class="ps-off">❌ ${p.label}</div>`).join("")}
+  </div>`;
+}
 function renderRoleBanner() {
   const el = document.getElementById("roleBanner");
   if (!currentUser) { el.innerHTML = ""; return; }
-  const note = isAdmin() ? " มีสิทธิ์จัดการงานและคนในทีม" : (currentUser.rank==="employee" ? " สร้างงานต้องขออนุมัติ แต่ทำเชคลิสต์ได้" : " ทำเชคลิสต์ได้อย่างเดียว");
-  el.innerHTML = `<div class="role-banner">${RANK_EMOJI[currentUser.rank]||""} <b>${RANKS[currentUser.rank]||""}</b> — ${esc(currentUser.name)}${note}</div>`;
+  const custom = !isAdmin() && Object.keys(currentUser.perms||{}).length > 0;
+  const note = isAdmin() ? "มีสิทธิ์จัดการงานและคนในทีมทั้งหมด"
+    : (can("create_task") ? "สร้างงานได้เลย" : can("request_task") ? "สร้างงานต้องขออนุมัติ" : "ทำเชคลิสต์ได้อย่างเดียว") + (custom ? " · มีสิทธิ์ปรับเฉพาะคน" : "");
+  el.innerHTML = `<div class="role-banner" role="button" tabindex="0" onclick="toggleRoleBanner()" onkeydown="if(event.key==='Enter')toggleRoleBanner()" title="ดูสิทธิ์ของฉัน">
+      ${RANK_EMOJI[rankCls(currentUser.rank)]||""} <b>${RANKS[rankCls(currentUser.rank)]}</b> — ${esc(currentUser.name)} ${note}
+      <span class="rb-toggle">${bannerOpen?"ซ่อน ▴":"ดูสิทธิ์ของฉัน ▾"}</span>
+    </div>${bannerOpen ? `<div class="role-detail">${isAdmin() ? `<div class="ps-on">✅ ทำได้ทุกอย่าง รวมถึงเชิญ/ลบสมาชิก อนุมัติคำขอ และปรับสิทธิ์ของแต่ละคน</div>` : permSummaryHtml(currentUser)}</div>` : ""}`;
 }
 
 function renderRequests() {
@@ -1662,7 +1740,7 @@ function renderTeam() {
     let removeBtn = '';
     if (currentUser && m.id !== currentUser.id) {
       if (isAdmin()) removeBtn = `<button class="btn-danger btn-sm m-del" title="ลบสมาชิก" onclick="delMember('${id}')">✕</button>`;
-      else if (currentUser.rank === "employee") removeBtn = `<button class="btn-ghost btn-sm m-del" title="ขออนุมัติลบสมาชิก" onclick="submitDeleteMemberRequest('${id}')">📤</button>`;
+      else if (can("request_task")) removeBtn = `<button class="btn-ghost btn-sm m-del" title="ขออนุมัติลบสมาชิก" onclick="submitDeleteMemberRequest('${id}')">📤</button>`;
     }
     if (m.status === "pending") {
       return `<div class="member" style="opacity:0.75;border:2px dashed var(--accent)">
@@ -1675,7 +1753,7 @@ function renderTeam() {
         <div style="text-align:center;padding:16px 0">
           <div style="font-size:28px;margin-bottom:6px">📧</div>
           <div style="font-size:12.5px;color:var(--txt-2)">ถูกเชิญแล้ว รอตั้งรหัสผ่าน</div>
-          ${isAdmin()?`<button class="btn-ghost btn-sm" style="margin-top:8px" onclick="resendInvite('${id}')">🔄 ส่งลิงก์อีกครั้ง</button>`:""}
+          ${isAdmin()?`<button class="btn-ghost btn-sm" style="margin-top:8px" onclick="resendInvite('${id}')">🔄 ส่งลิงก์อีกครั้ง</button> <button class="btn-ghost btn-sm" style="margin-top:8px" onclick="openPermModal('${id}')">⚙️ สิทธิ์</button>`:""}
         </div>
       </div>`;
     }
@@ -1696,6 +1774,7 @@ function renderTeam() {
         <span class="chip" style="color:var(--danger)">😢 <b>${s.late}</b> เลยกำหนด</span>
         <span class="chip">⏳ <b>${s.pending}</b> ค้าง</span>
       </div>
+      ${isAdmin()?`<div class="perm-bar"><span>${(m.rank==="boss"||m.rank==="dev")?"สิทธิ์เต็ม":(Object.keys(m.perms||{}).length?"⚙️ ปรับสิทธิ์เฉพาะคน "+Object.keys(m.perms).length+" รายการ":"สิทธิ์ตามตำแหน่ง")}</span><button class="btn-ghost btn-sm" onclick="openPermModal('${id}')">⚙️ ตำแหน่ง/สิทธิ์</button></div>`:""}
       ${notMigrated?`<div class="chip-link" title="สมาชิกคนนี้ยังไม่เคยเข้าระบบเวอร์ชันใหม่ — เข้าได้ด้วยรหัสเดิม หรือส่งลิงก์เชิญใหม่ให้"><span>⚠️ ยังไม่ย้ายเข้าระบบใหม่</span><button class="btn-ghost btn-sm" onclick="resendInvite('${id}')">🔗 ส่งลิงก์</button></div>`:""}
     </div>`;
   }).join("");
@@ -1704,7 +1783,6 @@ function renderTeam() {
 /* การ์ดงาน — ใช้ร่วมกันทั้งหน้า Dashboard และงานวันนี้ (สิทธิ์ตรงกันทุกหน้า) */
 function renderTaskCard(t) {
   const admin = isAdmin();
-  const isIntern = !!currentUser && currentUser.rank === "intern";
   const mine = !!currentUser && t.who === currentUser.id;
   const canTick = admin || mine;
   const id = sid(t.id);
@@ -1717,22 +1795,20 @@ function renderTaskCard(t) {
   if (st==="done") tag=`<span class="tag done">✅ เสร็จแล้ว</span>`;
   else if (over) tag=`<span class="tag overdue">⚠️ เลยกำหนด</span>`;
   const tEmoji = (st==="done"||pct===100)?"😍":(over?"😢":(t.emoji||"🚗"));
-  const empEdit = !!currentUser && currentUser.rank==="employee" && mine;
-
-  let foot;
-  if (isIntern) {
-    foot = `<span style="font-size:12px;color:var(--txt-2)">🎓 เด็กฝึกงาน — ทำได้แค่เช็คลิสต์</span>`;
-  } else {
-    let btns = "";
-    if (st!=="done") { if (canTick) btns += `<button class="btn-ghost btn-sm" onclick="completeTask('${id}')">✅ ทำเสร็จแล้ว</button>`; }
-    else if (admin) btns += `<button class="btn-ghost btn-sm" onclick="reopenTask('${id}')">↩︎ เปิดงานใหม่</button>`;
-    else if (empEdit) btns += `<button class="btn-ghost btn-sm" onclick="submitReopenRequest('${id}')">📤 ขอเปิดงานใหม่</button>`;
-    if (admin || empEdit) {
-      btns += `<button class="btn-ghost btn-sm" onclick="openEditTaskModal('${id}')">✏️ แก้ไข</button>`;
-      btns += `<button class="btn-danger btn-sm" onclick="${admin?`delTaskDirect('${id}')`:`submitDeleteRequest('${id}')`}">🗑 ลบ</button>`;
-    }
-    foot = `<span style="font-size:12px;color:var(--txt-2)">${over?"⚠️ เลยกำหนดส่งแล้ว":(st==="done"?"🎉 งานเสร็จสมบูรณ์":"💪 กำลังดำเนินการ")}</span><div class="foot-btns">${btns}</div>`;
-  }
+  const canEdit = canEditTask(t);
+  const canDel = canDeleteTaskDirect(t);
+  const reqDel = !canDel && mine && can("request_task");
+  const canRe = canReopenTask(t);
+  const reqRe = !canRe && mine && can("request_task");
+  let btns = "";
+  if (st!=="done") { if (canTick) btns += `<button class="btn-ghost btn-sm" onclick="completeTask('${id}')">✅ ทำเสร็จแล้ว</button>`; }
+  else if (canRe) btns += `<button class="btn-ghost btn-sm" onclick="reopenTask('${id}')">↩︎ เปิดงานใหม่</button>`;
+  else if (reqRe) btns += `<button class="btn-ghost btn-sm" onclick="submitReopenRequest('${id}')">📤 ขอเปิดงานใหม่</button>`;
+  if (canEdit) btns += `<button class="btn-ghost btn-sm" onclick="openEditTaskModal('${id}')">✏️ แก้ไข</button>`;
+  if (canDel) btns += `<button class="btn-danger btn-sm" onclick="delTaskDirect('${id}')">🗑 ลบ</button>`;
+  else if (reqDel) btns += `<button class="btn-danger btn-sm" onclick="submitDeleteRequest('${id}')">📤 ขอลบ</button>`;
+  const status = over?"⚠️ เลยกำหนดส่งแล้ว":(st==="done"?"🎉 งานเสร็จสมบูรณ์":(mine && !canEdit && !admin ? "ติ๊กเชคลิสต์ได้อย่างเดียว" : "💪 กำลังดำเนินการ"));
+  const foot = `<span style="font-size:12px;color:var(--txt-2)">${status}</span><div class="foot-btns">${btns}</div>`;
 
   return `<div class="task ${st==='done'?'done':''} ${over?'overdue':''}">
     <div class="task-head">
@@ -1770,7 +1846,7 @@ function renderTaskCard(t) {
 }
 function visibleTasks() {
   let tasks = [...state.tasks];
-  if (currentUser && currentUser.rank === "intern") tasks = tasks.filter(t => t.who === currentUser.id);
+  if (currentUser && !can("view_all_tasks")) tasks = tasks.filter(t => t.who === currentUser.id);
   return tasks;
 }
 
@@ -1794,7 +1870,7 @@ function routeView() {
   let v = sidebarState.activeItem;
   // เด็กฝึกงานเข้า view ที่ไม่มีสิทธิ์ไม่ได้
   const item = SIDEBAR_MENU.flatMap(g=>g.items).find(i=>i.id===v);
-  if (currentUser && item && !item.roles.includes(currentUser.rank)) { v = sidebarState.activeItem = "dashboard"; }
+  if (currentUser && item && item.perm && !can(item.perm)) { v = sidebarState.activeItem = "dashboard"; }
   if (!currentUser) { vr.innerHTML = ""; showDefaultSections(false); return; }
   if (v === "today-tasks") { showDefaultSections(false); renderTasksView(); }
   else if (v === "event-cal") { showDefaultSections(false); renderEventCalendar(); }
@@ -1816,9 +1892,9 @@ function byDue(a,b){ return (a.due||"9999") < (b.due||"9999") ? -1 : (a.due||"99
 function renderTasksView() {
   const vr = document.getElementById("viewRoot");
   const today = todayStr();
-  const isIntern = !!currentUser && currentUser.rank === "intern";
+  const onlyMine = !!currentUser && !can("view_all_tasks");
   let tasks = visibleTasks();
-  if (state.mine && !isIntern) tasks = tasks.filter(t => t.who === currentUser.id);
+  if (state.mine && !onlyMine) tasks = tasks.filter(t => t.who === currentUser.id);
   const overdue = tasks.filter(t => isOverdue(t)).sort(byDue);
   const dueToday = tasks.filter(t => !isOverdue(t) && taskStatus(t) !== "done" && t.due === today);
   const doing = tasks.filter(t => taskStatus(t) !== "done" && !isOverdue(t)).sort(byDue);
@@ -1845,12 +1921,12 @@ function renderTasksView() {
   vr.innerHTML = `
     <div class="view-head"><div><h2>✅ งาน</h2>
       <div style="font-size:12.5px;color:var(--txt-2);margin-top:3px">${new Date().toLocaleDateString("th-TH",{weekday:"long",day:"numeric",month:"long",year:"numeric"})}</div></div>
-      <div class="cal-ctrl">${canCreateTask() ? `<button class="btn-primary btn-sm" onclick="openTaskModal()">➕ ${isAdmin()?"เพิ่มงาน":"ขอสร้างงาน"}</button>` : ""}</div></div>
+      <div class="cal-ctrl">${canCreateTask() ? `<button class="btn-primary btn-sm" onclick="openTaskModal()">➕ ${can("create_task")?"เพิ่มงาน":"ขอสร้างงาน"}</button>` : ""}</div></div>
     <div class="task-toolbar">
       <div class="cal-filters" role="tablist" aria-label="กรองงาน" style="margin:0">
         ${TASK_TABS.map(t=>`<button type="button" role="tab" aria-selected="${f===t.id}" class="cal-filter ${f===t.id?'on':''}" onclick="setTaskFilter('${t.id}')">${t.label}<span class="tab-count ${t.id!=='all'&&t.id!=='done'&&t.id!=='doing'&&counts[t.id]&&overdue.length?'alert':''}">${counts[t.id]}</span></button>`).join("")}
       </div>
-      ${isIntern ? "" : `<label class="mine-toggle"><input type="checkbox" ${state.mine?"checked":""} onchange="toggleMine()"> เฉพาะงานของฉัน</label>`}
+      ${onlyMine ? "" : `<label class="mine-toggle"><input type="checkbox" ${state.mine?"checked":""} onchange="toggleMine()"> เฉพาะงานของฉัน</label>`}
     </div>
     ${body}`;
 }
@@ -1877,7 +1953,7 @@ function renderEventCalendar() {
   const daysInM = new Date(y, m+1, 0).getDate();
   const today = todayStr();
   const monthLabel = first.toLocaleDateString("th-TH",{month:"long",year:"numeric"});
-  const canAdd = !!currentUser && currentUser.rank !== "intern";
+  const canAdd = !!currentUser && can("add_event");
   let cells = "";
   const total = Math.ceil((startDow + daysInM)/7)*7;
   for (let i=0;i<total;i++) {
@@ -1916,12 +1992,12 @@ function calMove(n){ calCursor = new Date(calCursor.getFullYear(), calCursor.get
 function calToday(){ calCursor = new Date(); routeView(); }
 
 let editingEventId = null;
-function canEditEvent(e){ return isAdmin() || (!!currentUser && currentUser.rank !== "intern" && (!e || e.by === currentUser.id)); }
+function canEditEvent(e){ return isAdmin() || (!!currentUser && can("add_event") && (!e || e.by === currentUser.id)); }
 function openEventModal(dateStr, evId) {
   if (!currentUser) { showAuth(); return; }
   const e = evId ? state.events.find(x=>x.id===evId) : null;
   if (evId && !e) return;
-  if (!e && currentUser.rank === "intern") { toast("เด็กฝึกงานดูอย่างเดียว","🔒"); return; }
+  if (!e && !can("add_event")) { toast("ไม่มีสิทธิ์เพิ่มอีเวนต์","🔒"); return; }
   const editable = canEditEvent(e);
   editingEventId = e ? e.id : null;
   document.getElementById("evTitle").value = e ? e.title : "";
@@ -2010,7 +2086,7 @@ function openTaskModal() {
   document.getElementById("tStartDate").value = todayStr();   // (แก้บั๊ก) รีเซ็ตทุกครั้ง
   document.getElementById("tDue").value = todayStr();
   document.getElementById("tCheck").value = "";
-  document.querySelector("#taskOverlay h3").textContent = isAdmin() ? "🚗 เพิ่มงานใหม่" : "📬 ขอสร้างงานใหม่";
+  document.querySelector("#taskOverlay h3").textContent = can("create_task") ? "🚗 เพิ่มงานใหม่" : "📬 ขอสร้างงานใหม่";
   renderEmojiPick("tEmojiPick","t",TASK_EMOJIS);
   renderTmpChecks(); syncWhoSelect();
   document.getElementById("taskOverlay").classList.add("show");
@@ -2053,11 +2129,12 @@ function readTaskForm() {
 }
 function saveTask() {
   if (!currentUser) { showAuth(); return; }
-  if (currentUser.rank === "employee") { submitCreateRequest(); return; }
-  saveTaskDirect();
+  if (can("create_task")) { saveTaskDirect(); return; }
+  if (can("request_task")) { submitCreateRequest(); return; }
+  toast("ไม่มีสิทธิ์สร้างงาน","🔒");
 }
 function saveTaskDirect() {
-  if (!isAdmin()) { toast("ไม่มีสิทธิ์สร้างงาน","🔒"); return; }
+  if (!can("create_task")) { toast("ไม่มีสิทธิ์สร้างงาน","🔒"); return; }
   const f = readTaskForm(); if (!f) return;
   const t = { id:uid(), title:f.title, desc:f.desc, who:f.who, startDate:f.startDate, due:f.due, freq:f.freq, emoji:state.tEmoji, status:"doing", checks:state.tmpChecks.map(c=>({text:c.text,on:false})), createdAt:new Date().toISOString(), completedAt:null, createdBy:currentUser.id };
   state.tasks.unshift(t);
@@ -2069,7 +2146,7 @@ function saveTaskDirect() {
 }
 
 let editChecks = [];
-function canEditTask(t) { return isAdmin() || (!!currentUser && currentUser.rank === "employee" && t.who === currentUser.id); }
+function canEditTask(t) { return isAdmin() || (!!currentUser && t.who === currentUser.id && can("edit_own_task")); }
 function openEditTaskModal(tid) {
   const t = state.tasks.find(x=>x.id===tid);
   if (!t) return;
@@ -2160,16 +2237,73 @@ async function completeTask(tid) {
     toast(who ? `เยี่ยม ${who.name}! 😍` : "ทำเสร็จแล้ว 🎉", "🎉");
   }
 }
+function canReopenTask(t) { return isAdmin() || (!!t && !!currentUser && t.who === currentUser.id && can("reopen_task")); }
 async function reopenTask(tid) {
-  if (!isAdmin()) { toast("ไม่มีสิทธิ์เปิดงานนี้","🔒"); return; }
+  if (!canReopenTask(state.tasks.find(x=>x.id===tid))) { toast("ไม่มีสิทธิ์เปิดงานนี้","🔒"); return; }
   if (await checkOp(tid, "all", { on:false })) toast("เปิดงานใหม่แล้ว (รีเซ็ตเชคลิสต์)","↩︎");
 }
 function delTaskDirect(tid) {
-  if (!canDeleteTaskDirect()) { toast("ไม่มีสิทธิ์ลบ","🔒"); return; }
+  if (!canDeleteTaskDirect(state.tasks.find(x=>x.id===tid))) { toast("ไม่มีสิทธิ์ลบ","🔒"); return; }
   if (!confirm("ลบงานนี้?")) return;
   state.tasks = state.tasks.filter(t=>t.id!==tid);
   dbw(db.from("tasks").delete().eq("id", tid), "ลบงานไม่สำเร็จ");
   render(); toast("ลบงานแล้ว","🗑");
+}
+
+/* ============ ปรับตำแหน่ง/สิทธิ์รายคน (Boss/Dev) ============ */
+let permEditId = null;
+function openPermModal(memberId) {
+  if (!isAdmin()) { toast("ต้องเป็น Admin","🔒"); return; }
+  const m = memberById(memberId); if (!m) return;
+  permEditId = m.id;
+  document.getElementById("permTitle").textContent = `⚙️ ตำแหน่งและสิทธิ์ — ${m.name}`;
+  const sel = document.getElementById("permRank");
+  sel.value = rankCls(m.rank);
+  const self = currentUser && m.id === currentUser.id;
+  sel.disabled = self;
+  document.getElementById("permRankNote").textContent = self ? "เปลี่ยนตำแหน่งตัวเองไม่ได้ — ให้ Boss/Dev คนอื่นเปลี่ยนให้" : "";
+  renderPermChecks(m.perms || {});
+  document.getElementById("permOverlay").classList.add("show");
+}
+function renderPermChecks(overrides) {
+  const rank = document.getElementById("permRank").value;
+  const admin = rank === "boss" || rank === "dev";
+  document.getElementById("permList").innerHTML = PERMS.map(p => {
+    const def = permDefault(rank, p.key);
+    const val = admin ? true : (typeof overrides[p.key] === "boolean" ? overrides[p.key] : def);
+    const changed = !admin && val !== def;
+    return `<label class="perm-row ${changed?'changed':''}">
+      <input type="checkbox" data-key="${p.key}" ${val?"checked":""} ${admin?"disabled":""} onchange="this.closest('.perm-row').classList.toggle('changed', this.checked !== ${def})">
+      <span><b>${p.label}</b>${p.hint?`<small>${p.hint}</small>`:""}<small class="perm-def">ค่าตั้งต้นของตำแหน่ง: ${def?"เปิด":"ปิด"}</small></span>
+    </label>`;
+  }).join("") + (admin ? `<div class="perm-admin-note">Boss / Dev มีทุกสิทธิ์เสมอ</div>` : "");
+}
+function onPermRankChange() { renderPermChecks({}); }
+function resetPermDefaults() { renderPermChecks({}); }
+async function savePerms() {
+  if (!isAdmin() || !permEditId) return;
+  const m = memberById(permEditId); if (!m) return;
+  const rank = document.getElementById("permRank").value;
+  const perms = {};
+  if (rank !== "boss" && rank !== "dev") {
+    document.querySelectorAll("#permList input[data-key]").forEach(cb => {
+      if (cb.checked !== permDefault(rank, cb.dataset.key)) perms[cb.dataset.key] = cb.checked;
+    });
+  }
+  const upd = { perms };
+  if (rank !== m.rank) upd.rank = rank;
+  const { error } = await db.from("members").update(upd).eq("id", m.id);
+  if (error) {
+    const msg = /CANNOT_CHANGE_OWN_RANK/.test(error.message) ? "เปลี่ยนตำแหน่งตัวเองไม่ได้"
+      : /LAST_ADMIN/.test(error.message) ? "ต้องเหลือ Boss/Dev อย่างน้อย 1 คน" : ("บันทึกไม่สำเร็จ: " + error.message);
+    toast(msg, "⚠️"); return;
+  }
+  Object.assign(m, { rank, perms });
+  if (currentUser && currentUser.id === m.id) Object.assign(currentUser, { rank, perms });
+  closeModal("permOverlay");
+  if (m.status === "active" && m.id !== currentUser.id) notify({ toId:m.id, type:"task", title:"สิทธิ์ของคุณถูกปรับ", message:`${currentUser.name} ปรับตำแหน่ง/สิทธิ์ของคุณ — กดแถบตำแหน่งด้านบนเพื่อดูรายละเอียด` });
+  toast(`บันทึกสิทธิ์ของ ${m.name} แล้ว`, "⚙️");
+  render();
 }
 
 /* ============ MEMBER OPS ============ */
@@ -2297,6 +2431,19 @@ async function adminResetPassword() {
 }
 
 /* ============ PROFILE ============ */
+const PROFILE_EMOJIS = ["🙂","😎","🤓","🥳","😺","🧑‍💻","👩‍💼","👨‍💼","👩‍🎨","👨‍💻","👩‍🔬","🧑‍🚀","🦸","🦹","🐱","🐶","🦊","🐼","🐯","🐨","🐸","🦄","🐧","🐙","🌸","⭐","🔥","🚗","📸","🎨","🎬","👑","💻","💼","🎓"];
+async function setMyEmoji(i) {
+  const e = PROFILE_EMOJIS[i];
+  if (!currentUser || !e || e === currentUser.emoji) return;
+  const { error } = await db.rpc("update_my_emoji", { p_emoji: e });
+  if (error) { toast("เปลี่ยนไอคอนไม่สำเร็จ: " + (error.message||""), "⚠️"); return; }
+  currentUser.emoji = e;
+  const me = memberById(currentUser.id); if (me) me.emoji = e;
+  document.querySelectorAll("#profileEmojiPick button").forEach((b, j) => b.classList.toggle("sel", j === i));
+  const big = document.querySelector("#profileInfo > div > div"); if (big) big.textContent = e;
+  render();
+  toast("เปลี่ยนไอคอนแล้ว", e);
+}
 function showProfile() {
   if (!currentUser) return;
   document.getElementById("profileInfo").innerHTML = `
@@ -2309,6 +2456,10 @@ function showProfile() {
       <div style="margin-bottom:8px"><b>📧 อีเมล:</b> ${esc(currentUser.email||"—")}</div>
       <div style="margin-bottom:8px"><b>💼 ตำแหน่ง:</b> ${esc(currentUser.position||"—")}</div>
       <div><b>🔑 รหัสผ่าน:</b> ••••••••</div>
+    </div>
+    <div style="margin-top:14px">
+      <div style="font-size:12.5px;color:var(--txt-2);font-weight:600;margin-bottom:7px">เปลี่ยนไอคอน</div>
+      <div class="emoji-pick" id="profileEmojiPick">${PROFILE_EMOJIS.map((e,i)=>`<button type="button" class="${e===currentUser.emoji?'sel':''}" onclick="setMyEmoji(${i})" title="ใช้ไอคอนนี้">${e}</button>`).join("")}</div>
     </div>
     <button class="btn-ghost btn-block" style="margin-top:12px" onclick="closeModal('profileOverlay');showChangePassword()">🔑 เปลี่ยนรหัสผ่าน</button>`;
   document.getElementById("profileOverlay").classList.add("show");
