@@ -895,7 +895,7 @@ const SYNC_MS = 4000;          // ใช้เมื่อ realtime ยังไ
 const SYNC_MS_LIVE = 30000;    // realtime เชื่อมแล้ว → ดึงสำรองทุก 30 วิ กันพลาด
 const RT_TABLES = ["members","tasks","requests","notifications","invites","announcements","events"];
 let rtChannel = null, rtLive = false, rtDebounce = null;
-const MEMBER_COLS = "id,name,position,emoji,email,phone,rank,status,auth_uid,perms";
+const MEMBER_COLS = "id,name,position,emoji,email,phone,rank,status,auth_uid,perms,login_count,last_login_date";
 
 /* storage ที่ไม่พังเมื่อ browser บล็อก localStorage */
 function lsGet(k){ try { return localStorage.getItem(k); } catch(e) { return null; } }
@@ -917,6 +917,7 @@ let lastSnapshot = "";
 let cloudState = db ? "loading" : "off";
 let syncTimer = null;
 let notifOpen = false;
+let tlCollapsed = {}; // ไทม์ไลน์งาน: เก็บว่าเดือนไหนถูกยุบไว้ (key = "YYYY-MM")
 
 /* ============ SIDEBAR STATE & MENU ============ */
 let sidebarState = { activeGroup:'overview', activeItem:'dashboard', collapsed:false, collapsedGroups:[], mobileOpen:false };
@@ -1010,7 +1011,7 @@ const RANKS = { boss:"Boss", dev:"Dev", employee:"พนักงาน", intern
 const RANK_EMOJI = { boss:"👑", dev:"💻", employee:"💼", intern:"🎓" };
 const FREQ_MAP = { daily:"📅 รายวัน", weekly:"📆 รายอาทิตย์", monthly:"🗓️ รายเดือน" };
 const EV_ICON = { event:"🎪", campaign:"🎯", content:"📱", launch:"🚀", meeting:"👥", deadline:"⏰" };
-const TASK_EMOJIS = ["🚗","📣","🎨","💻","📊","📝","📸","🎬","🛍️","📈","🔧","⭐"];
+const TASK_EMOJIS = ["🚗","📣","🎨","💻","📊","📝","📸","🎬","🛍️","📈","🔧","⭐","🔥"];
 const MEMBER_EMOJIS = ["🙂","🧑‍💻","👩‍💼","👨‍💼","👩‍🎨","👨‍💻","👩‍🔬","🧑‍🚀","🦸","🦹","🐱","🐶","🦊","🐼","🐯"];
 function isAdmin() { return !!currentUser && (currentUser.rank==="boss" || currentUser.rank==="dev"); }
 /* ============ สิทธิ์รายบุคคล (ต้องตรงกับ supabase-perms.sql) ============ */
@@ -1105,12 +1106,12 @@ function closeModal(id) { document.getElementById(id).classList.remove("show"); 
 function memberById(id) { return state.members.find(m => m.id === id); }
 
 /* ============ DB MAPPERS ============ */
-function mapMember(r){ return { id:r.id, name:r.name||"", position:r.position||"", emoji:r.emoji||"🧑‍💻", email:r.email||"", phone:r.phone||"", rank:r.rank||"employee", status:r.status||"active", authUid:r.auth_uid||null, perms:(r.perms && typeof r.perms==="object" && !Array.isArray(r.perms)) ? r.perms : {} }; }
+function mapMember(r){ return { id:r.id, name:r.name||"", position:r.position||"", emoji:r.emoji||"🧑‍💻", email:r.email||"", phone:r.phone||"", rank:r.rank||"employee", status:r.status||"active", authUid:r.auth_uid||null, perms:(r.perms && typeof r.perms==="object" && !Array.isArray(r.perms)) ? r.perms : {}, loginCount:r.login_count||0, lastLoginDate:r.last_login_date||null }; }
 function mapTask(r){ return { id:r.id, title:r.title||"", desc:r.description||"", who:r.who||"", startDate:r.start_date||"", due:r.due||"", freq:r.freq||"daily", emoji:r.emoji||"🚗", status:r.status||"doing", checks:Array.isArray(r.checks)?r.checks:[], createdAt:r.created_at||new Date().toISOString(), completedAt:r.completed_at||null, createdBy:r.created_by||"" }; }
 function mapRequest(r){ return { id:r.id, fromId:r.from_id||"", fromName:r.from_name||"", type:r.type||"create", title:r.title||"", description:r.description||"", who:r.who||"", startDate:r.start_date||"", due:r.due||"", freq:r.freq||"daily", emoji:r.emoji||"", checks:Array.isArray(r.checks)?r.checks:[], taskId:r.task_id||"", status:r.status||"pending", note:r.note||"", createdAt:r.created_at||new Date().toISOString() }; }
 function mapNotif(r){ return { id:r.id, fromId:r.from_id||"", fromName:r.from_name||"", toRank:r.to_rank||"", toId:r.to_id||"", type:r.type||"", title:r.title||"", message:r.message||"", linkId:r.link_id||"", isRead:!!r.is_read, createdAt:r.created_at||new Date().toISOString() }; }
 function mapInvite(r){ return { id:r.id, email:r.email||"", rank:r.rank||"employee", createdBy:r.created_by||"", createdAt:r.created_at||new Date().toISOString() }; }
-function mapAnn(r){ return { id:r.id, title:r.title||"", content:r.content||"", authorName:r.author_name||"", authorId:r.author_id||"", isPinned:!!r.is_pinned, createdAt:r.created_at||new Date().toISOString() }; }
+function mapAnn(r){ return { id:r.id, title:r.title||"", content:r.content||"", authorName:r.author_name||"", authorId:r.author_id||"", isPinned:!!r.is_pinned, ackedBy:Array.isArray(r.acked_by)?r.acked_by:[], createdAt:r.created_at||new Date().toISOString() }; }
 function mapEvent(r){ return { id:r.id, title:r.title||"", date:r.event_date||"", time:r.time||"", type:r.type||"event", desc:r.description||"", by:r.created_by||"", createdAt:r.created_at||new Date().toISOString() }; }
 
 function taskRow(t){ return { title:t.title, description:t.desc||"", who:t.who||"", start_date:t.startDate||"", due:t.due||"", freq:t.freq||"daily", emoji:t.emoji||"🚗", status:t.status||"doing", checks:t.checks||[], completed_at:t.completedAt||null }; }
@@ -1540,6 +1541,15 @@ function togglePinAnnouncement(id) {
   renderBoard();
   toast(a.isPinned ? "ปักหมุดแล้ว" : "เลิกปักหมุด","📌");
 }
+async function ackAnnouncement(id) {
+  if (!currentUser) return;
+  const a = state.announcements.find(x => x.id === id);
+  if (!a || (a.ackedBy||[]).includes(currentUser.id)) return;
+  a.ackedBy = [...(a.ackedBy||[]), currentUser.id]; // อัปเดตหน้าจอทันที
+  renderBoard();
+  const r = await dbw(db.rpc("ack_announcement", { p_id: id }), "รับทราบไม่สำเร็จ");
+  if (r.error) { a.ackedBy = a.ackedBy.filter(x => x !== currentUser.id); renderBoard(); }
+}
 function renderBoard() {
   const list = document.getElementById("boardList");
   const hint = document.getElementById("boardHint");
@@ -1548,12 +1558,21 @@ function renderBoard() {
   if (sorted.length === 0) { list.innerHTML = `<div class="empty"><div class="e-emoji">📌</div><b>ยังไม่มีประกาศ</b></div>`; return; }
   list.innerHTML = sorted.map(a => {
     const author = memberById(a.authorId);
+    const ackedBy = a.ackedBy||[];
+    const iAcked = !!currentUser && ackedBy.includes(currentUser.id);
+    const ackNames = ackedBy.map(id => { const m = memberById(id); return m ? m.name : ""; }).filter(Boolean).join(", ");
     return `<div class="board-card ${a.isPinned?'pinned':''}">
       <div class="board-head">
         <div class="board-title">${a.isPinned?'<span class="pin">📌</span>':''} ${esc(a.title)}</div>
         <div class="board-meta"><span>${esc(author?author.name:a.authorName)}</span><span>${timeAgo(a.createdAt)}</span></div>
       </div>
       ${a.content?`<div class="board-content">${esc(a.content)}</div>`:""}
+      <div class="board-actions" style="justify-content:space-between;align-items:center">
+        <span style="font-size:12px;color:var(--txt-2)" ${ackNames?`title="${esc(ackNames)}"`:""}>✅ รับทราบแล้ว ${ackedBy.length} คน</span>
+        ${currentUser?(iAcked
+          ? `<span class="tag done" style="font-size:11px">✅ คุณรับทราบแล้ว</span>`
+          : `<button class="btn-primary btn-sm" onclick="ackAnnouncement('${sid(a.id)}')">✅ รับทราบ</button>`):""}
+      </div>
       ${canManageAnn(a)?`<div class="board-actions">
         ${canManageBoard()?`<button class="btn-ghost btn-sm" onclick="togglePinAnnouncement('${sid(a.id)}')">${a.isPinned?'📌 เลิกปักหมุด':'📌 ปักหมุด'}</button>`:""}
         <button class="btn-danger btn-sm" onclick="deleteAnnouncementItem('${sid(a.id)}')">🗑 ลบ</button>
@@ -1781,6 +1800,17 @@ function renderAttention() {
 }
 function openTasks(filter) { state.filter = filter; navigateTo("today-tasks"); }
 
+/* เช็คอินรายวัน: พนักงาน/เด็กฝึกงานต้องเข้าระบบอย่างน้อยวันละ 1 ครั้ง */
+function loginStatusChip(m) {
+  const inToday = m.lastLoginDate === todayStr();
+  const color = inToday ? "var(--success)" : "var(--danger)";
+  const label = inToday ? "✅ เข้าระบบวันนี้แล้ว" : "❌ ยังไม่เข้าระบบวันนี้";
+  const daysAgo = (!inToday && m.lastLoginDate) ? (() => {
+    const d = Math.floor((new Date(todayStr()) - new Date(m.lastLoginDate)) / 86400000);
+    return d > 0 ? ` (ล่าสุด ${d} วันก่อน)` : "";
+  })() : (!m.lastLoginDate ? " (ยังไม่เคยเข้าระบบ)" : "");
+  return `<div class="chip-link" style="border-color:${color}"><span style="color:${color};font-weight:600">${label}${esc(daysAgo)}</span><span style="color:var(--txt-2);font-size:11px">🔑 เข้าระบบสะสม ${m.loginCount||0} ครั้ง</span></div>`;
+}
 function renderTeam() {
   const g = document.getElementById("teamGrid");
   if (state.members.length === 0) {
@@ -1829,6 +1859,7 @@ function renderTeam() {
         <span class="chip" style="color:var(--danger)">😢 <b>${s.late}</b> เลยกำหนด</span>
         <span class="chip">⏳ <b>${s.pending}</b> ค้าง</span>
       </div>
+      ${(rk==="employee"||rk==="intern")?loginStatusChip(m):""}
       ${isAdmin()?`<div class="perm-bar"><span>${(m.rank==="boss"||m.rank==="dev")?"สิทธิ์เต็ม":(Object.keys(m.perms||{}).length?"⚙️ ปรับสิทธิ์เฉพาะคน "+Object.keys(m.perms).length+" รายการ":"สิทธิ์ตามตำแหน่ง")}</span><button class="btn-ghost btn-sm" onclick="openPermModal('${id}')">⚙️ ตำแหน่ง/สิทธิ์</button></div>`:""}
       ${notMigrated?`<div class="chip-link" title="สมาชิกคนนี้ยังไม่เคยเข้าระบบเวอร์ชันใหม่ — เข้าได้ด้วยรหัสเดิม หรือส่งลิงก์เชิญใหม่ให้"><span>⚠️ ยังไม่ย้ายเข้าระบบใหม่</span><button class="btn-ghost btn-sm" onclick="resendInvite('${id}')">🔗 ส่งลิงก์</button></div>`:""}
     </div>`;
@@ -2107,34 +2138,81 @@ function deleteEventItem() {
 }
 
 /* ============ VIEW: CAMPAIGN TIMELINE ============ */
+const TL_MONTH_NAME = ["มกราคม","กุมภาพันธ์","มีนาคม","เมษายน","พฤษภาคม","มิถุนายน","กรกฎาคม","สิงหาคม","กันยายน","ตุลาคม","พฤศจิกายน","ธันวาคม"];
+function tlMonthKey(dateStr) { return dateStr && dateStr.length>=7 ? dateStr.slice(0,7) : "ไม่ระบุ"; }
+function tlMonthLabel(key) {
+  if (key === "ไม่ระบุ") return "ไม่ระบุวันที่";
+  const [y,m] = key.split("-").map(Number);
+  return `${TL_MONTH_NAME[m-1]||key} ${y+543}`;
+}
+function toggleTlMonth(key) { tlCollapsed[key] = !tlCollapsed[key]; renderCampaignTimeline(); }
 function renderCampaignTimeline() {
   const vr = document.getElementById("viewRoot");
   const tasks = visibleTasks().sort((a,b)=>(a.due||"9999")<(b.due||"9999")?-1:1);
   const today = todayStr();
-  const todayRow = `<div class="tl-row" style="background:var(--accent-tint);border-color:var(--accent);font-weight:700;font-size:13px"><div style="width:170px;flex-shrink:0">📌 วันนี้ ${fmtDate(today)}</div><div style="flex:1;color:var(--accent)">↓ งานจากวันนี้ไป</div></div>`;
-  let lineShown = false, rows = "";
+  const curMonthKey = tlMonthKey(today);
+
+  // จัดกลุ่มงานตามเดือนของวันกำหนดส่ง
+  const groups = new Map();
   tasks.forEach(t => {
-    if (!lineShown && (t.due||"9999") >= today) { rows += todayRow; lineShown = true; }
-    const st = taskStatus(t), over = isOverdue(t);
-    const checks = t.checks||[], doneC = checks.filter(c=>c.on).length;
-    const pct = checks.length ? Math.round(doneC/checks.length*100) : (st==="done"?100:0);
-    const who = memberById(t.who);
-    const color = st==="done" ? "var(--success)" : (over ? "var(--danger)" : "var(--accent)");
-    rows += `<div class="tl-row" onclick="openEditTaskModal('${sid(t.id)}')" style="cursor:pointer">
-      <div style="font-size:22px;flex-shrink:0">${esc(t.emoji||"🚗")}</div>
-      <div class="tl-info">
-        <div class="tl-title">${esc(t.title)} ${over?'<span class="tag overdue" style="font-size:10px">⚠️ เลยกำหนด</span>':(st==="done"?'<span class="tag done" style="font-size:10px">✅</span>':"")}</div>
-        <div class="tl-meta">👤 ${who?esc(who.name):"ไม่ระบุ"} • 📅 ${fmtDate(t.startDate)} → ${fmtDate(t.due)}</div>
+    const key = tlMonthKey(t.due);
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(t);
+  });
+  const monthKeys = [...groups.keys()].sort((a,b) => a==="ไม่ระบุ" ? 1 : b==="ไม่ระบุ" ? -1 : (a<b?-1:1));
+
+  let bodyHtml = "";
+  monthKeys.forEach(key => {
+    const monthTasks = groups.get(key);
+    const overdueCount = monthTasks.filter(t => isOverdue(t)).length;
+    // ค่าเริ่มต้น: เดือนปัจจุบันยืดออก เดือนอื่นยุบไว้ (ถ้ายังไม่เคยตั้งค่า)
+    if (!(key in tlCollapsed)) tlCollapsed[key] = key !== curMonthKey;
+    const collapsed = !!tlCollapsed[key];
+    let rows = "";
+    if (key === curMonthKey) {
+      const todayRow = `<div class="tl-row" style="background:var(--accent-tint);border-color:var(--accent);font-weight:700;font-size:13px"><div style="width:170px;flex-shrink:0">📌 วันนี้ ${fmtDate(today)}</div><div style="flex:1;color:var(--accent)">↓ งานจากวันนี้ไป</div></div>`;
+      let lineShown = false;
+      monthTasks.forEach(t => {
+        if (!lineShown && (t.due||"9999") >= today) { rows += todayRow; lineShown = true; }
+        rows += tlRowHtml(t);
+      });
+      if (!lineShown) rows += todayRow;
+    } else {
+      rows = monthTasks.map(tlRowHtml).join("");
+    }
+    bodyHtml += `<div class="tl-month">
+      <div class="tl-month-head" onclick="toggleTlMonth('${key}')" style="cursor:pointer;display:flex;align-items:center;gap:8px;padding:10px 4px;font-weight:700;border-bottom:1px solid var(--stroke)">
+        <span style="transition:transform .15s;display:inline-block;transform:rotate(${collapsed?'-90':'0'}deg)">▾</span>
+        <span>🗓️ ${esc(tlMonthLabel(key))}</span>
+        <span style="font-weight:400;color:var(--txt-2);font-size:12.5px">${monthTasks.length} งาน${overdueCount?` · <span style="color:var(--danger)">เลยกำหนด ${overdueCount}</span>`:""}</span>
       </div>
-      <div class="tl-bar"><i style="width:${pct}%;background:${color}"></i></div>
-      <div class="tl-pct" style="color:${color}">${pct}%</div>
+      ${collapsed?"":rows}
     </div>`;
   });
-  if (!lineShown) rows += todayRow;
+
   vr.innerHTML = `
     <div class="view-head"><h2>🎯 ไทม์ไลน์งาน</h2>
-      <div class="cal-ctrl"><span style="font-size:12.5px;color:var(--txt-2)">เรียงตามกำหนดส่ง • แถบสีฟ้า = วันนี้</span></div></div>
-    ${tasks.length===0?`<div class="empty"><div class="e-emoji">🎯</div><b>ยังไม่มีงาน/แคมเปญ</b></div>`:rows}`;
+      <div class="cal-ctrl">
+        <span style="font-size:12.5px;color:var(--txt-2)">จัดกลุ่มตามเดือน • กดหัวข้อเดือนเพื่อยืด/หุบ</span>
+        <button class="btn-ghost btn-sm" onclick="tlCollapsed={};renderCampaignTimeline()">↕️ รีเซ็ตมุมมอง</button>
+      </div></div>
+    ${tasks.length===0?`<div class="empty"><div class="e-emoji">🎯</div><b>ยังไม่มีงาน/แคมเปญ</b></div>`:bodyHtml}`;
+}
+function tlRowHtml(t) {
+  const st = taskStatus(t), over = isOverdue(t);
+  const checks = t.checks||[], doneC = checks.filter(c=>c.on).length;
+  const pct = checks.length ? Math.round(doneC/checks.length*100) : (st==="done"?100:0);
+  const who = memberById(t.who);
+  const color = st==="done" ? "var(--success)" : (over ? "var(--danger)" : "var(--accent)");
+  return `<div class="tl-row" onclick="openEditTaskModal('${sid(t.id)}')" style="cursor:pointer">
+    <div style="font-size:22px;flex-shrink:0">${esc(t.emoji||"🚗")}</div>
+    <div class="tl-info">
+      <div class="tl-title">${esc(t.title)} ${over?'<span class="tag overdue" style="font-size:10px">⚠️ เลยกำหนด</span>':(st==="done"?'<span class="tag done" style="font-size:10px">✅</span>':"")}</div>
+      <div class="tl-meta">👤 ${who?esc(who.name):"ไม่ระบุ"} • 📅 ${fmtDate(t.startDate)} → ${fmtDate(t.due)}</div>
+    </div>
+    <div class="tl-bar"><i style="width:${pct}%;background:${color}"></i></div>
+    <div class="tl-pct" style="color:${color}">${pct}%</div>
+  </div>`;
 }
 
 /* ============ TASK OPS ============ */
@@ -2530,7 +2608,7 @@ async function adminResetPassword() {
 }
 
 /* ============ PROFILE ============ */
-const PROFILE_EMOJIS = ["🙂","😎","🤓","🥳","😺","🧑‍💻","👩‍💼","👨‍💼","👩‍🎨","👨‍💻","👩‍🔬","🧑‍🚀","🦸","🦹","🐱","🐶","🦊","🐼","🐯","🐨","🐸","🦄","🐧","🐙","🕷️","🌸","⭐","🔥","🚗","📸","🎨","🎬","👑","💻","💼","🎓"];
+const PROFILE_EMOJIS = ["🙂","😎","🤓","🥳","😺","🧑‍💻","👩‍💼","👨‍💼","👩‍🎨","👨‍💻","👩‍🔬","🧑‍🚀","🦸","🦹","🐱","🐶","🦊","🐼","🐯","🐨","🐸","🦄","🐧","🐙","🕷️","🦋","🌸","⭐","🔥","🚗","📸","🎨","🎬","👑","💻","💼","🎓"];
 async function setMyEmoji(i) {
   const e = PROFILE_EMOJIS[i];
   if (!currentUser || !e || e === currentUser.emoji) return;
