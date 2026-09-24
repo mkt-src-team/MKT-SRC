@@ -141,4 +141,8 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON
   announcements, banned_emails, events
   TO anon, authenticated;
 
+-- 11. คอลัมน์ attachments ในตาราง tasks (ไฟล์แนบงาน — เก็บแค่ metadata/ลิงก์
+--     ตัวไฟล์จริงเก็บบน Google Drive ไม่ได้เก็บในฐานข้อมูล)
+ALTER TABLE tasks ADD COLUMN IF NOT EXISTS attachments JSONB DEFAULT '[]'::JSONB;
+
 -- ✅ เสร็จสิ้น! ตารางครบแล้ว

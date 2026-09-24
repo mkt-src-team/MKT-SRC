@@ -722,6 +722,15 @@ button.cal-filter i{width:9px;height:9px;border-radius:3px;display:inline-block}
       </div>
       <div id="editCheckList" style="margin-top:8px"></div>
     </div>
+    <div class="field">
+      <label>📎 ไฟล์แนบ <span style="font-weight:400;color:var(--txt-3);font-size:11px">(อัปโหลดไฟล์ขึ้น Google Drive เอง แล้ววางลิงก์ที่นี่)</span></label>
+      <div id="editAttachList" style="margin-bottom:8px"></div>
+      <div class="add-check" id="editAddAttachBox">
+        <input id="editAttachName" placeholder="ชื่อไฟล์ เช่น ภาพหน้าปก" style="flex:1">
+        <input id="editAttachUrl" placeholder="วางลิงก์ Google Drive ที่นี่" style="flex:2" onkeydown="if(event.key==='Enter'){event.preventDefault();addEditAttachmentLink()}">
+        <button class="btn-ghost btn-sm" onclick="addEditAttachmentLink()">＋ เพิ่ม</button>
+      </div>
+    </div>
     <div class="modal-foot">
       <button class="btn-ghost" onclick="closeModal('editTaskOverlay')">ยกเลิก</button>
       <button class="btn-primary" onclick="updateTask()">💾 บันทึกการแก้ไข</button>
@@ -1104,14 +1113,14 @@ function memberById(id) { return state.members.find(m => m.id === id); }
 
 /* ============ DB MAPPERS ============ */
 function mapMember(r){ return { id:r.id, name:r.name||"", position:r.position||"", emoji:r.emoji||"🧑‍💻", email:r.email||"", phone:r.phone||"", rank:r.rank||"employee", status:r.status||"active", authUid:r.auth_uid||null, perms:(r.perms && typeof r.perms==="object" && !Array.isArray(r.perms)) ? r.perms : {}, loginCount:r.login_count||0, lastLoginDate:r.last_login_date||null }; }
-function mapTask(r){ return { id:r.id, title:r.title||"", desc:r.description||"", who:r.who||"", startDate:r.start_date||"", due:r.due||"", freq:r.freq||"daily", emoji:r.emoji||"🚗", status:r.status||"doing", checks:Array.isArray(r.checks)?r.checks:[], createdAt:r.created_at||new Date().toISOString(), completedAt:r.completed_at||null, createdBy:r.created_by||"" }; }
+function mapTask(r){ return { id:r.id, title:r.title||"", desc:r.description||"", who:r.who||"", startDate:r.start_date||"", due:r.due||"", freq:r.freq||"daily", emoji:r.emoji||"🚗", status:r.status||"doing", checks:Array.isArray(r.checks)?r.checks:[], attachments:Array.isArray(r.attachments)?r.attachments:[], createdAt:r.created_at||new Date().toISOString(), completedAt:r.completed_at||null, createdBy:r.created_by||"" }; }
 function mapRequest(r){ return { id:r.id, fromId:r.from_id||"", fromName:r.from_name||"", type:r.type||"create", title:r.title||"", description:r.description||"", who:r.who||"", startDate:r.start_date||"", due:r.due||"", freq:r.freq||"daily", emoji:r.emoji||"", checks:Array.isArray(r.checks)?r.checks:[], taskId:r.task_id||"", status:r.status||"pending", note:r.note||"", createdAt:r.created_at||new Date().toISOString() }; }
 function mapNotif(r){ return { id:r.id, fromId:r.from_id||"", fromName:r.from_name||"", toRank:r.to_rank||"", toId:r.to_id||"", type:r.type||"", title:r.title||"", message:r.message||"", linkId:r.link_id||"", isRead:!!r.is_read, createdAt:r.created_at||new Date().toISOString() }; }
 function mapInvite(r){ return { id:r.id, email:r.email||"", rank:r.rank||"employee", createdBy:r.created_by||"", createdAt:r.created_at||new Date().toISOString() }; }
 function mapAnn(r){ return { id:r.id, title:r.title||"", content:r.content||"", authorName:r.author_name||"", authorId:r.author_id||"", isPinned:!!r.is_pinned, ackedBy:Array.isArray(r.acked_by)?r.acked_by:[], createdAt:r.created_at||new Date().toISOString() }; }
 function mapEvent(r){ return { id:r.id, title:r.title||"", date:r.event_date||"", time:r.time||"", type:r.type||"event", desc:r.description||"", by:r.created_by||"", createdAt:r.created_at||new Date().toISOString() }; }
 
-function taskRow(t){ return { title:t.title, description:t.desc||"", who:t.who||"", start_date:t.startDate||"", due:t.due||"", freq:t.freq||"daily", emoji:t.emoji||"🚗", status:t.status||"doing", checks:t.checks||[], completed_at:t.completedAt||null }; }
+function taskRow(t){ return { title:t.title, description:t.desc||"", who:t.who||"", start_date:t.startDate||"", due:t.due||"", freq:t.freq||"daily", emoji:t.emoji||"🚗", status:t.status||"doing", checks:t.checks||[], attachments:t.attachments||[], completed_at:t.completedAt||null }; }
 function requestRow(r){ return { id:r.id, from_id:r.fromId, from_name:r.fromName, type:r.type, title:r.title, description:r.description||"", who:r.who||"", start_date:r.startDate||"", due:r.due||"", freq:r.freq||"daily", emoji:r.emoji||"", checks:r.checks||[], task_id:r.taskId||"", status:r.status, note:r.note||"" }; }
 function eventRow(e){ return { title:e.title, event_date:e.date||"", time:e.time||"", type:e.type||"event", description:e.desc||"" }; }
 function annRow(a){ return { title:a.title, content:a.content||"", author_name:a.authorName||"", author_id:a.authorId||"", is_pinned:!!a.isPinned }; }
@@ -2304,9 +2313,50 @@ function openEditTaskModal(tid) {
   state.editEmoji = t.emoji || "🚗";   // (แก้บั๊ก) ตั้งก่อนวาด ให้ไฮไลต์ถูกตัว
   renderEmojiPick("editEmojiPick","edit",TASK_EMOJIS);
   renderEditChecks();
+  state.editAttachments = (t.attachments || []).map(a => Object.assign({}, a));
+  renderEditAttachments();
   document.getElementById("editTaskOverlay").classList.add("show");
   setTimeout(()=>document.getElementById("editTitle").focus(),100);
 }
+
+/* ============ ไฟล์แนบ — แบบวางลิงก์เอง (ปลอดภัย 100% ไม่มี secret/ไม่มี Apps Script)
+   ผู้ใช้อัปโหลดไฟล์ขึ้น Google Drive เอง แล้ววางลิงก์แชร์เข้ามาที่นี่
+   หมายเหตุ: ตอนแรกออกแบบให้อัปโหลดไฟล์ขึ้น Drive อัตโนมัติจากในเว็บ (ผ่าน Google Apps
+   Script ตัวกลาง) แต่ repo นี้เป็น GitHub Public (แพ็กเกจ Free ของ org เปลี่ยนเป็น Private
+   ไม่ได้ เพราะ GitHub Pages ใช้กับ private repo ได้เฉพาะแพ็กเกจ Team/Enterprise) การฝัง
+   secret ของ Apps Script ไว้ในโค้ดฝั่ง client จึงเสี่ยงถูกคนนอกเห็นและมาสแปมไฟล์เข้า
+   Google Drive ได้ เลยเปลี่ยนมาใช้วิธีนี้แทนซึ่งไม่มีความเสี่ยงเลย — ถ้าวันไหนอัป org
+   เป็นแพ็กเกจ Team/Enterprise แล้วเปลี่ยน repo เป็น Private ได้ ค่อยกลับมาทำระบบอัปโหลด
+   อัตโนมัติต่อ (มีโค้ด Apps Script ที่ทดสอบผ่านแล้วเก็บไว้ในโฟลเดอร์ google-drive-upload/) ============ */
+function renderEditAttachments() {
+  const box = document.getElementById("editAttachList");
+  if (!box) return;
+  const items = state.editAttachments || [];
+  box.innerHTML = items.length ? items.map((f,i) => `
+    <div style="display:flex;align-items:center;gap:8px;padding:7px 10px;background:var(--layer-2);border:1px solid var(--stroke);border-radius:6px;margin-bottom:6px;font-size:13px">
+      <span style="font-size:18px;width:24px;text-align:center;flex-shrink:0">🔗</span>
+      <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(f.name)}</span>
+      <button type="button" class="btn-ghost btn-sm" onclick="window.open('${esc(f.url)}','_blank')" title="เปิดลิงก์">👁️ เปิดดู</button>
+      <button type="button" class="btn-ghost btn-sm" onclick="removeEditAttachment(${i})" title="ลบไฟล์แนบ">✕</button>
+    </div>`).join("") : `<div style="font-size:12.5px;color:var(--txt-3)">ยังไม่มีไฟล์แนบ</div>`;
+}
+function addEditAttachmentLink() {
+  const nameInp = document.getElementById("editAttachName");
+  const urlInp = document.getElementById("editAttachUrl");
+  const name = nameInp.value.trim();
+  const url = urlInp.value.trim();
+  if (!name) { toast("กรุณาใส่ชื่อไฟล์","⚠️"); return; }
+  if (!/^https?:\/\//i.test(url)) { toast("กรุณาวางลิงก์ให้ถูกต้อง (ขึ้นต้นด้วย http:// หรือ https://)","⚠️"); return; }
+  state.editAttachments = state.editAttachments || [];
+  state.editAttachments.push({ name, url });
+  nameInp.value = ""; urlInp.value = ""; nameInp.focus();
+  renderEditAttachments();
+}
+function removeEditAttachment(i) {
+  state.editAttachments.splice(i,1);
+  renderEditAttachments();
+}
+
 function renderEditChecks() {
   document.getElementById("editCheckList").innerHTML = editChecks.map((c,i)=>`
     <label class="check" style="background:var(--layer-2)">
@@ -2335,7 +2385,7 @@ function updateTask() {
   if (!canManageTasks() && who !== t.who) { toast("ไม่มีสิทธิ์มอบหมายให้คนอื่น","🔒"); return; }
   if (startDate && due && due < startDate) { toast("วันกำหนดส่งต้องไม่ก่อนวันเริ่มงาน","⚠️"); return; }
   const prevWho = t.who;
-  Object.assign(t, { title, desc:document.getElementById("editDesc").value.trim(), who, freq:document.getElementById("editFreq").value, startDate, due, emoji:state.editEmoji || t.emoji, checks:editChecks.map(c=>({text:c.text, on:c.on})) });
+  Object.assign(t, { title, desc:document.getElementById("editDesc").value.trim(), who, freq:document.getElementById("editFreq").value, startDate, due, emoji:state.editEmoji || t.emoji, checks:editChecks.map(c=>({text:c.text, on:c.on})), attachments:state.editAttachments||[] });
   const total = t.checks.length, done = t.checks.filter(c=>c.on).length;
   if (total > 0 && done === total) { t.status = "done"; if (!t.completedAt) t.completedAt = new Date().toISOString(); }
   else if (t.status === "done") { t.status = "doing"; t.completedAt = null; }
