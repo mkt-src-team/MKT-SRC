@@ -2,7 +2,7 @@
 <html lang="th" data-theme="light">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" id="viewportMeta" content="width=device-width, initial-scale=1.0">
 <title>MKT-SRC | ทีมงานและการมอบหมายงาน</title>
 
 <script>
@@ -390,6 +390,27 @@ main{padding:20px 24px}
 .hamburger:hover{background:var(--control-hover)}
 @media(max-width:1024px){.hamburger{display:grid}}
 
+/* ============ MOBILE BOTTOM NAV + FAB ============ */
+#bottomNav{display:none}
+#mobileFab{display:none}
+#backToMobileBtn{display:none;position:fixed;left:12px;bottom:12px;z-index:96;align-items:center;gap:6px;background:var(--accent);color:var(--accent-contrast);border:0;border-radius:99px;padding:9px 14px;font-size:12px;font-weight:600;cursor:pointer;box-shadow:var(--shadow-2)}
+.sidebar-mobile-actions{display:none}
+@media(max-width:1024px){
+  .header-right .theme-picker{display:none}
+  .header-right .actions>button{display:none}
+  .header-right .actions{gap:8px}
+  .header-right .user-box .u-role{display:none}
+  body{padding-bottom:64px}
+  #bottomNav{display:flex;position:fixed;left:0;right:0;bottom:0;height:58px;background:var(--mica);backdrop-filter:saturate(160%) blur(20px);-webkit-backdrop-filter:saturate(160%) blur(20px);border-top:1px solid var(--stroke);z-index:90}
+  #bottomNav .bn-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;color:var(--txt-3);font-size:10px;font-weight:600;background:transparent;border:0;cursor:pointer;padding:6px 2px}
+  #bottomNav .bn-item.active{color:var(--accent)}
+  #bottomNav .bn-item .ic{font-size:19px}
+  #mobileFab{display:flex;position:fixed;right:16px;bottom:74px;width:52px;height:52px;border-radius:50%;background:var(--accent);color:var(--accent-contrast);align-items:center;justify-content:center;font-size:24px;box-shadow:var(--shadow-2);z-index:91;border:0;cursor:pointer}
+  .sidebar-mobile-actions{display:flex;flex-direction:column;gap:7px;padding:12px;border-top:1px solid var(--stroke)}
+  .sidebar-mobile-actions .is-active-theme{background:var(--accent-tint);border-color:var(--accent);color:var(--accent)}
+  .sidebar-mobile-actions button{width:100%;justify-content:flex-start}
+}
+
 /* ============ VIEWS ============ */
 .view-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:4px 0 14px;flex-wrap:wrap}
 .view-head h2{margin:0;font-size:18px}
@@ -420,6 +441,20 @@ main{padding:20px 24px}
 .ev-chip.t-deadline{background:var(--burgundy-tint);border-color:var(--burgundy)}
 .ev-chip.t-task{background:var(--accent-tint);border-color:var(--accent);font-weight:600}
 .ev-chip.t-task.overdue{background:var(--danger);border-color:var(--danger);color:#fff;font-weight:700}
+.cal-dots{display:none;gap:3px;flex-wrap:wrap;align-items:center;margin-top:3px}
+.cal-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0}
+.cal-dot.dot-event,.cal-dot.dot-task{background:var(--accent)}
+.cal-dot.dot-task-overdue,.cal-dot.dot-launch{background:var(--danger)}
+.cal-dot.dot-campaign{background:var(--caution)}
+.cal-dot.dot-content{background:var(--success)}
+.cal-dot.dot-meeting{background:var(--txt-2)}
+.cal-dot.dot-deadline{background:var(--burgundy)}
+.cal-dot-more{font-size:8px;color:var(--txt-3);line-height:5px;flex-shrink:0}
+@media(max-width:1024px){
+  .cal-cell .ev-chip,.cal-cell .cal-overflow-text{display:none}
+  .cal-cell .cal-dots{display:flex}
+  .cal-cell{cursor:pointer}
+}
 .stat-link{text-align:left;font:inherit;color:inherit;cursor:pointer;width:100%}
 button.stat-link{border:1px solid var(--stroke);padding:15px 17px;border-radius:8px;background:var(--layer);font-weight:400}
 button.stat-link:hover{border-color:var(--accent)}
@@ -508,8 +543,12 @@ button.cal-filter i{width:9px;height:9px;border-radius:3px;display:inline-block}
       <span class="more"><svg viewBox="0 0 24 24"><path d="m7 15 5 5 5-5"/><path d="m7 9 5-5 5 5"/></svg></span>
     </div>
   </div>
+  <div class="sidebar-mobile-actions" id="sidebarMobileActions"></div>
 </aside>
 <div id="sidebarOverlay" onclick="closeSidebarMobile()"></div>
+<nav id="bottomNav" aria-label="เมนูล่าง (มือถือ)"></nav>
+<button id="mobileFab" onclick="openTaskModal()" title="เพิ่มงาน" aria-label="เพิ่มงาน">➕</button>
+<button id="backToMobileBtn" onclick="toggleDesktopMode()" title="กลับไปเวอร์ชันมือถือ">📱 กลับมือถือ</button>
 
 <header>
   <button class="hamburger" onclick="toggleSidebarMobile()" title="เมนู">☰</button>
@@ -1738,6 +1777,67 @@ function renderHeader() {
   el.innerHTML = html;
   renderNotifBadge();
   if (notifOpen) renderNotifPanel();
+  renderMobileActions();
+}
+
+/* ============ MOBILE BOTTOM NAV + FAB ============ */
+const BOTTOM_NAV_ITEMS = [
+  { id:'dashboard', label:'หน้าหลัก', ic:'🏠' },
+  { id:'today-tasks', label:'งาน', ic:'✅' },
+  { id:'event-cal', label:'ปฏิทิน', ic:'🗓️' },
+  { id:'campaign-timeline', label:'ไทม์ไลน์', ic:'🎯', perm:'view_all_tasks' }
+];
+function bottomNavGo(id) {
+  sidebarState.activeItem = id;
+  closeSidebarMobile();
+  routeView();
+  renderSidebar();
+  renderBottomNav();
+}
+function renderBottomNav() {
+  const el = document.getElementById("bottomNav");
+  if (!el) return;
+  if (!currentUser) { el.innerHTML = ""; return; }
+  const items = BOTTOM_NAV_ITEMS.filter(i => !i.perm || can(i.perm));
+  el.innerHTML = items.map(i => `<button class="bn-item ${sidebarState.activeItem===i.id?'active':''}" onclick="bottomNavGo('${i.id}')"><span class="ic">${i.ic}</span>${esc(i.label)}</button>`).join("")
+    + `<button class="bn-item" onclick="toggleSidebarMobile()"><span class="ic">⋯</span>เพิ่มเติม</button>`;
+}
+function renderMobileActions() {
+  const el = document.getElementById("sidebarMobileActions");
+  const fab = document.getElementById("mobileFab");
+  if (!el || !fab) return;
+  if (!currentUser) { el.innerHTML = ""; fab.style.display = "none"; return; }
+  let html = `<div style="display:flex;gap:6px">
+      <button class="btn-ghost ${themeMode==='light'?'is-active-theme':''}" style="flex:1;padding:8px 4px;font-size:12px" onclick="setMode('light')">☀️ สว่าง</button>
+      <button class="btn-ghost ${themeMode==='dark'?'is-active-theme':''}" style="flex:1;padding:8px 4px;font-size:12px" onclick="setMode('dark')">🌙 มืด</button>
+      <button class="btn-ghost ${themeMode==='system'?'is-active-theme':''}" style="flex:1;padding:8px 4px;font-size:12px" onclick="setMode('system')">🖥️ ระบบ</button>
+    </div>
+    <button class="btn-ghost" onclick="toggleDesktopMode()">${desktopModeForced?'📱 กลับไปเวอร์ชันมือถือ':'🖥️ ดูเวอร์ชันคอม'}</button>`;
+  if (canInviteDirect()) {
+    html += `<button class="btn-ghost" onclick="closeSidebarMobile();openResetPassModal()">🔑 Reset</button>
+      <button class="btn-ghost" onclick="closeSidebarMobile();openTeamModal()">👥 เพิ่มคน</button>
+      <button class="btn-ghost" onclick="closeSidebarMobile();openBannedModal()">🚫 รายชื่อแบน</button>
+      <button class="btn-ghost" onclick="closeSidebarMobile();openBoardModal()">📌 ประกาศ</button>`;
+  }
+  html += `<button class="btn-ghost btn-sm" onclick="logout()">ออก</button>`;
+  el.innerHTML = html;
+  fab.style.display = (canInviteDirect() || canCreateTask()) ? "" : "none";
+  renderBottomNav();
+}
+
+/* ============ ดูเวอร์ชันคอมบนมือถือ ============ */
+let desktopModeForced = (lsGet("mkt_force_desktop") === "1");
+function applyDesktopModeState() {
+  const vp = document.getElementById("viewportMeta");
+  const btn = document.getElementById("backToMobileBtn");
+  if (vp) vp.setAttribute("content", desktopModeForced ? "width=1280" : "width=device-width, initial-scale=1.0");
+  if (btn) btn.style.display = desktopModeForced ? "flex" : "none";
+}
+function toggleDesktopMode() {
+  desktopModeForced = !desktopModeForced;
+  lsSet("mkt_force_desktop", desktopModeForced ? "1" : "0");
+  applyDesktopModeState();
+  renderMobileActions();
 }
 
 let bannerOpen = false;
@@ -2085,11 +2185,20 @@ function renderEventCalendar() {
     const hasOverdue = !out && taskDue.some(isOverdue);
     const dayItemCount = evs.length + taskDue.length;
     const hoverAttrs = (!out && dayItemCount>maxT) ? `onmouseenter="showCalHoverPop(this,'${ds}')" onmouseleave="hideCalHoverPop()"` : "";
-    cells += `<div class="cal-cell ${out?"out":""} ${ds===today?"today":""} ${hasOverdue?"has-overdue":""}" ${hoverAttrs} ${(!out && canAdd)?`onclick="openEventModal('${ds}')"`:""}>
+    const cellClickAttr = out ? "" : (dayItemCount>0
+      ? `onclick="if(window.innerWidth<=1024){openDayDetail('${ds}')}else{${canAdd?`openEventModal('${ds}')`:''}}"`
+      : (canAdd ? `onclick="openEventModal('${ds}')"` : ""));
+    const dotsList = [
+      ...evs.map(e=>`<span class="cal-dot dot-${evType(e.type)}"></span>`),
+      ...taskDue.map(t=>`<span class="cal-dot ${isOverdue(t)?'dot-task-overdue':'dot-task'}"></span>`)
+    ];
+    const dotsHtml = dotsList.slice(0,4).join("") + (dayItemCount>4?`<span class="cal-dot-more">+${dayItemCount-4}</span>`:"");
+    cells += `<div class="cal-cell ${out?"out":""} ${ds===today?"today":""} ${hasOverdue?"has-overdue":""}" ${hoverAttrs} ${cellClickAttr}>
       <div class="cal-num"><span>${d.getDate()}</span>${(!out&&canAdd)?`<span class="cal-add" onclick="event.stopPropagation();openEventModal('${ds}')" title="เพิ่มอีเวนต์">＋</span>`:""}</div>
       ${evs.map(e=>`<div class="ev-chip t-${evType(e.type)}" title="${esc(e.desc)}" onclick="event.stopPropagation();openEventModal('${sid(e.date)}','${sid(e.id)}')">${EV_ICON[evType(e.type)]} ${esc(e.title)}${e.time?" "+esc(e.time):""}</div>`).join("")}
       ${taskDue.slice(0,maxT).map(t=>`<div class="ev-chip t-task ${isOverdue(t)?'overdue':''}" onclick="event.stopPropagation();openEditTaskModal('${sid(t.id)}')">${isOverdue(t)?'⚠️':'📋'} ${esc(t.title)}</div>`).join("")}
-      ${taskDue.length>maxT?`<div style="font-size:10px;color:var(--txt-3);cursor:pointer" onclick="event.stopPropagation();openDayDetail('${ds}')" title="ชี้เมาส์ค้างไว้ (คอม) หรือกด (มือถือ) เพื่อดูทั้งหมด">+${taskDue.length-maxT} งาน</div>`:""}
+      ${taskDue.length>maxT?`<div class="cal-overflow-text" style="font-size:10px;color:var(--txt-3);cursor:pointer" onclick="event.stopPropagation();openDayDetail('${ds}')" title="ชี้เมาส์ค้างไว้ (คอม) เพื่อดูทั้งหมด">+${taskDue.length-maxT} งาน</div>`:""}
+      ${dotsList.length?`<div class="cal-dots">${dotsHtml}</div>`:""}
     </div>`;
   }
   vr.innerHTML = `
@@ -2813,7 +2922,7 @@ function applyTheme(){
   if (lbl) lbl.textContent = themeMode==="system"?"ตามระบบ":(themeMode==="light"?"สว่าง":"มืด");
   if (icon) icon.textContent = themeMode==="system"?"🖥️":(themeMode==="light"?"☀️":"🌙");
 }
-function setMode(m){ themeMode=m; lsSet(THEME_KEY,m); applyTheme(); renderThemeMenu(); closeThemeMenu(); }
+function setMode(m){ themeMode=m; lsSet(THEME_KEY,m); applyTheme(); renderThemeMenu(); closeThemeMenu(); renderMobileActions(); }
 function renderThemeMenu(){
   document.querySelectorAll("#themeMenu .combo-item[data-m]").forEach(el=>el.classList.toggle("on",el.getAttribute("data-m")===themeMode));
 }
@@ -2837,6 +2946,7 @@ document.addEventListener("keydown",e=>{ if (e.key==="Escape") { closeThemeMenu(
 /* ============ INIT ============ */
 async function boot() {
   initTheme();
+  applyDesktopModeState();
   if (lsGet("mkt_sidebar_collapsed") === "1" && window.innerWidth > 1024) toggleSidebarCollapse(true);
   if (typeof emailjs !== 'undefined') { try { emailjs.init(EMAILJS_PUBLIC_KEY); } catch(e) {} }
   const params = new URLSearchParams(window.location.search);
