@@ -2099,6 +2099,9 @@ function routeView() {
   else if (v === "event-cal") { showDefaultSections(false); renderEventCalendar(); }
   else if (v === "campaign-timeline") { showDefaultSections(false); renderCampaignTimeline(); }
   else { vr.innerHTML = ""; showDefaultSections(true); renderStats(); renderBoard(); renderRequests(); renderTeam(); }
+  // ปุ่มลอย ➕ เพิ่มงาน ทับแถวสุดท้ายของตารางปฏิทินพอดี (มือถือ) แตะช่องปฏิทินแล้วดันไปโดนปุ่มนี้แทน ซ่อนตอนอยู่หน้าปฏิทิน (มีปุ่ม "เพิ่มอีเวนต์" ของตัวเองอยู่แล้ว)
+  const fab = document.getElementById("mobileFab");
+  if (fab && v === "event-cal") fab.style.display = "none";
 }
 
 /* ============ VIEW: งาน (หน้าเดียวสำหรับรายการงานทั้งหมด) ============ */
