@@ -893,7 +893,6 @@ button.cal-filter i{width:9px;height:9px;border-radius:3px;display:inline-block}
     <div id="dayDetailList"></div>
     <div class="modal-foot">
       <button class="btn-ghost" onclick="closeModal('dayDetailOverlay')">ปิด</button>
-      <button class="btn-primary" id="dayDetailAddBtn" onclick="closeModal('dayDetailOverlay');openEventModal(dayDetailDate)">➕ เพิ่มอีเวนต์วันนี้</button>
     </div>
   </div>
 </div>
@@ -2265,10 +2264,9 @@ function openDayDetail(ds) {
   document.getElementById("dayDetailTitle").textContent = "🗓️ " + d.toLocaleDateString("th-TH",{day:"numeric",month:"long",year:"numeric"});
   const evs = state.events.filter(e=>e.date===ds);
   const tasks = visibleTasks().filter(t=>t.due===ds && taskStatus(t)!=="done");
-  document.getElementById("dayDetailAddBtn").style.display = (!!currentUser && can("add_event")) ? "" : "none";
   const rows = [
-    ...evs.map(e=>`<div class="ev-chip t-${evType(e.type)}" style="white-space:normal;margin-bottom:6px;padding:8px 10px;cursor:pointer" onclick="closeModal('dayDetailOverlay');openEventModal('${sid(e.date)}','${sid(e.id)}')">${EV_ICON[evType(e.type)]} ${esc(e.title)}${e.time?" · "+esc(e.time):""}</div>`),
-    ...tasks.map(t=>{ const who = memberById(t.who); return `<div class="ev-chip t-task ${isOverdue(t)?'overdue':''}" style="white-space:normal;margin-bottom:6px;padding:8px 10px;cursor:pointer" onclick="closeModal('dayDetailOverlay');openEditTaskModal('${sid(t.id)}')">${isOverdue(t)?'⚠️':'📋'} ${esc(t.title)}${who?" · "+esc(who.name):""}</div>`; })
+    ...evs.map(e=>`<div class="ev-chip t-${evType(e.type)}" style="white-space:normal;margin-bottom:6px;padding:8px 10px">${EV_ICON[evType(e.type)]} ${esc(e.title)}${e.time?" · "+esc(e.time):""}${e.desc?`<div style="font-size:11px;font-weight:400;color:var(--txt-2);margin-top:3px">${esc(e.desc)}</div>`:""}</div>`),
+    ...tasks.map(t=>{ const who = memberById(t.who); return `<div class="ev-chip t-task ${isOverdue(t)?'overdue':''}" style="white-space:normal;margin-bottom:6px;padding:8px 10px">${isOverdue(t)?'⚠️':'📋'} ${esc(t.title)}${who?" · "+esc(who.name):""}</div>`; })
   ];
   document.getElementById("dayDetailList").innerHTML = rows.length ? rows.join("") : `<div class="empty"><div class="e-emoji">🗓️</div><b>ไม่มีรายการในวันนี้</b></div>`;
   document.getElementById("dayDetailOverlay").classList.add("show");
