@@ -413,8 +413,6 @@ main{padding:20px 24px}
   /* การ์ดสรุปหน้าหลัก: เดิม minmax 175px ทำให้จอมือถือ (~375px) วางได้แค่คอลัมน์เดียว เรียงยาวกินพื้นที่มาก ลดขั้นต่ำให้พอวางได้ 2 คอลัมน์ */
   .stats{grid-template-columns:repeat(auto-fit,minmax(140px,1fr))}
   .stat{padding:12px 13px}
-  /* ปุ่ม + ข้างเลขวันในปฏิทิน ปกติซ่อนด้วย opacity:0 โชว์ตอน hover แต่มือถือไม่มี hover จริง ปุ่มเลยล่องหนแต่ยังกดโดนได้ ทำให้แตะเลขวันแล้วเด้งเพิ่มอีเวนต์ เอาออกจากมือถือไปเลย */
-  .cal-add{display:none}
 }
 
 /* ============ VIEWS ============ */
@@ -424,10 +422,7 @@ main{padding:20px 24px}
 .cal-title{font-weight:700;font-size:15px;min-width:150px;text-align:center}
 .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
 .cal-dow{text-align:center;font-size:11px;font-weight:700;color:var(--txt-3);padding:4px 0}
-.cal-cell{background:var(--layer);border:1px solid var(--stroke);border-radius:8px;min-height:98px;padding:6px;transition:.12s;overflow:hidden;position:relative}
-.cal-day-pop{position:fixed;width:230px;background:var(--layer);border:1px solid var(--accent);border-radius:8px;box-shadow:var(--flyout);padding:8px;z-index:90;display:none;max-height:280px;overflow-y:auto}
-.cal-day-pop.show{display:block}
-.cal-day-pop-title{font-weight:700;font-size:12px;margin-bottom:6px;color:var(--txt)}
+.cal-cell{background:var(--layer);border:1px solid var(--stroke);border-radius:8px;min-height:98px;padding:6px;transition:.12s;overflow:hidden;position:relative;cursor:pointer}
 .cal-cell:hover{border-color:var(--accent)}
 .cal-cell.out{opacity:.42}
 .cal-cell.today{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
@@ -435,10 +430,7 @@ main{padding:20px 24px}
 .cal-num{display:flex;justify-content:space-between;align-items:center;font-size:12px;font-weight:700;color:var(--txt-2);margin-bottom:4px}
 .cal-cell.today .cal-num>span:first-child{background:var(--accent);color:var(--accent-contrast);border-radius:50%;width:21px;height:21px;display:grid;place-items:center}
 .cal-cell.has-overdue .cal-num>span:first-child{background:var(--danger);color:#fff;border-radius:50%;width:21px;height:21px;display:grid;place-items:center}
-.cal-add{opacity:0;cursor:pointer;font-size:13px;color:var(--accent);transition:.12s;padding:0 3px}
-.cal-cell:hover .cal-add{opacity:1}
-.ev-chip{font-size:11px;padding:3px 6px;border-radius:5px;margin-bottom:3px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-left:3px solid var(--txt-3);background:var(--layer-2);transition:.1s}
-.ev-chip:hover{filter:brightness(1.06)}
+.ev-chip{font-size:11px;padding:3px 6px;border-radius:5px;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-left:3px solid var(--txt-3);background:var(--layer-2)}
 .ev-chip.t-event{background:var(--accent-tint);border-color:var(--accent)}
 .ev-chip.t-campaign{background:var(--caution-tint);border-color:var(--caution)}
 .ev-chip.t-content{background:var(--success-tint);border-color:var(--success)}
@@ -459,7 +451,6 @@ main{padding:20px 24px}
 @media(max-width:1024px){
   .cal-cell .ev-chip,.cal-cell .cal-overflow-text{display:none}
   .cal-cell .cal-dots{display:flex}
-  .cal-cell{cursor:pointer}
 }
 .stat-link{text-align:left;font:inherit;color:inherit;cursor:pointer;width:100%}
 button.stat-link{border:1px solid var(--stroke);padding:15px 17px;border-radius:8px;background:var(--layer);font-weight:400}
@@ -2198,20 +2189,17 @@ function renderEventCalendar() {
     const maxT = calFilter === "task" ? 4 : 2;
     const hasOverdue = !out && taskDue.some(isOverdue);
     const dayItemCount = evs.length + taskDue.length;
-    const hoverAttrs = (!out && dayItemCount>maxT) ? `onmouseenter="showCalHoverPop(this,'${ds}')" onmouseleave="hideCalHoverPop()"` : "";
-    const cellClickAttr = out ? "" : (dayItemCount>0
-      ? `onclick="if(window.innerWidth<=1024){openDayDetail('${ds}')}else{${canAdd?`openEventModal('${ds}')`:''}}"`
-      : (canAdd ? `onclick="if(window.innerWidth>1024){openEventModal('${ds}')}"` : ""));
+    const cellClickAttr = out ? "" : `onclick="openDayDetail('${ds}')"`;
     const dotsList = [
       ...evs.map(e=>`<span class="cal-dot dot-${evType(e.type)}"></span>`),
       ...taskDue.map(t=>`<span class="cal-dot ${isOverdue(t)?'dot-task-overdue':'dot-task'}"></span>`)
     ];
     const dotsHtml = dotsList.slice(0,4).join("") + (dayItemCount>4?`<span class="cal-dot-more">+${dayItemCount-4}</span>`:"");
-    cells += `<div class="cal-cell ${out?"out":""} ${ds===today?"today":""} ${hasOverdue?"has-overdue":""}" ${hoverAttrs} ${cellClickAttr}>
-      <div class="cal-num"><span>${d.getDate()}</span>${(!out&&canAdd)?`<span class="cal-add" onclick="event.stopPropagation();openEventModal('${ds}')" title="เพิ่มอีเวนต์">＋</span>`:""}</div>
-      ${evs.map(e=>`<div class="ev-chip t-${evType(e.type)}" title="${esc(e.desc)}" onclick="event.stopPropagation();openEventModal('${sid(e.date)}','${sid(e.id)}')">${EV_ICON[evType(e.type)]} ${esc(e.title)}${e.time?" "+esc(e.time):""}</div>`).join("")}
-      ${taskDue.slice(0,maxT).map(t=>`<div class="ev-chip t-task ${isOverdue(t)?'overdue':''}" onclick="event.stopPropagation();openEditTaskModal('${sid(t.id)}')">${isOverdue(t)?'⚠️':'📋'} ${esc(t.title)}</div>`).join("")}
-      ${taskDue.length>maxT?`<div class="cal-overflow-text" style="font-size:10px;color:var(--txt-3);cursor:pointer" onclick="event.stopPropagation();openDayDetail('${ds}')" title="ชี้เมาส์ค้างไว้ (คอม) เพื่อดูทั้งหมด">+${taskDue.length-maxT} งาน</div>`:""}
+    cells += `<div class="cal-cell ${out?"out":""} ${ds===today?"today":""} ${hasOverdue?"has-overdue":""}" ${cellClickAttr}>
+      <div class="cal-num"><span>${d.getDate()}</span></div>
+      ${evs.map(e=>`<div class="ev-chip t-${evType(e.type)}" title="${esc(e.desc)}">${EV_ICON[evType(e.type)]} ${esc(e.title)}${e.time?" "+esc(e.time):""}</div>`).join("")}
+      ${taskDue.slice(0,maxT).map(t=>`<div class="ev-chip t-task ${isOverdue(t)?'overdue':''}">${isOverdue(t)?'⚠️':'📋'} ${esc(t.title)}</div>`).join("")}
+      ${taskDue.length>maxT?`<div class="cal-overflow-text" style="font-size:10px;color:var(--txt-3)">+${taskDue.length-maxT} งาน</div>`:""}
       ${dotsList.length?`<div class="cal-dots">${dotsHtml}</div>`:""}
     </div>`;
   }
@@ -2232,36 +2220,10 @@ function renderEventCalendar() {
     <div class="cal-grid">
       ${["อา.","จ.","อ.","พ.","พฤ.","ศ.","ส."].map(d=>`<div class="cal-dow">${d}</div>`).join("")}
       ${cells}
-    </div>
-    <div class="cal-day-pop" id="calHoverPop"></div>`;
+    </div>`;
 }
 function calMove(n){ calCursor = new Date(calCursor.getFullYear(), calCursor.getMonth()+n, 1); routeView(); }
 function calToday(){ calCursor = new Date(); routeView(); }
-let calHoverTimer = null;
-function showCalHoverPop(cellEl, ds) {
-  clearTimeout(calHoverTimer);
-  const pop = document.getElementById("calHoverPop");
-  if (!pop) return;
-  const d = new Date(ds+"T00:00:00");
-  const evs = state.events.filter(e=>e.date===ds);
-  const tasks = visibleTasks().filter(t=>t.due===ds && taskStatus(t)!=="done");
-  const rows = [
-    ...evs.map(e=>`<div class="ev-chip t-${evType(e.type)}" style="white-space:normal;margin-bottom:4px;cursor:pointer" onclick="document.getElementById('calHoverPop').classList.remove('show');openEventModal('${sid(e.date)}','${sid(e.id)}')">${EV_ICON[evType(e.type)]} ${esc(e.title)}${e.time?" · "+esc(e.time):""}</div>`),
-    ...tasks.map(t=>`<div class="ev-chip t-task ${isOverdue(t)?'overdue':''}" style="white-space:normal;margin-bottom:4px;cursor:pointer" onclick="document.getElementById('calHoverPop').classList.remove('show');openEditTaskModal('${sid(t.id)}')">${isOverdue(t)?'⚠️':'📋'} ${esc(t.title)}</div>`)
-  ].join("");
-  pop.innerHTML = `<div class="cal-day-pop-title">${d.getDate()} ${d.toLocaleDateString("th-TH",{month:"long"})}</div>${rows}`;
-  const r = cellEl.getBoundingClientRect();
-  pop.style.top = r.top + "px";
-  const spaceRight = window.innerWidth - r.right;
-  if (spaceRight >= 240) pop.style.left = (r.right + 4) + "px";
-  else pop.style.left = Math.max(4, r.left - 234) + "px";
-  pop.classList.add("show");
-  pop.onmouseenter = () => clearTimeout(calHoverTimer);
-  pop.onmouseleave = hideCalHoverPop;
-}
-function hideCalHoverPop() {
-  calHoverTimer = setTimeout(() => { const pop = document.getElementById("calHoverPop"); if (pop) pop.classList.remove("show"); }, 120);
-}
 
 let dayDetailDate = null;
 function openDayDetail(ds) {
