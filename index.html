@@ -56,7 +56,6 @@
   --flyout:0 10px 30px rgba(0,0,0,.55);--mica:rgba(32,32,32,.82);--overlay:rgba(0,0,0,.55);
 }
 *{box-sizing:border-box;margin:0;padding:0}
-html,body{height:100%}
 body{font-family:"Segoe UI Variable Text","Segoe UI",system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--txt);min-height:100vh;min-height:100dvh;padding-bottom:60px;-webkit-font-smoothing:antialiased;transition:background .2s,color .2s}
 
 /* HEADER */
@@ -385,10 +384,9 @@ body.sidebar-collapsed{padding-left:64px}
 }
 main{padding:20px 24px}
 
-/* Hamburger (mobile) */
+/* Hamburger — ไม่ใช้แล้วบนมือถือ (ซ้ำกับปุ่ม "เพิ่มเติม" ในเมนูล่าง) เหลือไว้เผื่อจอ >1024 ในอนาคต แต่ปิดไว้ */
 .hamburger{display:none;width:36px;height:36px;place-items:center;border-radius:6px;background:var(--control);border:1px solid var(--stroke-2);color:var(--txt);font-size:16px;cursor:pointer;flex-shrink:0}
 .hamburger:hover{background:var(--control-hover)}
-@media(max-width:1024px){.hamburger{display:grid}}
 
 /* ============ MOBILE BOTTOM NAV + FAB ============ */
 #bottomNav{display:none}
@@ -554,7 +552,6 @@ button.cal-filter i{width:9px;height:9px;border-radius:3px;display:inline-block}
 <button id="mobileFab" onclick="openTaskModal()" title="เพิ่มงาน" aria-label="เพิ่มงาน">➕</button>
 
 <header>
-  <button class="hamburger" onclick="toggleSidebarMobile()" title="เมนู">☰</button>
   <div class="logo">
     <div class="badge">🚗</div>
     <div>
