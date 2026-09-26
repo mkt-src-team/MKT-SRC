@@ -2194,7 +2194,7 @@ function renderEventCalendar() {
     const hoverAttrs = (!out && dayItemCount>maxT) ? `onmouseenter="showCalHoverPop(this,'${ds}')" onmouseleave="hideCalHoverPop()"` : "";
     const cellClickAttr = out ? "" : (dayItemCount>0
       ? `onclick="if(window.innerWidth<=1024){openDayDetail('${ds}')}else{${canAdd?`openEventModal('${ds}')`:''}}"`
-      : (canAdd ? `onclick="openEventModal('${ds}')"` : ""));
+      : (canAdd ? `onclick="if(window.innerWidth>1024){openEventModal('${ds}')}"` : ""));
     const dotsList = [
       ...evs.map(e=>`<span class="cal-dot dot-${evType(e.type)}"></span>`),
       ...taskDue.map(t=>`<span class="cal-dot ${isOverdue(t)?'dot-task-overdue':'dot-task'}"></span>`)
