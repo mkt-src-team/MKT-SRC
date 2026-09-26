@@ -57,7 +57,7 @@
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%}
-body{font-family:"Segoe UI Variable Text","Segoe UI",system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--txt);min-height:100vh;padding-bottom:60px;-webkit-font-smoothing:antialiased;transition:background .2s,color .2s}
+body{font-family:"Segoe UI Variable Text","Segoe UI",system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--txt);min-height:100vh;min-height:100dvh;padding-bottom:60px;-webkit-font-smoothing:antialiased;transition:background .2s,color .2s}
 
 /* HEADER */
 header{position:sticky;top:0;z-index:50;background:var(--mica);backdrop-filter:saturate(160%) blur(20px);-webkit-backdrop-filter:saturate(160%) blur(20px);border-bottom:1px solid var(--stroke);padding:10px 20px;display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}
@@ -393,8 +393,6 @@ main{padding:20px 24px}
 /* ============ MOBILE BOTTOM NAV + FAB ============ */
 #bottomNav{display:none}
 #mobileFab{display:none}
-#viewToggleBtn{display:flex;align-items:center;gap:5px;background:var(--control);color:var(--txt);border:1px solid var(--stroke-2);border-radius:99px;padding:7px 12px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0}
-#viewToggleBtn:hover{background:var(--control-hover)}
 .sidebar-mobile-actions{display:none}
 @media(max-width:1024px){
   .header-right .theme-picker{display:none}
@@ -407,8 +405,11 @@ main{padding:20px 24px}
   #bottomNav .bn-item.active{color:var(--accent)}
   #bottomNav .bn-item .ic{font-size:19px}
   #mobileFab{display:flex;position:fixed;right:16px;bottom:74px;width:52px;height:52px;border-radius:50%;background:var(--accent);color:var(--accent-contrast);align-items:center;justify-content:center;font-size:24px;box-shadow:var(--shadow-2);z-index:91;border:0;cursor:pointer}
-  #viewToggleBtn{padding:6px 9px;font-size:10px}
-  .sidebar-mobile-actions{display:flex;flex-direction:column;gap:7px;padding:12px;border-top:1px solid var(--stroke)}
+  /* เอาแถบ sidebar (โลโก้ + เมนูนำทาง ซ้ำกับเมนูล่างอยู่แล้ว + โปรไฟล์ ซ้ำกับมุมขวาบน) ออกจากมือถือ เหลือแค่แผง "เพิ่มเติม" */
+  #sidebar .sidebar-header{display:none}
+  #sidebarNav{display:none}
+  .sidebar-footer{display:none}
+  .sidebar-mobile-actions{display:flex;flex-direction:column;gap:7px;padding:12px}
   .sidebar-mobile-actions .is-active-theme{background:var(--accent-tint);border-color:var(--accent);color:var(--accent)}
   .sidebar-mobile-actions button{width:100%;justify-content:flex-start}
 }
@@ -544,6 +545,7 @@ button.cal-filter i{width:9px;height:9px;border-radius:3px;display:inline-block}
       </div>
       <span class="more"><svg viewBox="0 0 24 24"><path d="m7 15 5 5 5-5"/><path d="m7 9 5-5 5 5"/></svg></span>
     </div>
+    <button class="btn-ghost btn-sm" id="sidebarViewToggleBtn" onclick="cycleForceView()" style="width:100%;margin-top:6px;justify-content:center" title="สลับมุมมองมือถือ/คอม"></button>
   </div>
   <div class="sidebar-mobile-actions" id="sidebarMobileActions"></div>
 </aside>
@@ -561,7 +563,6 @@ button.cal-filter i{width:9px;height:9px;border-radius:3px;display:inline-block}
     </div>
   </div>
   <div class="header-right">
-    <button id="viewToggleBtn" onclick="cycleForceView()" title="สลับมุมมองมือถือ/คอม"></button>
     <div class="theme-picker" id="themePicker">
       <button class="combo" id="themeCombo" onclick="toggleThemeMenu(event)">
         <span><span id="themeIcon">🖥️</span>&nbsp; <span id="themeLabel">ตามระบบ</span></span>
@@ -1820,13 +1821,15 @@ function renderMobileActions() {
       <button class="btn-ghost" onclick="closeSidebarMobile();openBannedModal()">🚫 รายชื่อแบน</button>
       <button class="btn-ghost" onclick="closeSidebarMobile();openBoardModal()">📌 ประกาศ</button>`;
   }
+  const showingMobileNow = forceView === "mobile" ? true : forceView === "desktop" ? false : (window.innerWidth <= 1024);
+  html += `<button class="btn-ghost" onclick="cycleForceView()">${showingMobileNow ? "🖥️ ดูเวอร์ชันคอม" : "📱 ดูเวอร์ชันมือถือ"}</button>`;
   html += `<button class="btn-ghost btn-sm" onclick="logout()">ออก</button>`;
   el.innerHTML = html;
   fab.style.display = (canInviteDirect() || canCreateTask()) ? "" : "none";
   renderBottomNav();
 }
 
-/* ============ สลับมือถือ/คอม — ปุ่มฝังใน header (ไม่ใช้ fixed กัน iOS เพี้ยนตำแหน่ง) สลับได้ทั้ง 2 ทาง ============
+/* ============ สลับมือถือ/คอม — อยู่ในเมนู "เพิ่มเติม" (มือถือ) และมุมล่างซ้ายของ sidebar (คอม กันเผื่อบังคับคอมแล้วหาทางกลับไม่เจอ) สลับได้ทั้ง 2 ทาง ============
    forceView: "auto" (ตามขนาดจอจริง) | "mobile" (บังคับมือถือ) | "desktop" (บังคับคอม)
    ใช้ reload หน้าเสมอ เพราะ iOS Safari ไม่ปรับ viewport สดๆ ให้แบบไม่รีโหลด ============ */
 let forceView = lsGet("mkt_force_view") || "auto";
@@ -1836,10 +1839,10 @@ function applyForceView() {
     forceView === "desktop" ? "width=1280" :
     forceView === "mobile" ? "width=375" :
     "width=device-width, initial-scale=1.0");
-  const btn = document.getElementById("viewToggleBtn");
+  const btn = document.getElementById("sidebarViewToggleBtn");
   if (!btn) return;
   const showingMobile = forceView === "mobile" ? true : forceView === "desktop" ? false : (window.innerWidth <= 1024);
-  btn.textContent = showingMobile ? "🖥️ คอม" : "📱 มือถือ";
+  btn.textContent = showingMobile ? "🖥️ ดูเวอร์ชันคอม" : "📱 ดูเวอร์ชันมือถือ";
 }
 function cycleForceView() {
   forceView = (window.innerWidth <= 1024) ? "desktop" : "mobile";
