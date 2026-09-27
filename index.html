@@ -840,13 +840,13 @@ button.cal-filter i{width:9px;height:9px;border-radius:3px;display:inline-block}
 <!-- BOARD MODAL -->
 <div class="overlay" id="boardOverlay">
   <div class="modal">
-    <h3>📌 เขียนประกาศใหม่</h3>
+    <h3 id="boardModalTitle">📌 เขียนประกาศใหม่</h3>
     <p class="desc">ประกาศนี้จะเห็นได้ทุกคนในทีม</p>
     <div class="field"><label>หัวข้อประกาศ *</label><input id="boardTitle" placeholder="เช่น แจ้งกำหนดส่งงานสัปดาห์นี้"></div>
     <div class="field"><label>รายละเอียด</label><textarea id="boardContent" placeholder="เนื้อหาประกาศ..." style="min-height:120px"></textarea></div>
     <div class="modal-foot">
       <button class="btn-ghost" onclick="closeModal('boardOverlay')">ยกเลิก</button>
-      <button class="btn-primary" onclick="saveAnnouncement()">📌 ประกาศ</button>
+      <button class="btn-primary" id="boardSaveBtn" onclick="saveAnnouncement()">📌 ประกาศ</button>
     </div>
   </div>
 </div>
@@ -1564,23 +1564,36 @@ function deleteNotif(id) {
 /* ============ BOARD / ANNOUNCEMENTS ============ */
 function canPostAnn() { return isAdmin() || can("post_announcement"); }
 function canManageAnn(a) { return canManageBoard() || (!!a && !!currentUser && a.authorId === currentUser.id && can("post_announcement")); }
-function openBoardModal() {
-  if (!canPostAnn()) { toast("ไม่มีสิทธิ์เขียนประกาศ","🔒"); return; }
-  document.getElementById("boardTitle").value = "";
-  document.getElementById("boardContent").value = "";
+let editingAnnId = null;
+function openBoardModal(id) {
+  const a = id ? state.announcements.find(x => x.id === id) : null;
+  if (a ? !canManageAnn(a) : !canPostAnn()) { toast("ไม่มีสิทธิ์","🔒"); return; }
+  editingAnnId = a ? a.id : null;
+  document.getElementById("boardModalTitle").textContent = a ? "✏️ แก้ไขประกาศ" : "📌 เขียนประกาศใหม่";
+  document.getElementById("boardSaveBtn").textContent = a ? "💾 บันทึก" : "📌 ประกาศ";
+  document.getElementById("boardTitle").value = a ? a.title : "";
+  document.getElementById("boardContent").value = a ? a.content : "";
   document.getElementById("boardOverlay").classList.add("show");
   setTimeout(()=>document.getElementById("boardTitle").focus(), 100);
 }
 function saveAnnouncement() {
-  if (!canPostAnn()) { toast("ไม่มีสิทธิ์เขียนประกาศ","🔒"); return; }
+  const editing = editingAnnId ? state.announcements.find(x => x.id === editingAnnId) : null;
+  if (editing ? !canManageAnn(editing) : !canPostAnn()) { toast("ไม่มีสิทธิ์","🔒"); return; }
   const title = document.getElementById("boardTitle").value.trim();
   const content = document.getElementById("boardContent").value.trim();
   if (!title) { toast("กรุณาใส่หัวข้อประกาศ","⚠️"); return; }
-  const a = { id:uid(), title, content, authorName:currentUser.name, authorId:currentUser.id, isPinned:false, createdAt:new Date().toISOString() };
-  state.announcements.unshift(a);
-  dbw(db.from("announcements").insert(Object.assign({ id:a.id }, annRow(a))), "ประกาศไม่สำเร็จ");
+  if (editing) {
+    Object.assign(editing, { title, content });
+    dbw(db.from("announcements").update({ title, content }).eq("id", editing.id), "แก้ไขประกาศไม่สำเร็จ");
+    toast("แก้ไขประกาศแล้ว","✏️");
+  } else {
+    const a = { id:uid(), title, content, authorName:currentUser.name, authorId:currentUser.id, isPinned:false, createdAt:new Date().toISOString() };
+    state.announcements.unshift(a);
+    dbw(db.from("announcements").insert(Object.assign({ id:a.id }, annRow(a))), "ประกาศไม่สำเร็จ");
+    toast("ประกาศแล้ว!","📌");
+  }
+  editingAnnId = null;
   closeModal("boardOverlay");
-  toast("ประกาศแล้ว!","📌");
   renderBoard();
 }
 function deleteAnnouncementItem(id) {
@@ -1633,6 +1646,7 @@ function renderBoard() {
           : `<button class="btn-primary btn-sm" onclick="ackAnnouncement('${sid(a.id)}')">✅ รับทราบ</button>`):""}
       </div>
       ${canManageAnn(a)?`<div class="board-actions">
+        <button class="btn-ghost btn-sm" onclick="openBoardModal('${sid(a.id)}')">✏️ แก้ไข</button>
         ${canManageBoard()?`<button class="btn-ghost btn-sm" onclick="togglePinAnnouncement('${sid(a.id)}')">${a.isPinned?'📌 เลิกปักหมุด':'📌 ปักหมุด'}</button>`:""}
         <button class="btn-danger btn-sm" onclick="deleteAnnouncementItem('${sid(a.id)}')">🗑 ลบ</button>
       </div>`:""}
@@ -2301,9 +2315,18 @@ function tlMonthLabel(key) {
   return `${TL_MONTH_NAME[m-1]||key} ${y+543}`;
 }
 function toggleTlMonth(key) { tlCollapsed[key] = !tlCollapsed[key]; renderCampaignTimeline(); }
+const TL_FILTERS = [
+  { id:"all", label:"ทั้งหมด" },
+  { id:"doing", label:"⏳ กำลังทำ" },
+  { id:"overdue", label:"⚠️ เลยกำหนด" },
+  { id:"done", label:"✅ เสร็จแล้ว" }
+];
+let tlFilter = "all";
+function setTlFilter(f) { tlFilter = f; renderCampaignTimeline(); }
 function renderCampaignTimeline() {
   const vr = document.getElementById("viewRoot");
-  const tasks = visibleTasks().sort((a,b)=>(a.due||"9999")<(b.due||"9999")?-1:1);
+  let tasks = visibleTasks().sort((a,b)=>(a.due||"9999")<(b.due||"9999")?-1:1);
+  if (tlFilter !== "all") tasks = tasks.filter(t => taskStatus(t) === tlFilter);
   const today = todayStr();
   const curMonthKey = tlMonthKey(today);
 
@@ -2347,11 +2370,12 @@ function renderCampaignTimeline() {
 
   vr.innerHTML = `
     <div class="view-head"><h2>🎯 ไทม์ไลน์งาน</h2>
-      <div class="cal-ctrl">
-        <span style="font-size:12.5px;color:var(--txt-2)">จัดกลุ่มตามเดือน • กดหัวข้อเดือนเพื่อยืด/หุบ</span>
-        <button class="btn-ghost btn-sm" onclick="tlCollapsed={};renderCampaignTimeline()">↕️ รีเซ็ตมุมมอง</button>
-      </div></div>
-    ${tasks.length===0?`<div class="empty"><div class="e-emoji">🎯</div><b>ยังไม่มีงาน/แคมเปญ</b></div>`:bodyHtml}`;
+      <span style="font-size:12.5px;color:var(--txt-2)">จัดกลุ่มตามเดือน • กดหัวข้อเดือนเพื่อยืด/หุบ</span>
+    </div>
+    <div class="cal-filters" role="tablist" aria-label="กรองไทม์ไลน์">
+      ${TL_FILTERS.map(f=>`<button type="button" role="tab" aria-selected="${tlFilter===f.id}" class="cal-filter ${tlFilter===f.id?'on':''}" onclick="setTlFilter('${f.id}')">${f.label}</button>`).join("")}
+    </div>
+    ${tasks.length===0?`<div class="empty"><div class="e-emoji">🎯</div><b>${tlFilter==='all'?'ยังไม่มีงาน/แคมเปญ':'ไม่มีงานที่ตรงกับตัวกรอง'}</b></div>`:bodyHtml}`;
 }
 function tlRowHtml(t) {
   const st = taskStatus(t), over = isOverdue(t);
