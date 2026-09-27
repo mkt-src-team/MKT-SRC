@@ -23,6 +23,7 @@
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3/dist/tabler-icons.min.css">
 
 <style>
 /* ============ WINDOWS 11 — LIGHT ============ */
@@ -197,7 +198,8 @@ section{margin-bottom:32px}
 .task-icon{width:42px;height:42px;border-radius:8px;flex:none;display:grid;place-items:center;font-size:21px;background:var(--layer-2);border:1px solid var(--stroke)}
 .task-main{flex:1;min-width:200px}
 .task-title{font-weight:650;font-size:15.5px;margin-bottom:6px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-.tag{font-size:11px;font-weight:700;padding:3px 9px;border-radius:5px;background:var(--layer-2);border:1px solid var(--stroke);color:var(--txt-2)}
+.tag{font-size:11px;font-weight:700;padding:3px 9px;border-radius:5px;background:var(--layer-2);border:1px solid var(--stroke);color:var(--txt-2);display:inline-flex;align-items:center;gap:4px}
+.tag i{font-size:12px}
 .tag.overdue{background:var(--danger-tint);color:var(--danger);border-color:transparent}
 .tag.done{background:var(--success-tint);color:var(--success);border-color:transparent}
 .tag.doing{background:var(--caution-tint);color:var(--caution);border-color:transparent}
@@ -418,6 +420,7 @@ main{padding:20px 24px}
 /* ============ VIEWS ============ */
 .view-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:4px 0 14px;flex-wrap:wrap}
 .view-head h2{margin:0;font-size:18px}
+h2 i.ti,h3 i.ti,.sec-head h2 i.ti{font-size:.88em;vertical-align:-1px;margin-right:2px}
 .cal-ctrl{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
 .cal-title{font-weight:700;font-size:15px;min-width:150px;text-align:center}
 .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
@@ -545,11 +548,11 @@ button.cal-filter i{width:9px;height:9px;border-radius:3px;display:inline-block}
 </aside>
 <div id="sidebarOverlay" onclick="closeSidebarMobile()"></div>
 <nav id="bottomNav" aria-label="เมนูล่าง (มือถือ)"></nav>
-<button id="mobileFab" onclick="openTaskModal()" title="เพิ่มงาน" aria-label="เพิ่มงาน">➕</button>
+<button id="mobileFab" onclick="openTaskModal()" title="เพิ่มงาน" aria-label="เพิ่มงาน"><i class="ti ti-plus"></i></button>
 
 <header>
   <div class="logo">
-    <div class="badge">🚗</div>
+    <div class="badge"><i class="ti ti-steering-wheel"></i></div>
     <div>
       <h1>MKT-<span class="src">SRC</span></h1>
       <small>ระบบติดตามงานทีม • เชคลิสต์ • คะแนนความพึงพอใจ</small>
@@ -558,14 +561,14 @@ button.cal-filter i{width:9px;height:9px;border-radius:3px;display:inline-block}
   <div class="header-right">
     <div class="theme-picker" id="themePicker">
       <button class="combo" id="themeCombo" onclick="toggleThemeMenu(event)">
-        <span><span id="themeIcon">🖥️</span>&nbsp; <span id="themeLabel">ตามระบบ</span></span>
+        <span><i class="ti ti-device-desktop" id="themeIcon"></i>&nbsp; <span id="themeLabel">ตามระบบ</span></span>
         <span class="chev">˅</span>
       </button>
       <div class="combo-flyout" id="themeMenu">
         <div class="flyout-title">ธีม</div>
-        <div class="combo-item" data-m="light" onclick="setMode('light')">☀️ สว่าง</div>
-        <div class="combo-item" data-m="dark" onclick="setMode('dark')">🌙 มืด</div>
-        <div class="combo-item" data-m="system" onclick="setMode('system')">🖥️ ตามระบบ<span class="sub">เปลี่ยนตามอุปกรณ์ของคุณ</span></div>
+        <div class="combo-item" data-m="light" onclick="setMode('light')"><i class="ti ti-sun"></i> สว่าง</div>
+        <div class="combo-item" data-m="dark" onclick="setMode('dark')"><i class="ti ti-moon"></i> มืด</div>
+        <div class="combo-item" data-m="system" onclick="setMode('system')"><i class="ti ti-device-desktop"></i> ตามระบบ<span class="sub">เปลี่ยนตามอุปกรณ์ของคุณ</span></div>
       </div>
     </div>
     <div class="actions" id="headerActions"></div>
@@ -600,7 +603,7 @@ button.cal-filter i{width:9px;height:9px;border-radius:3px;display:inline-block}
   <!-- Team -->
   <section id="teamSection">
     <div class="sec-head">
-      <h2>👥 ทีมงาน & คะแนนความพึงพอใจ</h2>
+      <h2><i class="ti ti-users"></i> ทีมงาน & คะแนนความพึงพอใจ</h2>
       <span class="hint">😍 ดีเยี่ยม (≥80%) | 😊 ดี (≥75%) | 🙂 ปานกลาง (≥50%) | 😢 เลยกำหนด | ต่ำกว่า 50%/ยังไม่มีงาน → โชว์อีโมจิของตัวเอง</span>
     </div>
     <div class="team-grid" id="teamGrid"></div>
@@ -691,7 +694,7 @@ button.cal-filter i{width:9px;height:9px;border-radius:3px;display:inline-block}
 <!-- CONFIRM PASSWORD MODAL -->
 <div class="overlay" id="askPassOverlay">
   <div class="modal" style="max-width:400px">
-    <h3>🔑 ยืนยันตัวตน</h3>
+    <h3><i class="ti ti-shield-check"></i> ยืนยันตัวตน</h3>
     <p class="desc" id="askPassDesc">ใส่รหัสผ่านของคุณเพื่อยืนยัน</p>
     <div class="field"><label>รหัสผ่าน *</label><input type="password" id="askPassInput" autocomplete="current-password" onkeydown="if(event.key==='Enter')askPassDone(true)"></div>
     <div class="modal-foot">
@@ -704,7 +707,7 @@ button.cal-filter i{width:9px;height:9px;border-radius:3px;display:inline-block}
 <!-- TASK MODAL -->
 <div class="overlay" id="taskOverlay">
   <div class="modal">
-    <h3>🚗 เพิ่มงานใหม่</h3>
+    <h3><i class="ti ti-plus"></i> เพิ่มงานใหม่</h3>
     <p class="desc">มอบหมายงานให้ทีม พร้อมกำหนดส่งและเชคลิสต์</p>
     <div class="field"><label>ชื่องาน *</label><input id="tTitle" placeholder="เช่น ทำแคมเปญเฟสบุ๊คเดือนนี้"></div>
     <div class="field"><label>รายละเอียด</label><textarea id="tDesc" placeholder="อธิบายงานเพิ่มเติม..."></textarea></div>
@@ -738,7 +741,7 @@ button.cal-filter i{width:9px;height:9px;border-radius:3px;display:inline-block}
 <!-- EDIT TASK MODAL -->
 <div class="overlay" id="editTaskOverlay">
   <div class="modal">
-    <h3>✏️ แก้ไขงาน</h3>
+    <h3><i class="ti ti-pencil"></i> แก้ไขงาน</h3>
     <p class="desc">แก้ไขรายละเอียดงาน</p>
     <input type="hidden" id="editTaskId">
     <div class="field"><label>ชื่องาน *</label><input id="editTitle"></div>
@@ -782,7 +785,7 @@ button.cal-filter i{width:9px;height:9px;border-radius:3px;display:inline-block}
 <!-- TEAM MODAL -->
 <div class="overlay" id="teamOverlay">
   <div class="modal">
-    <h3>👥 เพิ่มสมาชิกทีม</h3>
+    <h3><i class="ti ti-user-plus"></i> เพิ่มสมาชิกทีม</h3>
     <p class="desc">เพิ่มคนในทีมเพื่อมอบหมายงานและติดตามคะแนน</p>
     <div class="field"><label>ชื่อ *</label><input id="mName" placeholder="เช่น สมชาย" onkeydown="if(event.key==='Enter'){saveMember()}"></div>
     <div class="field"><label>อีเมล *</label><input type="email" id="mEmail" placeholder="someone@email.com"></div>
@@ -828,7 +831,7 @@ button.cal-filter i{width:9px;height:9px;border-radius:3px;display:inline-block}
 <!-- BANNED EMAILS MODAL (dev/boss ปลดแบนคนที่เคยถูกลบ) -->
 <div class="overlay" id="bannedOverlay">
   <div class="modal">
-    <h3>🚫 รายชื่อที่ถูกแบน</h3>
+    <h3><i class="ti ti-ban"></i> รายชื่อที่ถูกแบน</h3>
     <p class="desc">คนที่เคยถูกลบออกจากทีม ระบบจะกันไม่ให้อีเมลนี้สมัคร/เข้าสู่ระบบใหม่ — กด "ปลดแบน" เพื่อให้อีเมลนี้เชิญเข้าทีมได้อีกครั้ง</p>
     <div id="bannedListWrap" style="max-height:340px;overflow:auto;margin-top:10px"></div>
     <div class="modal-foot">
@@ -840,13 +843,13 @@ button.cal-filter i{width:9px;height:9px;border-radius:3px;display:inline-block}
 <!-- BOARD MODAL -->
 <div class="overlay" id="boardOverlay">
   <div class="modal">
-    <h3 id="boardModalTitle">📌 เขียนประกาศใหม่</h3>
+    <h3 id="boardModalTitle"><i class="ti ti-pin"></i> เขียนประกาศใหม่</h3>
     <p class="desc">ประกาศนี้จะเห็นได้ทุกคนในทีม</p>
     <div class="field"><label>หัวข้อประกาศ *</label><input id="boardTitle" placeholder="เช่น แจ้งกำหนดส่งงานสัปดาห์นี้"></div>
     <div class="field"><label>รายละเอียด</label><textarea id="boardContent" placeholder="เนื้อหาประกาศ..." style="min-height:120px"></textarea></div>
     <div class="modal-foot">
       <button class="btn-ghost" onclick="closeModal('boardOverlay')">ยกเลิก</button>
-      <button class="btn-primary" id="boardSaveBtn" onclick="saveAnnouncement()">📌 ประกาศ</button>
+      <button class="btn-primary" id="boardSaveBtn" onclick="saveAnnouncement()"><i class="ti ti-pin"></i> ประกาศ</button>
     </div>
   </div>
 </div>
@@ -854,7 +857,7 @@ button.cal-filter i{width:9px;height:9px;border-radius:3px;display:inline-block}
 <!-- ADMIN RESET PASSWORD MODAL -->
 <div class="overlay" id="resetPassOverlay">
   <div class="modal">
-    <h3>🔑 Reset รหัสผ่าน (Admin)</h3>
+    <h3><i class="ti ti-key"></i> Reset รหัสผ่าน (Admin)</h3>
     <p class="desc">ส่งลิงก์ตั้งรหัสผ่านใหม่ไปที่อีเมลของสมาชิก — สมาชิกที่ยังไม่ได้ย้ายเข้าระบบใหม่จะได้ลิงก์เชิญแทน</p>
     <div class="field">
       <label>เลือกสมาชิก *</label>
@@ -870,7 +873,7 @@ button.cal-filter i{width:9px;height:9px;border-radius:3px;display:inline-block}
 <!-- PROFILE MODAL -->
 <div class="overlay" id="profileOverlay">
   <div class="modal" style="max-width:400px">
-    <h3>👤 โปรไฟล์ของฉัน</h3>
+    <h3><i class="ti ti-user"></i> โปรไฟล์ของฉัน</h3>
     <p class="desc">ข้อมูลบัญชีผู้ใช้ของคุณ</p>
     <div id="profileInfo"></div>
     <div class="modal-foot">
@@ -894,7 +897,7 @@ button.cal-filter i{width:9px;height:9px;border-radius:3px;display:inline-block}
 <!-- EVENT MODAL -->
 <div class="overlay" id="eventOverlay">
   <div class="modal" style="max-width:460px">
-    <h3 id="evModalTitle">🗓️ เพิ่มอีเวนต์</h3>
+    <h3 id="evModalTitle"><i class="ti ti-plus"></i> เพิ่มอีเวนต์</h3>
     <p class="desc">งาน Event ของทีม Marketing — แสดงบนหน้าปฏิทิน</p>
     <div class="field"><label>ชื่ออีเวนต์ *</label><input id="evTitle" placeholder="เช่น แคมเปญเปิดตัวสินค้าใหม่"></div>
     <div class="field"><label>ประเภท</label>
@@ -913,7 +916,7 @@ button.cal-filter i{width:9px;height:9px;border-radius:3px;display:inline-block}
     </div>
     <div class="field"><label>รายละเอียด</label><textarea id="evDesc" style="min-height:70px" placeholder="รายละเอียดอีเวนต์..."></textarea></div>
     <div class="modal-foot">
-      <button class="btn-danger" id="evDelBtn" style="display:none;margin-right:auto" onclick="deleteEventItem()">🗑 ลบ</button>
+      <button class="btn-danger" id="evDelBtn" style="display:none;margin-right:auto" onclick="deleteEventItem()"><i class="ti ti-trash"></i> ลบ</button>
       <button class="btn-ghost" onclick="closeModal('eventOverlay')">ยกเลิก</button>
       <button class="btn-primary" onclick="saveEventItem()">💾 บันทึก</button>
     </div>
@@ -1569,8 +1572,8 @@ function openBoardModal(id) {
   const a = id ? state.announcements.find(x => x.id === id) : null;
   if (a ? !canManageAnn(a) : !canPostAnn()) { toast("ไม่มีสิทธิ์","🔒"); return; }
   editingAnnId = a ? a.id : null;
-  document.getElementById("boardModalTitle").textContent = a ? "✏️ แก้ไขประกาศ" : "📌 เขียนประกาศใหม่";
-  document.getElementById("boardSaveBtn").textContent = a ? "💾 บันทึก" : "📌 ประกาศ";
+  document.getElementById("boardModalTitle").innerHTML = a ? '<i class="ti ti-pencil"></i> แก้ไขประกาศ' : '<i class="ti ti-pin"></i> เขียนประกาศใหม่';
+  document.getElementById("boardSaveBtn").innerHTML = a ? '<i class="ti ti-device-floppy"></i> บันทึก' : '<i class="ti ti-pin"></i> ประกาศ';
   document.getElementById("boardTitle").value = a ? a.title : "";
   document.getElementById("boardContent").value = a ? a.content : "";
   document.getElementById("boardOverlay").classList.add("show");
@@ -1625,7 +1628,7 @@ async function ackAnnouncement(id) {
 function renderBoard() {
   const list = document.getElementById("boardList");
   const hint = document.getElementById("boardHint");
-  if (hint) hint.innerHTML = canPostAnn() ? `<button class="btn-primary btn-sm" onclick="openBoardModal()">📌 เขียนประกาศ</button>` : "";
+  if (hint) hint.innerHTML = canPostAnn() ? `<button class="btn-primary btn-sm" onclick="openBoardModal()"><i class="ti ti-pin"></i> เขียนประกาศ</button>` : "";
   const sorted = [...state.announcements].sort((a,b) => (a.isPinned!==b.isPinned) ? (a.isPinned?-1:1) : new Date(b.createdAt) - new Date(a.createdAt));
   if (sorted.length === 0) { list.innerHTML = `<div class="empty"><div class="e-emoji">📌</div><b>ยังไม่มีประกาศ</b></div>`; return; }
   list.innerHTML = sorted.map(a => {
@@ -1640,15 +1643,15 @@ function renderBoard() {
       </div>
       ${a.content?`<div class="board-content">${esc(a.content)}</div>`:""}
       <div class="board-actions" style="justify-content:space-between;align-items:center">
-        <span style="font-size:12px;color:var(--txt-2)">✅ รับทราบแล้ว ${ackedBy.length} คน${ackNames?` <span style="color:var(--txt-3)">(${esc(ackNames)})</span>`:""}</span>
+        <span style="font-size:12px;color:var(--txt-2)"><i class="ti ti-circle-check"></i> รับทราบแล้ว ${ackedBy.length} คน${ackNames?` <span style="color:var(--txt-3)">(${esc(ackNames)})</span>`:""}</span>
         ${currentUser?(iAcked
-          ? `<span class="tag done" style="font-size:11px">✅ คุณรับทราบแล้ว</span>`
-          : `<button class="btn-primary btn-sm" onclick="ackAnnouncement('${sid(a.id)}')">✅ รับทราบ</button>`):""}
+          ? `<span class="tag done" style="font-size:11px"><i class="ti ti-circle-check"></i> คุณรับทราบแล้ว</span>`
+          : `<button class="btn-primary btn-sm" onclick="ackAnnouncement('${sid(a.id)}')"><i class="ti ti-check"></i> รับทราบ</button>`):""}
       </div>
       ${canManageAnn(a)?`<div class="board-actions">
-        <button class="btn-ghost btn-sm" onclick="openBoardModal('${sid(a.id)}')">✏️ แก้ไข</button>
-        ${canManageBoard()?`<button class="btn-ghost btn-sm" onclick="togglePinAnnouncement('${sid(a.id)}')">${a.isPinned?'📌 เลิกปักหมุด':'📌 ปักหมุด'}</button>`:""}
-        <button class="btn-danger btn-sm" onclick="deleteAnnouncementItem('${sid(a.id)}')">🗑 ลบ</button>
+        <button class="btn-ghost btn-sm" onclick="openBoardModal('${sid(a.id)}')"><i class="ti ti-pencil"></i> แก้ไข</button>
+        ${canManageBoard()?`<button class="btn-ghost btn-sm" onclick="togglePinAnnouncement('${sid(a.id)}')"><i class="ti ti-pin"></i> ${a.isPinned?'เลิกปักหมุด':'ปักหมุด'}</button>`:""}
+        <button class="btn-danger btn-sm" onclick="deleteAnnouncementItem('${sid(a.id)}')"><i class="ti ti-trash"></i> ลบ</button>
       </div>`:""}
     </div>`;
   }).join("");
@@ -1761,11 +1764,11 @@ function moodFor(s, memberEmoji) {
 /* ============ RENDER ============ */
 function renderHeader() {
   const el = document.getElementById("headerActions");
-  if (!currentUser) { el.innerHTML = `<button class="btn-primary" onclick="showAuth()">🔑 เข้าสู่ระบบ</button>`; return; }
+  if (!currentUser) { el.innerHTML = `<button class="btn-primary" onclick="showAuth()"><i class="ti ti-key"></i> เข้าสู่ระบบ</button>`; return; }
   let html = `<div class="notif-wrap">
-    <button class="notif-bell" onclick="toggleNotifPanel()" title="การแจ้งเตือน">🔔<span class="notif-badge hidden" id="notifBadge">0</span></button>
+    <button class="notif-bell" onclick="toggleNotifPanel()" title="การแจ้งเตือน"><i class="ti ti-bell"></i><span class="notif-badge hidden" id="notifBadge">0</span></button>
     <div class="notif-panel ${notifOpen?'show':''}" id="notifPanel">
-      <div class="notif-head"><h4>🔔 การแจ้งเตือน</h4><button class="btn-ghost btn-sm" onclick="toggleNotifPanel()">✕</button></div>
+      <div class="notif-head"><h4><i class="ti ti-bell"></i> การแจ้งเตือน</h4><button class="btn-ghost btn-sm" onclick="toggleNotifPanel()">✕</button></div>
       <div id="notifPanelContent"></div>
     </div>
   </div>
@@ -1774,13 +1777,13 @@ function renderHeader() {
     <div><div class="u-name">${esc(currentUser.name)}</div><div class="u-role ${rankCls(currentUser.rank)}">${RANKS[currentUser.rank]||""}</div></div>
   </div>`;
   if (canInviteDirect()) {
-    html += `<button class="btn-ghost" onclick="openResetPassModal()">🔑 Reset</button>
-      <button class="btn-ghost" onclick="openTeamModal()">👥 เพิ่มคน</button>
-      <button class="btn-ghost" onclick="openBannedModal()">🚫 รายชื่อแบน</button>
-      <button class="btn-ghost" onclick="openBoardModal()">📌 ประกาศ</button>
-      <button class="btn-primary" onclick="openTaskModal()">➕ เพิ่มงาน</button>`;
+    html += `<button class="btn-ghost" onclick="openResetPassModal()"><i class="ti ti-key"></i> Reset</button>
+      <button class="btn-ghost" onclick="openTeamModal()"><i class="ti ti-user-plus"></i> เพิ่มคน</button>
+      <button class="btn-ghost" onclick="openBannedModal()"><i class="ti ti-ban"></i> รายชื่อแบน</button>
+      <button class="btn-ghost" onclick="openBoardModal()"><i class="ti ti-pin"></i> ประกาศ</button>
+      <button class="btn-primary" onclick="openTaskModal()"><i class="ti ti-plus"></i> เพิ่มงาน</button>`;
   } else if (canCreateTask()) {
-    html += `<button class="btn-primary" onclick="openTaskModal()">➕ ${can("create_task")?"เพิ่มงาน":"ขอสร้างงาน"}</button>`;
+    html += `<button class="btn-primary" onclick="openTaskModal()"><i class="ti ti-plus"></i> ${can("create_task")?"เพิ่มงาน":"ขอสร้างงาน"}</button>`;
   }
   html += `<button class="btn-ghost btn-sm" onclick="logout()">ออก</button>`;
   el.innerHTML = html;
@@ -1791,10 +1794,10 @@ function renderHeader() {
 
 /* ============ MOBILE BOTTOM NAV + FAB ============ */
 const BOTTOM_NAV_ITEMS = [
-  { id:'dashboard', label:'หน้าหลัก', ic:'🏠' },
-  { id:'today-tasks', label:'งาน', ic:'✅' },
-  { id:'event-cal', label:'ปฏิทิน', ic:'🗓️' },
-  { id:'campaign-timeline', label:'ไทม์ไลน์', ic:'🎯', perm:'view_all_tasks' }
+  { id:'dashboard', label:'หน้าหลัก', ic:'ti-home' },
+  { id:'today-tasks', label:'งาน', ic:'ti-list-check' },
+  { id:'event-cal', label:'ปฏิทิน', ic:'ti-calendar' },
+  { id:'campaign-timeline', label:'ไทม์ไลน์', ic:'ti-target-arrow', perm:'view_all_tasks' }
 ];
 function bottomNavGo(id) {
   sidebarState.activeItem = id;
@@ -1808,8 +1811,8 @@ function renderBottomNav() {
   if (!el) return;
   if (!currentUser) { el.innerHTML = ""; return; }
   const items = BOTTOM_NAV_ITEMS.filter(i => !i.perm || can(i.perm));
-  el.innerHTML = items.map(i => `<button class="bn-item ${sidebarState.activeItem===i.id?'active':''}" onclick="bottomNavGo('${i.id}')"><span class="ic">${i.ic}</span>${esc(i.label)}</button>`).join("")
-    + `<button class="bn-item" onclick="toggleSidebarMobile()"><span class="ic">⋯</span>เพิ่มเติม</button>`;
+  el.innerHTML = items.map(i => `<button class="bn-item ${sidebarState.activeItem===i.id?'active':''}" onclick="bottomNavGo('${i.id}')"><i class="ic ti ${i.ic}"></i>${esc(i.label)}</button>`).join("")
+    + `<button class="bn-item" onclick="toggleSidebarMobile()"><i class="ic ti ti-dots"></i>เพิ่มเติม</button>`;
 }
 function renderMobileActions() {
   const el = document.getElementById("sidebarMobileActions");
@@ -1817,18 +1820,18 @@ function renderMobileActions() {
   if (!el || !fab) return;
   if (!currentUser) { el.innerHTML = ""; fab.style.display = "none"; return; }
   let html = `<div style="display:flex;gap:6px">
-      <button class="btn-ghost ${themeMode==='light'?'is-active-theme':''}" style="flex:1;padding:8px 4px;font-size:12px" onclick="setMode('light')">☀️ สว่าง</button>
-      <button class="btn-ghost ${themeMode==='dark'?'is-active-theme':''}" style="flex:1;padding:8px 4px;font-size:12px" onclick="setMode('dark')">🌙 มืด</button>
-      <button class="btn-ghost ${themeMode==='system'?'is-active-theme':''}" style="flex:1;padding:8px 4px;font-size:12px" onclick="setMode('system')">🖥️ ระบบ</button>
+      <button class="btn-ghost ${themeMode==='light'?'is-active-theme':''}" style="flex:1;padding:8px 4px;font-size:12px" onclick="setMode('light')"><i class="ti ti-sun"></i> สว่าง</button>
+      <button class="btn-ghost ${themeMode==='dark'?'is-active-theme':''}" style="flex:1;padding:8px 4px;font-size:12px" onclick="setMode('dark')"><i class="ti ti-moon"></i> มืด</button>
+      <button class="btn-ghost ${themeMode==='system'?'is-active-theme':''}" style="flex:1;padding:8px 4px;font-size:12px" onclick="setMode('system')"><i class="ti ti-device-desktop"></i> ระบบ</button>
     </div>`;
   if (canInviteDirect()) {
-    html += `<button class="btn-ghost" onclick="closeSidebarMobile();openResetPassModal()">🔑 Reset</button>
-      <button class="btn-ghost" onclick="closeSidebarMobile();openTeamModal()">👥 เพิ่มคน</button>
-      <button class="btn-ghost" onclick="closeSidebarMobile();openBannedModal()">🚫 รายชื่อแบน</button>
-      <button class="btn-ghost" onclick="closeSidebarMobile();openBoardModal()">📌 ประกาศ</button>`;
+    html += `<button class="btn-ghost" onclick="closeSidebarMobile();openResetPassModal()"><i class="ti ti-key"></i> Reset</button>
+      <button class="btn-ghost" onclick="closeSidebarMobile();openTeamModal()"><i class="ti ti-user-plus"></i> เพิ่มคน</button>
+      <button class="btn-ghost" onclick="closeSidebarMobile();openBannedModal()"><i class="ti ti-ban"></i> รายชื่อแบน</button>
+      <button class="btn-ghost" onclick="closeSidebarMobile();openBoardModal()"><i class="ti ti-pin"></i> ประกาศ</button>`;
   }
   const showingMobileNow = forceView === "mobile" ? true : forceView === "desktop" ? false : (window.innerWidth <= 1024);
-  html += `<button class="btn-ghost" onclick="cycleForceView()">${showingMobileNow ? "🖥️ ดูเวอร์ชันคอม" : "📱 ดูเวอร์ชันมือถือ"}</button>`;
+  html += `<button class="btn-ghost" onclick="cycleForceView()">${showingMobileNow ? '<i class="ti ti-device-desktop"></i> ดูเวอร์ชันคอม' : '<i class="ti ti-device-mobile"></i> ดูเวอร์ชันมือถือ'}</button>`;
   html += `<button class="btn-ghost btn-sm" onclick="logout()">ออก</button>`;
   el.innerHTML = html;
   fab.style.display = (canInviteDirect() || canCreateTask()) ? "" : "none";
@@ -1920,11 +1923,11 @@ function renderStats() {
   const avg = active.length ? Math.round(active.reduce((a,m)=>a+memberScore(m).score,0)/active.length) : 0;
   const pend = state.members.length - active.length;
   document.getElementById("stats").innerHTML = `
-    <div class="stat"><div class="label">👥 สมาชิกทีม</div><div class="value">${active.length}</div><div class="sub">${pend?`+ รอเข้าระบบ ${pend} คน`:"คนในทีม"}</div></div>
-    <button type="button" class="stat stat-link" onclick="openTasks('all')"><div class="label">📋 งานทั้งหมด</div><div class="value">${total}</div><div class="sub">กำลังทำ ${doing} งาน →</div></button>
-    <button type="button" class="stat stat-link" onclick="openTasks('done')"><div class="label">✅ เสร็จแล้ว</div><div class="value" style="color:var(--success)">${done}</div><div class="sub">${total?Math.round(done/total*100):0}% ของงานทั้งหมด →</div></button>
-    <button type="button" class="stat stat-link" onclick="openTasks('overdue')"><div class="label">⚠️ เลยกำหนด</div><div class="value" style="color:${over?'var(--danger)':'var(--txt-3)'}">${over}</div><div class="sub">${over?"ต้องเร่งมือ →":"ไม่มี 🎉"}</div></button>
-    <div class="stat"><div class="label">💯 คะแนนเฉลี่ยทีม</div><div class="value">${avg}%</div><div class="sub">ส่งงานตรงเวลา</div></div>`;
+    <div class="stat"><div class="label"><i class="ti ti-users"></i> สมาชิกทีม</div><div class="value">${active.length}</div><div class="sub">${pend?`+ รอเข้าระบบ ${pend} คน`:"คนในทีม"}</div></div>
+    <button type="button" class="stat stat-link" onclick="openTasks('all')"><div class="label"><i class="ti ti-clipboard-list"></i> งานทั้งหมด</div><div class="value">${total}</div><div class="sub">กำลังทำ ${doing} งาน →</div></button>
+    <button type="button" class="stat stat-link" onclick="openTasks('done')"><div class="label"><i class="ti ti-circle-check"></i> เสร็จแล้ว</div><div class="value" style="color:var(--success)">${done}</div><div class="sub">${total?Math.round(done/total*100):0}% ของงานทั้งหมด →</div></button>
+    <button type="button" class="stat stat-link" onclick="openTasks('overdue')"><div class="label"><i class="ti ti-alert-triangle"></i> เลยกำหนด</div><div class="value" style="color:${over?'var(--danger)':'var(--txt-3)'}">${over}</div><div class="sub">${over?"ต้องเร่งมือ →":"ไม่มี"}</div></button>
+    <div class="stat"><div class="label"><i class="ti ti-target"></i> คะแนนเฉลี่ยทีม</div><div class="value">${avg}%</div><div class="sub">ส่งงานตรงเวลา</div></div>`;
   renderAttention();
 }
 /* แถบเตือนสั้นๆ บน Dashboard — ชี้ไปหน้างาน ไม่แสดงรายการงานซ้ำ */
@@ -2019,9 +2022,9 @@ function renderTaskCard(t) {
   const checks = t.checks||[];
   const doneC = checks.filter(c=>c.on).length;
   const pct = checks.length ? Math.round(doneC/checks.length*100) : (st==="done"?100:0);
-  let tag = `<span class="tag doing">⏳ กำลังทำ</span>`;
-  if (st==="done") tag=`<span class="tag done">✅ เสร็จแล้ว</span>`;
-  else if (over) tag=`<span class="tag overdue">⚠️ เลยกำหนด</span>`;
+  let tag = `<span class="tag doing"><i class="ti ti-hourglass"></i>กำลังทำ</span>`;
+  if (st==="done") tag=`<span class="tag done"><i class="ti ti-circle-check"></i>เสร็จแล้ว</span>`;
+  else if (over) tag=`<span class="tag overdue"><i class="ti ti-alert-triangle"></i>เลยกำหนด</span>`;
   const tEmoji = (st==="done"||pct===100)?"😍":(over?"😢":(t.emoji||"🚗"));
   const canEdit = canEditTask(t);
   const canDel = canDeleteTaskDirect(t);
@@ -2029,13 +2032,13 @@ function renderTaskCard(t) {
   const canRe = canReopenTask(t);
   const reqRe = !canRe && mine && can("request_task");
   let btns = "";
-  if (st!=="done") { if (canTick) btns += `<button class="btn-ghost btn-sm" onclick="completeTask('${id}')">✅ ทำเสร็จแล้ว</button>`; }
-  else if (canRe) btns += `<button class="btn-ghost btn-sm" onclick="reopenTask('${id}')">↩︎ เปิดงานใหม่</button>`;
-  else if (reqRe) btns += `<button class="btn-ghost btn-sm" onclick="submitReopenRequest('${id}')">📤 ขอเปิดงานใหม่</button>`;
-  if (canEdit) btns += `<button class="btn-ghost btn-sm" onclick="openEditTaskModal('${id}')">✏️ แก้ไข</button>`;
-  if (canDel) btns += `<button class="btn-danger btn-sm" onclick="delTaskDirect('${id}')">🗑 ลบ</button>`;
-  else if (reqDel) btns += `<button class="btn-danger btn-sm" onclick="submitDeleteRequest('${id}')">📤 ขอลบ</button>`;
-  const status = over?"⚠️ เลยกำหนดส่งแล้ว":(st==="done"?"🎉 งานเสร็จสมบูรณ์":(mine && !canEdit && !admin ? "ติ๊กเชคลิสต์ได้อย่างเดียว" : "💪 กำลังดำเนินการ"));
+  if (st!=="done") { if (canTick) btns += `<button class="btn-ghost btn-sm" onclick="completeTask('${id}')"><i class="ti ti-check"></i> ทำเสร็จแล้ว</button>`; }
+  else if (canRe) btns += `<button class="btn-ghost btn-sm" onclick="reopenTask('${id}')"><i class="ti ti-refresh"></i> เปิดงานใหม่</button>`;
+  else if (reqRe) btns += `<button class="btn-ghost btn-sm" onclick="submitReopenRequest('${id}')"><i class="ti ti-send"></i> ขอเปิดงานใหม่</button>`;
+  if (canEdit) btns += `<button class="btn-ghost btn-sm" onclick="openEditTaskModal('${id}')"><i class="ti ti-pencil"></i> แก้ไข</button>`;
+  if (canDel) btns += `<button class="btn-danger btn-sm" onclick="delTaskDirect('${id}')"><i class="ti ti-trash"></i> ลบ</button>`;
+  else if (reqDel) btns += `<button class="btn-danger btn-sm" onclick="submitDeleteRequest('${id}')"><i class="ti ti-send"></i> ขอลบ</button>`;
+  const status = over?"เลยกำหนดส่งแล้ว":(st==="done"?"งานเสร็จสมบูรณ์":(mine && !canEdit && !admin ? "ติ๊กเชคลิสต์ได้อย่างเดียว" : "กำลังดำเนินการ"));
   const foot = `<span style="font-size:12px;color:var(--txt-2)">${status}</span><div class="foot-btns">${btns}</div>`;
 
   return `<div class="task ${st==='done'?'done':''} ${over?'overdue':''}">
@@ -2219,7 +2222,7 @@ function renderEventCalendar() {
   }
   vr.innerHTML = `
     <div class="view-head">
-      <h2>🗓️ ปฏิทิน</h2>
+      <h2><i class="ti ti-calendar"></i> ปฏิทิน</h2>
       <div class="cal-ctrl">
         <button class="btn-ghost btn-sm" onclick="calMove(-1)">‹ ก่อนหน้า</button>
         <span class="cal-title">${monthLabel}</span>
@@ -2271,7 +2274,7 @@ function openEventModal(dateStr, evId) {
   ["evTitle","evType","evDate","evTime","evDesc"].forEach(id => document.getElementById(id).disabled = !editable);
   document.getElementById("evDelBtn").style.display = (e && editable) ? "" : "none";
   document.querySelector("#eventOverlay .btn-primary").style.display = editable ? "" : "none";
-  document.getElementById("evModalTitle").textContent = !e ? "🗓️ เพิ่มอีเวนต์" : (editable ? "✏️ แก้ไขอีเวนต์" : "🗓️ รายละเอียดอีเวนต์");
+  document.getElementById("evModalTitle").innerHTML = !e ? '<i class="ti ti-plus"></i> เพิ่มอีเวนต์' : (editable ? '<i class="ti ti-pencil"></i> แก้ไขอีเวนต์' : '<i class="ti ti-calendar"></i> รายละเอียดอีเวนต์');
   document.getElementById("eventOverlay").classList.add("show");
   if (editable) setTimeout(()=>document.getElementById("evTitle").focus(),100);
 }
@@ -2374,7 +2377,7 @@ function renderCampaignTimeline() {
   });
 
   vr.innerHTML = `
-    <div class="view-head"><h2>🎯 ไทม์ไลน์งาน</h2>
+    <div class="view-head"><h2><i class="ti ti-target-arrow"></i> ไทม์ไลน์งาน</h2>
       <div class="cal-ctrl">
         <span style="font-size:12.5px;color:var(--txt-2)">จัดกลุ่มตามเดือน • กดหัวข้อเดือนเพื่อยืด/หุบ</span>
         ${monthKeys.length>1?`<select onchange="jumpToTlMonth(this.value)" style="padding:6px 8px;border-radius:6px;background:var(--control);color:var(--txt);border:1px solid var(--stroke-2);font-size:12.5px">
@@ -2927,7 +2930,7 @@ function applyTheme(){
   const lbl = document.getElementById("themeLabel");
   const icon = document.getElementById("themeIcon");
   if (lbl) lbl.textContent = themeMode==="system"?"ตามระบบ":(themeMode==="light"?"สว่าง":"มืด");
-  if (icon) icon.textContent = themeMode==="system"?"🖥️":(themeMode==="light"?"☀️":"🌙");
+  if (icon) icon.className = "ti " + (themeMode==="system"?"ti-device-desktop":(themeMode==="light"?"ti-sun":"ti-moon"));
 }
 function setMode(m){ themeMode=m; lsSet(THEME_KEY,m); applyTheme(); renderThemeMenu(); closeThemeMenu(); renderMobileActions(); }
 function renderThemeMenu(){
