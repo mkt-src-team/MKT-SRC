@@ -2315,18 +2315,22 @@ function tlMonthLabel(key) {
   return `${TL_MONTH_NAME[m-1]||key} ${y+543}`;
 }
 function toggleTlMonth(key) { tlCollapsed[key] = !tlCollapsed[key]; renderCampaignTimeline(); }
-const TL_FILTERS = [
-  { id:"all", label:"ทั้งหมด" },
-  { id:"doing", label:"⏳ กำลังทำ" },
-  { id:"overdue", label:"⚠️ เลยกำหนด" },
-  { id:"done", label:"✅ เสร็จแล้ว" }
-];
-let tlFilter = "all";
-function setTlFilter(f) { tlFilter = f; renderCampaignTimeline(); }
+let tlJumpTo = null;
+function jumpToTlMonth(key) {
+  if (!key) return;
+  tlMonthKeysCache.forEach(k => { tlCollapsed[k] = k !== key; });
+  tlJumpTo = key;
+  renderCampaignTimeline();
+  setTimeout(() => {
+    const el = document.getElementById("tlm-" + key);
+    if (el) el.scrollIntoView({ behavior:"smooth", block:"start" });
+    tlJumpTo = null;
+  }, 30);
+}
+let tlMonthKeysCache = [];
 function renderCampaignTimeline() {
   const vr = document.getElementById("viewRoot");
   let tasks = visibleTasks().sort((a,b)=>(a.due||"9999")<(b.due||"9999")?-1:1);
-  if (tlFilter !== "all") tasks = tasks.filter(t => taskStatus(t) === tlFilter);
   const today = todayStr();
   const curMonthKey = tlMonthKey(today);
 
@@ -2338,6 +2342,7 @@ function renderCampaignTimeline() {
     groups.get(key).push(t);
   });
   const monthKeys = [...groups.keys()].sort((a,b) => a==="ไม่ระบุ" ? 1 : b==="ไม่ระบุ" ? -1 : (a<b?-1:1));
+  tlMonthKeysCache = monthKeys;
 
   let bodyHtml = "";
   monthKeys.forEach(key => {
@@ -2358,7 +2363,7 @@ function renderCampaignTimeline() {
     } else {
       rows = monthTasks.map(tlRowHtml).join("");
     }
-    bodyHtml += `<div class="tl-month">
+    bodyHtml += `<div class="tl-month" id="tlm-${key}">
       <div class="tl-month-head" onclick="toggleTlMonth('${key}')" style="cursor:pointer;display:flex;align-items:center;gap:8px;padding:10px 4px;font-weight:700;border-bottom:1px solid var(--stroke)">
         <span style="transition:transform .15s;display:inline-block;transform:rotate(${collapsed?'-90':'0'}deg)">▾</span>
         <span>🗓️ ${esc(tlMonthLabel(key))}</span>
@@ -2370,12 +2375,15 @@ function renderCampaignTimeline() {
 
   vr.innerHTML = `
     <div class="view-head"><h2>🎯 ไทม์ไลน์งาน</h2>
-      <span style="font-size:12.5px;color:var(--txt-2)">จัดกลุ่มตามเดือน • กดหัวข้อเดือนเพื่อยืด/หุบ</span>
+      <div class="cal-ctrl">
+        <span style="font-size:12.5px;color:var(--txt-2)">จัดกลุ่มตามเดือน • กดหัวข้อเดือนเพื่อยืด/หุบ</span>
+        ${monthKeys.length>1?`<select onchange="jumpToTlMonth(this.value)" style="padding:6px 8px;border-radius:6px;background:var(--control);color:var(--txt);border:1px solid var(--stroke-2);font-size:12.5px">
+          <option value="">↕️ ไปที่เดือน...</option>
+          ${monthKeys.map(k=>`<option value="${k}">${esc(tlMonthLabel(k))}</option>`).join("")}
+        </select>`:""}
+      </div>
     </div>
-    <div class="cal-filters" role="tablist" aria-label="กรองไทม์ไลน์">
-      ${TL_FILTERS.map(f=>`<button type="button" role="tab" aria-selected="${tlFilter===f.id}" class="cal-filter ${tlFilter===f.id?'on':''}" onclick="setTlFilter('${f.id}')">${f.label}</button>`).join("")}
-    </div>
-    ${tasks.length===0?`<div class="empty"><div class="e-emoji">🎯</div><b>${tlFilter==='all'?'ยังไม่มีงาน/แคมเปญ':'ไม่มีงานที่ตรงกับตัวกรอง'}</b></div>`:bodyHtml}`;
+    ${tasks.length===0?`<div class="empty"><div class="e-emoji">🎯</div><b>ยังไม่มีงาน/แคมเปญ</b></div>`:bodyHtml}`;
 }
 function tlRowHtml(t) {
   const st = taskStatus(t), over = isOverdue(t);
