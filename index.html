@@ -585,7 +585,7 @@ button.cal-filter i{width:9px;height:9px;border-radius:3px;display:inline-block}
   <!-- Board ประกาศ -->
   <section id="boardSection">
     <div class="sec-head">
-      <h2>📌 กระดานประกาศ</h2>
+      <h2><i class="ti ti-pin"></i> กระดานประกาศ</h2>
       <span class="hint" id="boardHint"></span>
     </div>
     <div id="boardList"></div>
@@ -619,8 +619,8 @@ button.cal-filter i{width:9px;height:9px;border-radius:3px;display:inline-block}
     <h3>MKT-<span class="src">SRC</span></h3>
     <p class="desc" id="authDesc">ระบบติดตามงานทีม • เข้าสู่ระบบ</p>
     <div class="auth-tabs" id="authTabs">
-      <button class="auth-tab active" id="authTabLogin" onclick="switchAuthTab('login')">🔑 เข้าสู่ระบบ</button>
-      <button class="auth-tab" id="authTabSetup" onclick="switchAuthTab('setup')">🔑 ตั้งรหัสผ่าน</button>
+      <button class="auth-tab active" id="authTabLogin" onclick="switchAuthTab('login')"><i class="ti ti-key"></i> เข้าสู่ระบบ</button>
+      <button class="auth-tab" id="authTabSetup" onclick="switchAuthTab('setup')"><i class="ti ti-key"></i> ตั้งรหัสผ่าน</button>
     </div>
     <div id="authError" class="auth-error"></div>
     <div id="authInfo" class="auth-info"></div>
@@ -634,7 +634,7 @@ button.cal-filter i{width:9px;height:9px;border-radius:3px;display:inline-block}
         <label>รหัสผ่าน *</label>
         <input type="password" id="loginPass" placeholder="ใส่รหัสผ่าน" required>
       </div>
-      <button type="submit" class="btn-primary btn-block" id="loginBtn">🔑 เข้าสู่ระบบ</button>
+      <button type="submit" class="btn-primary btn-block" id="loginBtn"><i class="ti ti-key"></i> เข้าสู่ระบบ</button>
       <a class="forgot-link" href="#" onclick="event.preventDefault();showForgotInfo()">ลืมรหัสผ่าน?</a>
     </form>
     <!-- SET PASSWORD FORM (for invited users) -->
@@ -657,7 +657,7 @@ button.cal-filter i{width:9px;height:9px;border-radius:3px;display:inline-block}
         <label>ยืนยันรหัสผ่าน *</label>
         <input type="password" id="setupPass2" placeholder="ใส่รหัสผ่านอีกครั้ง" required>
       </div>
-      <button type="submit" class="btn-burgundy btn-block" id="setupBtn">🔑 ตั้งรหัสผ่านและเข้าใช้งาน</button>
+      <button type="submit" class="btn-burgundy btn-block" id="setupBtn"><i class="ti ti-key"></i> ตั้งรหัสผ่านและเข้าใช้งาน</button>
     </form>
   </div>
 </div>
@@ -665,13 +665,13 @@ button.cal-filter i{width:9px;height:9px;border-radius:3px;display:inline-block}
 <!-- FORGOT PASSWORD MODAL -->
 <div class="overlay" id="forgotOverlay">
   <div class="modal" style="max-width:420px">
-    <h3>🔒 ลืมรหัสผ่าน?</h3>
+    <h3><i class="ti ti-lock"></i> ลืมรหัสผ่าน?</h3>
     <p class="desc">ใส่อีเมลของคุณ ระบบจะส่งลิงก์ตั้งรหัสผ่านใหม่ไปให้</p>
     <div class="field"><label>อีเมล *</label><input type="email" id="forgotEmail" placeholder="your@email.com"></div>
     <p style="font-size:12px;color:var(--txt-3)">ถ้ายังไม่เคยเข้าระบบเวอร์ชันใหม่ ให้ขอลิงก์เชิญใหม่จาก Admin แทน</p>
     <div class="modal-foot">
       <button class="btn-ghost" onclick="closeModal('forgotOverlay')">ปิด</button>
-      <button class="btn-primary" onclick="sendResetEmail()">✉️ ส่งลิงก์</button>
+      <button class="btn-primary" onclick="sendResetEmail()"><i class="ti ti-mail"></i> ส่งลิงก์</button>
     </div>
   </div>
 </div>
@@ -679,14 +679,14 @@ button.cal-filter i{width:9px;height:9px;border-radius:3px;display:inline-block}
 <!-- NEW PASSWORD MODAL (เปลี่ยนรหัส / ตั้งรหัสใหม่จากลิงก์รีเซ็ต) -->
 <div class="overlay" id="pwOverlay">
   <div class="modal" style="max-width:420px">
-    <h3 id="pwTitle">🔑 เปลี่ยนรหัสผ่าน</h3>
+    <h3 id="pwTitle"><i class="ti ti-key"></i> เปลี่ยนรหัสผ่าน</h3>
     <p class="desc" id="pwDesc">อย่างน้อย 6 ตัวอักษร</p>
     <div class="field" id="pwCurWrap"><label>รหัสผ่านปัจจุบัน *</label><input type="password" id="pwCur" autocomplete="current-password"></div>
     <div class="field"><label>รหัสผ่านใหม่ *</label><input type="password" id="pwNew" autocomplete="new-password"></div>
     <div class="field"><label>ยืนยันรหัสผ่านใหม่ *</label><input type="password" id="pwNew2" autocomplete="new-password" onkeydown="if(event.key==='Enter')savePassword()"></div>
     <div class="modal-foot">
       <button class="btn-ghost" onclick="closeModal('pwOverlay')">ยกเลิก</button>
-      <button class="btn-primary" onclick="savePassword()">💾 บันทึก</button>
+      <button class="btn-primary" onclick="savePassword()"><i class="ti ti-device-floppy"></i> บันทึก</button>
     </div>
   </div>
 </div>
@@ -733,7 +733,7 @@ button.cal-filter i{width:9px;height:9px;border-radius:3px;display:inline-block}
     </div>
     <div class="modal-foot">
       <button class="btn-ghost" onclick="closeModal('taskOverlay')">ยกเลิก</button>
-      <button class="btn-primary" onclick="saveTask()">💾 บันทึกงาน</button>
+      <button class="btn-primary" onclick="saveTask()"><i class="ti ti-device-floppy"></i> บันทึกงาน</button>
     </div>
   </div>
 </div>
@@ -767,7 +767,7 @@ button.cal-filter i{width:9px;height:9px;border-radius:3px;display:inline-block}
       <div id="editCheckList" style="margin-top:8px"></div>
     </div>
     <div class="field">
-      <label>📎 ไฟล์แนบ <span style="font-weight:400;color:var(--txt-3);font-size:11px">(อัปโหลดไฟล์ขึ้น Google Drive เอง แล้ววางลิงก์ที่นี่)</span></label>
+      <label><i class="ti ti-paperclip"></i> ไฟล์แนบ <span style="font-weight:400;color:var(--txt-3);font-size:11px">(อัปโหลดไฟล์ขึ้น Google Drive เอง แล้ววางลิงก์ที่นี่)</span></label>
       <div id="editAttachList" style="margin-bottom:8px"></div>
       <div class="add-check" id="editAddAttachBox">
         <input id="editAttachName" placeholder="ชื่อไฟล์ เช่น ภาพหน้าปก" style="flex:1">
@@ -777,7 +777,7 @@ button.cal-filter i{width:9px;height:9px;border-radius:3px;display:inline-block}
     </div>
     <div class="modal-foot">
       <button class="btn-ghost" onclick="closeModal('editTaskOverlay')">ยกเลิก</button>
-      <button class="btn-primary" onclick="updateTask()">💾 บันทึกการแก้ไข</button>
+      <button class="btn-primary" onclick="updateTask()"><i class="ti ti-device-floppy"></i> บันทึกการแก้ไข</button>
     </div>
   </div>
 </div>
@@ -802,7 +802,7 @@ button.cal-filter i{width:9px;height:9px;border-radius:3px;display:inline-block}
     <div class="field"><label>อีโมจิตัวแทน</label><div class="emoji-pick" id="mEmojiPick"></div></div>
     <div class="modal-foot">
       <button class="btn-ghost" onclick="closeModal('teamOverlay')">ยกเลิก</button>
-      <button class="btn-primary" onclick="saveMember()">✉️ ส่งคำเชิญ</button>
+      <button class="btn-primary" onclick="saveMember()"><i class="ti ti-mail"></i> ส่งคำเชิญ</button>
     </div>
   </div>
 </div>
@@ -810,18 +810,18 @@ button.cal-filter i{width:9px;height:9px;border-radius:3px;display:inline-block}
 <!-- INVITE LINK DIALOG -->
 <div class="overlay" id="inviteOverlay">
   <div class="modal" style="max-width:480px">
-    <h3>✉️ ส่งคำเชิญสำเร็จ!</h3>
+    <h3><i class="ti ti-mail"></i> ส่งคำเชิญสำเร็จ!</h3>
     <p class="desc" id="inviteDesc"></p>
     <div style="background:var(--layer-2);border:1px solid var(--stroke);border-radius:10px;padding:14px;margin:12px 0">
-      <div style="font-size:12px;color:var(--txt-2);margin-bottom:6px">🔗 ลิงก์เชิญ:</div>
+      <div style="font-size:12px;color:var(--txt-2);margin-bottom:6px"><i class="ti ti-link"></i> ลิงก์เชิญ:</div>
       <div style="font-size:13px;word-break:break-all;color:var(--accent);line-height:1.5" id="inviteLinkText"></div>
     </div>
     <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:12px">
-      <button class="btn-primary" onclick="copyInviteLink()" id="copyBtn">📋 คัดลอกลิงก์</button>
+      <button class="btn-primary" onclick="copyInviteLink()" id="copyBtn"><i class="ti ti-copy"></i> คัดลอกลิงก์</button>
       <button class="btn-ghost" onclick="closeModal('inviteOverlay')">ปิด</button>
     </div>
     <div style="margin-top:14px;padding:10px;background:var(--layer-2);border-radius:8px;font-size:12px;color:var(--txt-2);line-height:1.6">
-      📌 <b>ขั้นตอน:</b><br>
+      <i class="ti ti-list-numbers"></i> <b>ขั้นตอน:</b><br>
       1. ส่งลิงก์นี้ให้ <span id="inviteNameDisplay"></span> ทาง LINE / WhatsApp<br>
       2. เขาเปิดลิงก์ → ตั้งรหัสผ่าน → เข้าทีมทันที
     </div>
@@ -865,7 +865,7 @@ button.cal-filter i{width:9px;height:9px;border-radius:3px;display:inline-block}
     </div>
     <div class="modal-foot">
       <button class="btn-ghost" onclick="closeModal('resetPassOverlay')">ยกเลิก</button>
-      <button class="btn-burgundy" onclick="adminResetPassword()">✉️ ส่งลิงก์</button>
+      <button class="btn-burgundy" onclick="adminResetPassword()"><i class="ti ti-mail"></i> ส่งลิงก์</button>
     </div>
   </div>
 </div>
@@ -885,7 +885,7 @@ button.cal-filter i{width:9px;height:9px;border-radius:3px;display:inline-block}
 <!-- DAY DETAIL MODAL -->
 <div class="overlay" id="dayDetailOverlay">
   <div class="modal" style="max-width:440px">
-    <h3 id="dayDetailTitle">🗓️ รายการวันนี้</h3>
+    <h3 id="dayDetailTitle"><i class="ti ti-calendar"></i> รายการวันนี้</h3>
     <p class="desc">งานและอีเวนต์ทั้งหมดในวันนี้</p>
     <div id="dayDetailList"></div>
     <div class="modal-foot">
@@ -918,7 +918,7 @@ button.cal-filter i{width:9px;height:9px;border-radius:3px;display:inline-block}
     <div class="modal-foot">
       <button class="btn-danger" id="evDelBtn" style="display:none;margin-right:auto" onclick="deleteEventItem()"><i class="ti ti-trash"></i> ลบ</button>
       <button class="btn-ghost" onclick="closeModal('eventOverlay')">ยกเลิก</button>
-      <button class="btn-primary" onclick="saveEventItem()">💾 บันทึก</button>
+      <button class="btn-primary" onclick="saveEventItem()"><i class="ti ti-device-floppy"></i> บันทึก</button>
     </div>
   </div>
 </div>
@@ -926,7 +926,7 @@ button.cal-filter i{width:9px;height:9px;border-radius:3px;display:inline-block}
 <!-- PERMISSIONS MODAL (Boss/Dev) -->
 <div class="overlay" id="permOverlay">
   <div class="modal" style="max-width:500px">
-    <h3 id="permTitle">⚙️ ตำแหน่งและสิทธิ์</h3>
+    <h3 id="permTitle"><i class="ti ti-settings"></i> ตำแหน่งและสิทธิ์</h3>
     <p class="desc">สิทธิ์ตั้งต้นมาจากตำแหน่ง — เปิด/ปิดเพิ่มเฉพาะคนนี้ได้ (แถบสีส้ม = ต่างจากค่าตั้งต้น)</p>
     <div class="field">
       <label>ตำแหน่ง</label>
@@ -940,9 +940,9 @@ button.cal-filter i{width:9px;height:9px;border-radius:3px;display:inline-block}
     </div>
     <div class="field"><label>สิทธิ์</label><div id="permList"></div></div>
     <div class="modal-foot">
-      <button class="btn-ghost" style="margin-right:auto" onclick="resetPermDefaults()">↺ คืนค่าตั้งต้น</button>
+      <button class="btn-ghost" style="margin-right:auto" onclick="resetPermDefaults()"><i class="ti ti-refresh"></i> คืนค่าตั้งต้น</button>
       <button class="btn-ghost" onclick="closeModal('permOverlay')">ยกเลิก</button>
-      <button class="btn-primary" onclick="savePerms()">💾 บันทึก</button>
+      <button class="btn-primary" onclick="savePerms()"><i class="ti ti-device-floppy"></i> บันทึก</button>
     </div>
   </div>
 </div>
@@ -1070,9 +1070,9 @@ function closeSidebarMobile() {
 
 /* ============ RANK HELPERS ============ */
 const RANKS = { boss:"Boss", dev:"Dev", employee:"พนักงาน", intern:"เด็กฝึกงาน" };
-const RANK_EMOJI = { boss:"👑", dev:"💻", employee:"💼", intern:"🎓" };
-const FREQ_MAP = { daily:"📅 รายวัน", weekly:"📆 รายอาทิตย์", monthly:"🗓️ รายเดือน" };
-const EV_ICON = { event:"🎪", campaign:"🎯", content:"📱", launch:"🚀", meeting:"👥", deadline:"⏰" };
+const RANK_EMOJI = { boss:"ti-crown", dev:"ti-code", employee:"ti-briefcase", intern:"ti-school" };
+const FREQ_MAP = { daily:'<i class="ti ti-repeat"></i> รายวัน', weekly:'<i class="ti ti-calendar-week"></i> รายอาทิตย์', monthly:'<i class="ti ti-calendar-month"></i> รายเดือน' };
+const EV_ICON = { event:"ti-confetti", campaign:"ti-target-arrow", content:"ti-device-mobile", launch:"ti-rocket", meeting:"ti-users", deadline:"ti-clock-exclamation" };
 const TASK_EMOJIS = ["🚗","📣","🎨","💻","📊","📝","📸","🎬","🛍️","📈","🔧","⭐","🔥"];
 const MEMBER_EMOJIS = ["🙂","🧑‍💻","👩‍💼","👨‍💼","👩‍🎨","👨‍💻","👩‍🔬","🧑‍🚀","🦸","🦹","🐱","🐶","🦊","🐼","🐯"];
 function isAdmin() { return !!currentUser && (currentUser.rank==="boss" || currentUser.rank==="dev"); }
@@ -1147,10 +1147,18 @@ function taskStatus(t) {
   if (total>0 && done===total) return "done";
   return "doing";
 }
+const TOAST_ICON_MAP = {
+  "⚠️":"ti-alert-triangle","🔒":"ti-lock","🗑":"ti-trash","✅":"ti-check","📌":"ti-pin",
+  "📋":"ti-clipboard-check","✏️":"ti-pencil","✉️":"ti-mail","🚗":"ti-car","🗓️":"ti-calendar",
+  "🔑":"ti-key","📬":"ti-mail","👥":"ti-users","🎉":"ti-confetti","❌":"ti-x",
+  "⚙️":"ti-settings","↩︎":"ti-refresh","ℹ️":"ti-info-circle"
+};
 function toast(msg, emoji="✅") {
   const el = document.getElementById("toast");
   el.textContent = "";
-  const a = document.createElement("span"); a.textContent = emoji;
+  const a = document.createElement("span");
+  const cls = emoji && emoji.startsWith("ti-") ? emoji : TOAST_ICON_MAP[emoji];
+  if (cls) a.innerHTML = `<i class="ti ${cls}"></i>`; else a.textContent = emoji;
   const b = document.createElement("span"); b.textContent = msg;
   el.append(a, b);
   el.classList.add("show");
@@ -1452,7 +1460,7 @@ async function sendResetEmail() {
 let pwMode = "change";
 function openPwModal(mode) {
   pwMode = mode;
-  document.getElementById("pwTitle").textContent = mode === "recover" ? "🔑 ตั้งรหัสผ่านใหม่" : "🔑 เปลี่ยนรหัสผ่าน";
+  document.getElementById("pwTitle").innerHTML = mode === "recover" ? '<i class="ti ti-key"></i> ตั้งรหัสผ่านใหม่' : '<i class="ti ti-key"></i> เปลี่ยนรหัสผ่าน';
   document.getElementById("pwCurWrap").style.display = mode === "recover" ? "none" : "";
   ["pwCur","pwNew","pwNew2"].forEach(id => document.getElementById(id).value = "");
   document.getElementById("pwOverlay").classList.add("show");
@@ -1543,17 +1551,17 @@ function renderNotifPanel() {
   const panel = document.getElementById("notifPanelContent");
   if (!panel) return;
   const notifs = getMyNotifications();
-  if (notifs.length === 0) { panel.innerHTML = '<div class="notif-empty">🔔 ยังไม่มีการแจ้งเตือน</div>'; return; }
+  if (notifs.length === 0) { panel.innerHTML = '<div class="notif-empty"><i class="ti ti-bell-off"></i> ยังไม่มีการแจ้งเตือน</div>'; return; }
   panel.innerHTML = notifs.slice(0, 30).map(n => {
-    const icon = n.type==="request" ? "📬" : n.type==="approved" ? "✅" : n.type==="rejected" ? "❌" : n.type==="task" ? "📋" : "🔔";
+    const icon = n.type==="request" ? "ti-mail" : n.type==="approved" ? "ti-check" : n.type==="rejected" ? "ti-x" : n.type==="task" ? "ti-clipboard-check" : "ti-bell";
     return `<div class="notif-item ${!n.isRead?'unread':''}">
-      <div class="n-icon">${icon}</div>
+      <div class="n-icon"><i class="ti ${icon}"></i></div>
       <div class="n-body">
         <div class="n-title">${esc(n.title)}</div>
         <div class="n-msg">${esc(n.message)}</div>
         <div class="n-time">${timeAgo(n.createdAt)}${n.fromName?" • จาก "+esc(n.fromName):""}</div>
       </div>
-      <button class="n-del" onclick="event.stopPropagation();deleteNotif('${sid(n.id)}')" title="ลบการแจ้งเตือน">🗑</button>
+      <button class="n-del" onclick="event.stopPropagation();deleteNotif('${sid(n.id)}')" title="ลบการแจ้งเตือน"><i class="ti ti-trash"></i></button>
     </div>`;
   }).join("");
 }
@@ -1630,7 +1638,7 @@ function renderBoard() {
   const hint = document.getElementById("boardHint");
   if (hint) hint.innerHTML = canPostAnn() ? `<button class="btn-primary btn-sm" onclick="openBoardModal()"><i class="ti ti-pin"></i> เขียนประกาศ</button>` : "";
   const sorted = [...state.announcements].sort((a,b) => (a.isPinned!==b.isPinned) ? (a.isPinned?-1:1) : new Date(b.createdAt) - new Date(a.createdAt));
-  if (sorted.length === 0) { list.innerHTML = `<div class="empty"><div class="e-emoji">📌</div><b>ยังไม่มีประกาศ</b></div>`; return; }
+  if (sorted.length === 0) { list.innerHTML = `<div class="empty"><div class="e-emoji"><i class="ti ti-pin"></i></div><b>ยังไม่มีประกาศ</b></div>`; return; }
   list.innerHTML = sorted.map(a => {
     const author = memberById(a.authorId);
     const ackedBy = a.ackedBy||[];
@@ -1638,7 +1646,7 @@ function renderBoard() {
     const ackNames = ackedBy.map(id => { const m = memberById(id); return m ? m.name : ""; }).filter(Boolean).join(", ");
     return `<div class="board-card ${a.isPinned?'pinned':''}">
       <div class="board-head">
-        <div class="board-title">${a.isPinned?'<span class="pin">📌</span>':''} ${esc(a.title)}</div>
+        <div class="board-title">${a.isPinned?'<span class="pin"><i class="ti ti-pin"></i></span>':''} ${esc(a.title)}</div>
         <div class="board-meta"><span>${esc(author?author.name:a.authorName)}</span><span>${timeAgo(a.createdAt)}</span></div>
       </div>
       ${a.content?`<div class="board-content">${esc(a.content)}</div>`:""}
@@ -1768,7 +1776,7 @@ function renderHeader() {
   let html = `<div class="notif-wrap">
     <button class="notif-bell" onclick="toggleNotifPanel()" title="การแจ้งเตือน"><i class="ti ti-bell"></i><span class="notif-badge hidden" id="notifBadge">0</span></button>
     <div class="notif-panel ${notifOpen?'show':''}" id="notifPanel">
-      <div class="notif-head"><h4><i class="ti ti-bell"></i> การแจ้งเตือน</h4><button class="btn-ghost btn-sm" onclick="toggleNotifPanel()">✕</button></div>
+      <div class="notif-head"><h4><i class="ti ti-bell"></i> การแจ้งเตือน</h4><button class="btn-ghost btn-sm" onclick="toggleNotifPanel()"><i class="ti ti-x"></i></button></div>
       <div id="notifPanelContent"></div>
     </div>
   </div>
@@ -1851,7 +1859,7 @@ function applyForceView() {
   const btn = document.getElementById("sidebarViewToggleBtn");
   if (!btn) return;
   const showingMobile = forceView === "mobile" ? true : forceView === "desktop" ? false : (window.innerWidth <= 1024);
-  btn.textContent = showingMobile ? "🖥️ ดูเวอร์ชันคอม" : "📱 ดูเวอร์ชันมือถือ";
+  btn.innerHTML = showingMobile ? '<i class="ti ti-device-desktop"></i> ดูเวอร์ชันคอม' : '<i class="ti ti-device-mobile"></i> ดูเวอร์ชันมือถือ';
 }
 function cycleForceView() {
   forceView = (window.innerWidth <= 1024) ? "desktop" : "mobile";
@@ -1864,8 +1872,8 @@ function toggleRoleBanner() { bannerOpen = !bannerOpen; renderRoleBanner(); }
 function permSummaryHtml(m) {
   const on = PERMS.filter(p => memberCan(m, p.key)), off = PERMS.filter(p => !memberCan(m, p.key));
   return `<div class="perm-summary">
-    ${on.map(p=>`<div class="ps-on">✅ ${p.label}</div>`).join("")}
-    ${off.map(p=>`<div class="ps-off">❌ ${p.label}</div>`).join("")}
+    ${on.map(p=>`<div class="ps-on"><i class="ti ti-check"></i> ${p.label}</div>`).join("")}
+    ${off.map(p=>`<div class="ps-off"><i class="ti ti-x"></i> ${p.label}</div>`).join("")}
   </div>`;
 }
 function renderRoleBanner() {
@@ -1875,9 +1883,9 @@ function renderRoleBanner() {
   const note = isAdmin() ? "มีสิทธิ์จัดการงานและคนในทีมทั้งหมด"
     : (can("manage_all_tasks") ? "จัดการงานของทั้งทีมได้ (เรื่องสมาชิก/ระบบเป็นของ Boss/Dev)" : can("create_task") ? "สร้างงานได้เลย" : can("request_task") ? "สร้างงานต้องขออนุมัติ" : "ทำเชคลิสต์ได้อย่างเดียว") + (custom ? " · มีสิทธิ์ปรับเฉพาะคน" : "");
   el.innerHTML = `<div class="role-banner" role="button" tabindex="0" onclick="toggleRoleBanner()" onkeydown="if(event.key==='Enter')toggleRoleBanner()" title="ดูสิทธิ์ของฉัน">
-      ${RANK_EMOJI[rankCls(currentUser.rank)]||""} <b>${RANKS[rankCls(currentUser.rank)]}</b> — ${esc(currentUser.name)} ${note}
+      <i class="ti ${RANK_EMOJI[rankCls(currentUser.rank)]||""}"></i> <b>${RANKS[rankCls(currentUser.rank)]}</b> — ${esc(currentUser.name)} ${note}
       <span class="rb-toggle">${bannerOpen?"ซ่อน ▴":"ดูสิทธิ์ของฉัน ▾"}</span>
-    </div>${bannerOpen ? `<div class="role-detail">${isAdmin() ? `<div class="ps-on">✅ ทำได้ทุกอย่าง รวมถึงเชิญ/ลบสมาชิก อนุมัติคำขอ และปรับสิทธิ์ของแต่ละคน</div>` : permSummaryHtml(currentUser)}</div>` : ""}`;
+    </div>${bannerOpen ? `<div class="role-detail">${isAdmin() ? `<div class="ps-on"><i class="ti ti-check"></i> ทำได้ทุกอย่าง รวมถึงเชิญ/ลบสมาชิก อนุมัติคำขอ และปรับสิทธิ์ของแต่ละคน</div>` : permSummaryHtml(currentUser)}</div>` : ""}`;
 }
 
 function renderRequests() {
@@ -1906,8 +1914,8 @@ function renderRequests() {
         ${req.type==="delete_member"?`<div class="req-from">สมาชิกที่จะลบ: ${whoMember?esc(whoMember.name)+" ("+RANKS[rankCls(whoMember.rank)]+")":"— (ไม่พบแล้ว)"}</div>`:""}
       </div>
       <div class="req-btns">
-        <button class="btn-primary btn-sm" onclick="approveRequest('${sid(req.id)}')">✅ อนุมัติ</button>
-        <button class="btn-danger btn-sm" onclick="rejectRequest('${sid(req.id)}')">❌ ปฏิเสธ</button>
+        <button class="btn-primary btn-sm" onclick="approveRequest('${sid(req.id)}')"><i class="ti ti-check"></i> อนุมัติ</button>
+        <button class="btn-danger btn-sm" onclick="rejectRequest('${sid(req.id)}')"><i class="ti ti-x"></i> ปฏิเสธ</button>
       </div>
     </div>`;
   }).join("");
@@ -1940,7 +1948,7 @@ function renderAttention() {
   const parts = [];
   if (tc.overdue) parts.push(`<b style="color:var(--danger)">เลยกำหนด ${tc.overdue} งาน</b>`);
   if (dueToday) parts.push(`<b>ต้องส่งวันนี้ ${dueToday} งาน</b>`);
-  el.innerHTML = `<div class="attention ${tc.overdue?'bad':''}"><span>${tc.overdue?"⚠️":"📅"}</span><span>${currentUser && currentUser.rank==="intern"?"งานของคุณ: ":""}${parts.join(" · ")}</span><button class="btn-ghost btn-sm" onclick="openTasks('today')">ดูงานวันนี้ →</button></div>`;
+  el.innerHTML = `<div class="attention ${tc.overdue?'bad':''}"><span><i class="ti ${tc.overdue?"ti-alert-triangle":"ti-calendar"}"></i></span><span>${currentUser && currentUser.rank==="intern"?"งานของคุณ: ":""}${parts.join(" · ")}</span><button class="btn-ghost btn-sm" onclick="openTasks('today')">ดูงานวันนี้ <i class="ti ti-arrow-right"></i></button></div>`;
 }
 function openTasks(filter) { state.filter = filter; navigateTo("today-tasks"); }
 
@@ -1948,17 +1956,17 @@ function openTasks(filter) { state.filter = filter; navigateTo("today-tasks"); }
 function loginStatusChip(m) {
   const inToday = m.lastLoginDate === todayStr();
   const color = inToday ? "var(--success)" : "var(--danger)";
-  const label = inToday ? "✅ เข้าระบบวันนี้แล้ว" : "❌ ยังไม่เข้าระบบวันนี้";
+  const label = inToday ? '<i class="ti ti-check"></i> เข้าระบบวันนี้แล้ว' : '<i class="ti ti-x"></i> ยังไม่เข้าระบบวันนี้';
   const daysAgo = (!inToday && m.lastLoginDate) ? (() => {
     const d = Math.floor((new Date(todayStr()) - new Date(m.lastLoginDate)) / 86400000);
     return d > 0 ? ` (ล่าสุด ${d} วันก่อน)` : "";
   })() : (!m.lastLoginDate ? " (ยังไม่เคยเข้าระบบ)" : "");
-  return `<div class="chip-link" style="border-color:${color}"><span style="color:${color};font-weight:600">${label}${esc(daysAgo)}</span><span style="color:var(--txt-2);font-size:11px">🔑 เข้าระบบ ${m.loginCount||0}/7 วันล่าสุด</span></div>`;
+  return `<div class="chip-link" style="border-color:${color}"><span style="color:${color};font-weight:600">${label}${esc(daysAgo)}</span><span style="color:var(--txt-2);font-size:11px"><i class="ti ti-login"></i> เข้าระบบ ${m.loginCount||0}/7 วันล่าสุด</span></div>`;
 }
 function renderTeam() {
   const g = document.getElementById("teamGrid");
   if (state.members.length === 0) {
-    g.innerHTML = `<div class="empty" style="grid-column:1/-1"><div class="e-emoji">👋</div><b>ยังไม่มีสมาชิก</b><br><br>${isAdmin()?'กดปุ่ม "👥 เพิ่มคน" เพื่อเริ่มต้น':"รอ Admin เพิ่มสมาชิก"}</div>`;
+    g.innerHTML = `<div class="empty" style="grid-column:1/-1"><div class="e-emoji"><i class="ti ti-users"></i></div><b>ยังไม่มีสมาชิก</b><br><br>${isAdmin()?'กดปุ่ม "เพิ่มคน" เพื่อเริ่มต้น':"รอ Admin เพิ่มสมาชิก"}</div>`;
     return;
   }
   g.innerHTML = state.members.map(m => {
@@ -1968,21 +1976,21 @@ function renderTeam() {
     const rk = rankCls(m.rank), rl = RANKS[rk];
     let removeBtn = '';
     if (currentUser && m.id !== currentUser.id) {
-      if (isAdmin()) removeBtn = `<button class="btn-danger btn-sm m-del" title="ลบสมาชิก" onclick="delMember('${id}')">✕</button>`;
-      else if (can("request_task")) removeBtn = `<button class="btn-ghost btn-sm m-del" title="ขออนุมัติลบสมาชิก" onclick="submitDeleteMemberRequest('${id}')">📤</button>`;
+      if (isAdmin()) removeBtn = `<button class="btn-danger btn-sm m-del" title="ลบสมาชิก" onclick="delMember('${id}')"><i class="ti ti-x"></i></button>`;
+      else if (can("request_task")) removeBtn = `<button class="btn-ghost btn-sm m-del" title="ขออนุมัติลบสมาชิก" onclick="submitDeleteMemberRequest('${id}')"><i class="ti ti-send"></i></button>`;
     }
     if (m.status === "pending") {
       return `<div class="member" style="opacity:0.75;border:2px dashed var(--accent)">
         ${removeBtn}
-        <div style="position:absolute;top:8px;right:40px;background:var(--caution);color:#fff;font-size:11px;padding:2px 8px;border-radius:20px;font-weight:600">⏳ รอเข้าระบบ</div>
+        <div style="position:absolute;top:8px;right:40px;background:var(--caution);color:#fff;font-size:11px;padding:2px 8px;border-radius:20px;font-weight:600"><i class="ti ti-hourglass"></i> รอเข้าระบบ</div>
         <div class="top">
           <div class="avatar" style="filter:grayscale(0.5)">${esc(m.emoji||"🧑‍💻")}</div>
           <div><div class="name">${esc(m.name)} <span class="rank-badge ${rk}">${rl}</span></div><div class="role">${esc(m.email)}</div></div>
         </div>
         <div style="text-align:center;padding:16px 0">
-          <div style="font-size:28px;margin-bottom:6px">📧</div>
+          <div style="font-size:28px;margin-bottom:6px"><i class="ti ti-mail"></i></div>
           <div style="font-size:12.5px;color:var(--txt-2)">ถูกเชิญแล้ว รอตั้งรหัสผ่าน</div>
-          ${isAdmin()?`<button class="btn-ghost btn-sm" style="margin-top:8px" onclick="resendInvite('${id}')">🔄 ส่งลิงก์อีกครั้ง</button> <button class="btn-ghost btn-sm" style="margin-top:8px" onclick="openPermModal('${id}')">⚙️ สิทธิ์</button>`:""}
+          ${isAdmin()?`<button class="btn-ghost btn-sm" style="margin-top:8px" onclick="resendInvite('${id}')"><i class="ti ti-refresh"></i> ส่งลิงก์อีกครั้ง</button> <button class="btn-ghost btn-sm" style="margin-top:8px" onclick="openPermModal('${id}')"><i class="ti ti-settings"></i> สิทธิ์</button>`:""}
         </div>
       </div>`;
     }
@@ -1998,14 +2006,14 @@ function renderTeam() {
       <div class="bar ${mood.cls}"><i style="width:${s.hasTask?s.score:0}%"></i></div>
       <div class="score-row"><span>คะแนนความพึงพอใจ</span><b style="color:${sc}">${s.hasTask?s.score+"%":"—"}</b></div>
       <div class="mini">
-        <span class="chip">📋 <b>${s.total}</b> งาน</span>
-        <span class="chip" style="color:var(--success)">✅ <b>${s.onTime}</b> ตรงเวลา</span>
-        <span class="chip" style="color:var(--danger)">😢 <b>${s.late}</b> เลยกำหนด</span>
-        <span class="chip">⏳ <b>${s.pending}</b> ค้าง</span>
+        <span class="chip"><i class="ti ti-clipboard-check"></i> <b>${s.total}</b> งาน</span>
+        <span class="chip" style="color:var(--success)"><i class="ti ti-check"></i> <b>${s.onTime}</b> ตรงเวลา</span>
+        <span class="chip" style="color:var(--danger)"><i class="ti ti-alert-triangle"></i> <b>${s.late}</b> เลยกำหนด</span>
+        <span class="chip"><i class="ti ti-hourglass"></i> <b>${s.pending}</b> ค้าง</span>
       </div>
       ${(rk==="employee"||rk==="intern")?loginStatusChip(m):""}
-      ${isAdmin()?`<div class="perm-bar"><span>${(m.rank==="boss"||m.rank==="dev")?"สิทธิ์เต็ม":(Object.keys(m.perms||{}).length?"⚙️ ปรับสิทธิ์เฉพาะคน "+Object.keys(m.perms).length+" รายการ":"สิทธิ์ตามตำแหน่ง")}</span><button class="btn-ghost btn-sm" onclick="openPermModal('${id}')">⚙️ ตำแหน่ง/สิทธิ์</button></div>`:""}
-      ${notMigrated?`<div class="chip-link" title="สมาชิกคนนี้ยังไม่เคยเข้าระบบเวอร์ชันใหม่ — เข้าได้ด้วยรหัสเดิม หรือส่งลิงก์เชิญใหม่ให้"><span>⚠️ ยังไม่ย้ายเข้าระบบใหม่</span><button class="btn-ghost btn-sm" onclick="resendInvite('${id}')">🔗 ส่งลิงก์</button></div>`:""}
+      ${isAdmin()?`<div class="perm-bar"><span>${(m.rank==="boss"||m.rank==="dev")?"สิทธิ์เต็ม":(Object.keys(m.perms||{}).length?'<i class="ti ti-settings"></i> ปรับสิทธิ์เฉพาะคน '+Object.keys(m.perms).length+" รายการ":"สิทธิ์ตามตำแหน่ง")}</span><button class="btn-ghost btn-sm" onclick="openPermModal('${id}')"><i class="ti ti-settings"></i> ตำแหน่ง/สิทธิ์</button></div>`:""}
+      ${notMigrated?`<div class="chip-link" title="สมาชิกคนนี้ยังไม่เคยเข้าระบบเวอร์ชันใหม่ — เข้าได้ด้วยรหัสเดิม หรือส่งลิงก์เชิญใหม่ให้"><span><i class="ti ti-alert-triangle"></i> ยังไม่ย้ายเข้าระบบใหม่</span><button class="btn-ghost btn-sm" onclick="resendInvite('${id}')"><i class="ti ti-link"></i> ส่งลิงก์</button></div>`:""}
     </div>`;
   }).join("");
 }
@@ -2047,10 +2055,10 @@ function renderTaskCard(t) {
       <div class="task-main">
         <div class="task-title">${esc(t.title)} ${tag}</div>
         <div class="task-meta">
-          <span>👤 ${who?esc(who.name):"ไม่ระบุ"}</span>
-          <span>📅 เริ่ม: ${fmtDate(t.startDate)} → กำหนดส่ง: ${fmtDate(t.due)}</span>
+          <span><i class="ti ti-user"></i> ${who?esc(who.name):"ไม่ระบุ"}</span>
+          <span><i class="ti ti-calendar"></i> เริ่ม: ${fmtDate(t.startDate)} → กำหนดส่ง: ${fmtDate(t.due)}</span>
           <span class="tag ${freqCls(t.freq)}" style="font-size:10px">${FREQ_MAP[freqCls(t.freq)]}</span>
-          <span>📝 ${doneC}/${checks.length} ข้อ</span>
+          <span><i class="ti ti-list-check"></i> ${doneC}/${checks.length} ข้อ</span>
         </div>
         ${t.desc?`<div style="font-size:12.5px;color:var(--txt-2);margin-top:7px">${esc(t.desc)}</div>`:""}
       </div>
@@ -2065,7 +2073,7 @@ function renderTaskCard(t) {
         <label class="check">
           <input type="checkbox" ${c.on?"checked":""} ${canTick?"":"disabled"} onchange="toggleCheck('${id}',${i},this)">
           <span class="ctext">${esc(c.text)}</span>
-          ${canChecklist?`<button class="del-check" title="ลบหัวข้อย่อย" onclick="event.preventDefault();delCheck('${id}',${i})">🗑</button>`:""}
+          ${canChecklist?`<button class="del-check" title="ลบหัวข้อย่อย" onclick="event.preventDefault();delCheck('${id}',${i})"><i class="ti ti-trash"></i></button>`:""}
         </label>`).join("")}
       ${canChecklist?`<div class="add-check">
         <input placeholder="เพิ่มหัวข้อย่อย..." onkeydown="if(event.key==='Enter'){addCheck('${id}',this)}">
@@ -2114,7 +2122,7 @@ function routeView() {
 
 /* ============ VIEW: งาน (หน้าเดียวสำหรับรายการงานทั้งหมด) ============ */
 const TASK_TABS = [
-  { id:"mine", label:"👤 งานของฉัน" },
+  { id:"mine", label:'<i class="ti ti-user"></i> งานของฉัน' },
   { id:"today", label:"วันนี้" },
   { id:"doing", label:"กำลังทำ" },
   { id:"overdue", label:"เลยกำหนด" },
@@ -2142,29 +2150,29 @@ function renderTasksView() {
   const f = (state.filter in counts && tabs.some(t => t.id === state.filter)) ? state.filter : "today";
 
   const cards = arr => arr.map(renderTaskCard).join("");
-  const empty = msg => `<div class="empty"><div class="e-emoji">📭</div><b>${msg}</b></div>`;
+  const empty = msg => `<div class="empty"><div class="e-emoji"><i class="ti ti-inbox"></i></div><b>${msg}</b></div>`;
   const group = (title, arr) => arr.length ? `<div class="sec-head" style="margin-top:6px"><h2 style="font-size:15px">${title}</h2><span class="hint">${arr.length} งาน</span></div>${cards(arr)}` : "";
   let body;
   if (f === "mine") {
     body = myAll.length
-      ? group("⚠️ เลยกำหนด", myOver) + group("🔄 กำลังทำ", myDoing) + group("✅ เสร็จแล้ว", myDone)
+      ? group('<i class="ti ti-alert-triangle"></i> เลยกำหนด', myOver) + group('<i class="ti ti-refresh"></i> กำลังทำ', myDoing) + group('<i class="ti ti-check"></i> เสร็จแล้ว', myDone)
       : empty("ยังไม่มีงานที่มอบหมายให้คุณ");
   } else if (f === "today") {
     body = (overdue.length || dueToday.length)
-      ? group("⚠️ เลยกำหนด", overdue) + group("📅 ต้องส่งวันนี้", dueToday)
-      : empty("ไม่มีงานเร่งด่วนวันนี้ 🎉") ;
+      ? group('<i class="ti ti-alert-triangle"></i> เลยกำหนด', overdue) + group('<i class="ti ti-calendar"></i> ต้องส่งวันนี้', dueToday)
+      : empty("ไม่มีงานเร่งด่วนวันนี้") ;
   } else if (f === "all") {
     const rest = [...overdue, ...doing, ...done];
     body = rest.length ? cards(rest) : empty(state.tasks.length ? "ไม่มีงานที่ตรงเงื่อนไข" : "ยังไม่มีงาน");
   } else {
     const arr = f === "doing" ? doing : f === "overdue" ? overdue : done;
-    body = arr.length ? cards(arr) : empty(f === "overdue" ? "ไม่มีงานเลยกำหนด 🎉" : f === "done" ? "ยังไม่มีงานที่เสร็จ" : "ไม่มีงานที่กำลังทำ");
+    body = arr.length ? cards(arr) : empty(f === "overdue" ? "ไม่มีงานเลยกำหนด" : f === "done" ? "ยังไม่มีงานที่เสร็จ" : "ไม่มีงานที่กำลังทำ");
   }
 
   vr.innerHTML = `
-    <div class="view-head"><div><h2>✅ งาน</h2>
+    <div class="view-head"><div><h2><i class="ti ti-list-check"></i> งาน</h2>
       <div style="font-size:12.5px;color:var(--txt-2);margin-top:3px">${new Date().toLocaleDateString("th-TH",{weekday:"long",day:"numeric",month:"long",year:"numeric"})}</div></div>
-      <div class="cal-ctrl">${canCreateTask() ? `<button class="btn-primary btn-sm" onclick="openTaskModal()">➕ ${can("create_task")?"เพิ่มงาน":"ขอสร้างงาน"}</button>` : ""}</div></div>
+      <div class="cal-ctrl">${canCreateTask() ? `<button class="btn-primary btn-sm" onclick="openTaskModal()"><i class="ti ti-plus"></i> ${can("create_task")?"เพิ่มงาน":"ขอสร้างงาน"}</button>` : ""}</div></div>
     <div class="task-toolbar">
       <div class="cal-filters" role="tablist" aria-label="กรองงาน" style="margin:0">
         ${tabs.map(t=>{ const alert = t.id==="mine" ? myOver.length>0 : (t.id!=='all'&&t.id!=='done'&&t.id!=='doing'&&counts[t.id]&&overdue.length); return `<button type="button" role="tab" aria-selected="${f===t.id}" class="cal-filter ${f===t.id?'on':''}" onclick="setTaskFilter('${t.id}')">${t.label}<span class="tab-count ${alert?'alert':''}">${counts[t.id]}</span></button>`; }).join("")}
@@ -2214,8 +2222,8 @@ function renderEventCalendar() {
     const dotsHtml = dotsList.slice(0,4).join("") + (dayItemCount>4?`<span class="cal-dot-more">+${dayItemCount-4}</span>`:"");
     cells += `<div class="cal-cell ${out?"out":""} ${ds===today?"today":""} ${hasOverdue?"has-overdue":""}" ${cellClickAttr}>
       <div class="cal-num"><span>${d.getDate()}</span></div>
-      ${evs.map(e=>`<div class="ev-chip t-${evType(e.type)}" title="${esc(e.desc)}">${EV_ICON[evType(e.type)]} ${esc(e.title)}${e.time?" "+esc(e.time):""}</div>`).join("")}
-      ${taskDue.slice(0,maxT).map(t=>`<div class="ev-chip t-task ${isOverdue(t)?'overdue':''}">${isOverdue(t)?'⚠️':'📋'} ${esc(t.title)}</div>`).join("")}
+      ${evs.map(e=>`<div class="ev-chip t-${evType(e.type)}" title="${esc(e.desc)}"><i class="ti ${EV_ICON[evType(e.type)]}"></i> ${esc(e.title)}${e.time?" "+esc(e.time):""}</div>`).join("")}
+      ${taskDue.slice(0,maxT).map(t=>`<div class="ev-chip t-task ${isOverdue(t)?'overdue':''}"><i class="ti ${isOverdue(t)?'ti-alert-triangle':'ti-clipboard-check'}"></i> ${esc(t.title)}</div>`).join("")}
       ${taskDue.length>maxT?`<div class="cal-overflow-text" style="font-size:10px;color:var(--txt-3)">+${taskDue.length-maxT} งาน</div>`:""}
       ${dotsList.length?`<div class="cal-dots">${dotsHtml}</div>`:""}
     </div>`;
@@ -2228,7 +2236,7 @@ function renderEventCalendar() {
         <span class="cal-title">${monthLabel}</span>
         <button class="btn-ghost btn-sm" onclick="calMove(1)">ถัดไป ›</button>
         <button class="btn-ghost btn-sm" onclick="calToday()">วันนี้</button>
-        ${canAdd?`<button class="btn-primary btn-sm" onclick="openEventModal('${today}')">➕ เพิ่มอีเวนต์</button>`:""}
+        ${canAdd?`<button class="btn-primary btn-sm" onclick="openEventModal('${today}')"><i class="ti ti-plus"></i> เพิ่มอีเวนต์</button>`:""}
       </div>
     </div>
     <div class="cal-filters" role="tablist" aria-label="กรองปฏิทิน">
@@ -2246,14 +2254,14 @@ let dayDetailDate = null;
 function openDayDetail(ds) {
   dayDetailDate = ds;
   const d = new Date(ds+"T00:00:00");
-  document.getElementById("dayDetailTitle").textContent = "🗓️ " + d.toLocaleDateString("th-TH",{day:"numeric",month:"long",year:"numeric"});
+  document.getElementById("dayDetailTitle").innerHTML = '<i class="ti ti-calendar"></i> ' + d.toLocaleDateString("th-TH",{day:"numeric",month:"long",year:"numeric"});
   const evs = state.events.filter(e=>e.date===ds);
   const tasks = visibleTasks().filter(t=>t.due===ds && taskStatus(t)!=="done");
   const rows = [
-    ...evs.map(e=>`<div class="ev-chip t-${evType(e.type)}" style="white-space:normal;margin-bottom:6px;padding:8px 10px">${EV_ICON[evType(e.type)]} ${esc(e.title)}${e.time?" · "+esc(e.time):""}${e.desc?`<div style="font-size:11px;font-weight:400;color:var(--txt-2);margin-top:3px">${esc(e.desc)}</div>`:""}</div>`),
-    ...tasks.map(t=>{ const who = memberById(t.who); return `<div class="ev-chip t-task ${isOverdue(t)?'overdue':''}" style="white-space:normal;margin-bottom:6px;padding:8px 10px">${isOverdue(t)?'⚠️':'📋'} ${esc(t.title)}${who?" · "+esc(who.name):""}</div>`; })
+    ...evs.map(e=>`<div class="ev-chip t-${evType(e.type)}" style="white-space:normal;margin-bottom:6px;padding:8px 10px"><i class="ti ${EV_ICON[evType(e.type)]}"></i> ${esc(e.title)}${e.time?" · "+esc(e.time):""}${e.desc?`<div style="font-size:11px;font-weight:400;color:var(--txt-2);margin-top:3px">${esc(e.desc)}</div>`:""}</div>`),
+    ...tasks.map(t=>{ const who = memberById(t.who); return `<div class="ev-chip t-task ${isOverdue(t)?'overdue':''}" style="white-space:normal;margin-bottom:6px;padding:8px 10px"><i class="ti ${isOverdue(t)?'ti-alert-triangle':'ti-clipboard-check'}"></i> ${esc(t.title)}${who?" · "+esc(who.name):""}</div>`; })
   ];
-  document.getElementById("dayDetailList").innerHTML = rows.length ? rows.join("") : `<div class="empty"><div class="e-emoji">🗓️</div><b>ไม่มีรายการในวันนี้</b></div>`;
+  document.getElementById("dayDetailList").innerHTML = rows.length ? rows.join("") : `<div class="empty"><div class="e-emoji"><i class="ti ti-calendar"></i></div><b>ไม่มีรายการในวันนี้</b></div>`;
   document.getElementById("dayDetailOverlay").classList.add("show");
 }
 
@@ -2356,7 +2364,7 @@ function renderCampaignTimeline() {
     const collapsed = !!tlCollapsed[key];
     let rows = "";
     if (key === curMonthKey) {
-      const todayRow = `<div class="tl-row" style="background:var(--accent-tint);border-color:var(--accent);font-weight:700;font-size:13px"><div style="width:170px;flex-shrink:0">📌 วันนี้ ${fmtDate(today)}</div><div style="flex:1;color:var(--accent)">↓ งานจากวันนี้ไป</div></div>`;
+      const todayRow = `<div class="tl-row" style="background:var(--accent-tint);border-color:var(--accent);font-weight:700;font-size:13px"><div style="width:170px;flex-shrink:0"><i class="ti ti-map-pin"></i> วันนี้ ${fmtDate(today)}</div><div style="flex:1;color:var(--accent)"><i class="ti ti-arrow-down"></i> งานจากวันนี้ไป</div></div>`;
       let lineShown = false;
       monthTasks.forEach(t => {
         if (!lineShown && (t.due||"9999") >= today) { rows += todayRow; lineShown = true; }
@@ -2369,7 +2377,7 @@ function renderCampaignTimeline() {
     bodyHtml += `<div class="tl-month" id="tlm-${key}">
       <div class="tl-month-head" onclick="toggleTlMonth('${key}')" style="cursor:pointer;display:flex;align-items:center;gap:8px;padding:10px 4px;font-weight:700;border-bottom:1px solid var(--stroke)">
         <span style="transition:transform .15s;display:inline-block;transform:rotate(${collapsed?'-90':'0'}deg)">▾</span>
-        <span>🗓️ ${esc(tlMonthLabel(key))}</span>
+        <span><i class="ti ti-calendar"></i> ${esc(tlMonthLabel(key))}</span>
         <span style="font-weight:400;color:var(--txt-2);font-size:12.5px">${monthTasks.length} งาน${overdueCount?` · <span style="color:var(--danger)">เลยกำหนด ${overdueCount}</span>`:""}</span>
       </div>
       ${collapsed?"":rows}
@@ -2386,7 +2394,7 @@ function renderCampaignTimeline() {
         </select>`:""}
       </div>
     </div>
-    ${tasks.length===0?`<div class="empty"><div class="e-emoji">🎯</div><b>ยังไม่มีงาน/แคมเปญ</b></div>`:bodyHtml}`;
+    ${tasks.length===0?`<div class="empty"><div class="e-emoji"><i class="ti ti-target-arrow"></i></div><b>ยังไม่มีงาน/แคมเปญ</b></div>`:bodyHtml}`;
 }
 function tlRowHtml(t) {
   const st = taskStatus(t), over = isOverdue(t);
@@ -2397,8 +2405,8 @@ function tlRowHtml(t) {
   return `<div class="tl-row" onclick="openEditTaskModal('${sid(t.id)}')" style="cursor:pointer">
     <div style="font-size:22px;flex-shrink:0">${esc(t.emoji||"🚗")}</div>
     <div class="tl-info">
-      <div class="tl-title">${esc(t.title)} ${over?'<span class="tag overdue" style="font-size:10px">⚠️ เลยกำหนด</span>':(st==="done"?'<span class="tag done" style="font-size:10px">✅</span>':"")}</div>
-      <div class="tl-meta">👤 ${who?esc(who.name):"ไม่ระบุ"} • 📅 ${fmtDate(t.startDate)} → ${fmtDate(t.due)}</div>
+      <div class="tl-title">${esc(t.title)} ${over?'<span class="tag overdue" style="font-size:10px"><i class="ti ti-alert-triangle"></i> เลยกำหนด</span>':(st==="done"?'<span class="tag done" style="font-size:10px"><i class="ti ti-check"></i></span>':"")}</div>
+      <div class="tl-meta"><i class="ti ti-user"></i> ${who?esc(who.name):"ไม่ระบุ"} • <i class="ti ti-calendar"></i> ${fmtDate(t.startDate)} → ${fmtDate(t.due)}</div>
     </div>
     <div class="tl-bar"><i style="width:${pct}%;background:${color}"></i></div>
     <div class="tl-pct" style="color:${color}">${pct}%</div>
@@ -2439,7 +2447,7 @@ function addTmpCheck() {
 function delTmpCheck(i) { state.tmpChecks.splice(i,1); renderTmpChecks(); }
 function renderTmpChecks() {
   document.getElementById("tCheckList").innerHTML = state.tmpChecks.length
-    ? state.tmpChecks.map((c,i)=>`<label class="check" style="background:var(--layer-2)"><input type="checkbox" checked disabled><span class="ctext">${esc(c.text)}</span><button class="del-check" onclick="event.preventDefault();delTmpCheck(${i})">🗑</button></label>`).join("")
+    ? state.tmpChecks.map((c,i)=>`<label class="check" style="background:var(--layer-2)"><input type="checkbox" checked disabled><span class="ctext">${esc(c.text)}</span><button class="del-check" onclick="event.preventDefault();delTmpCheck(${i})"><i class="ti ti-trash"></i></button></label>`).join("")
     : `<div style="font-size:12px;color:var(--txt-3);padding:6px 2px">ยังไม่มีหัวข้อย่อย</div>`;
 }
 function readTaskForm() {
@@ -2517,10 +2525,10 @@ function renderEditAttachments() {
   const items = state.editAttachments || [];
   box.innerHTML = items.length ? items.map((f,i) => `
     <div style="display:flex;align-items:center;gap:8px;padding:7px 10px;background:var(--layer-2);border:1px solid var(--stroke);border-radius:6px;margin-bottom:6px;font-size:13px">
-      <span style="font-size:18px;width:24px;text-align:center;flex-shrink:0">🔗</span>
+      <span style="font-size:18px;width:24px;text-align:center;flex-shrink:0"><i class="ti ti-link"></i></span>
       <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(f.name)}</span>
-      <button type="button" class="btn-ghost btn-sm" onclick="window.open('${esc(f.url)}','_blank')" title="เปิดลิงก์">👁️ เปิดดู</button>
-      <button type="button" class="btn-ghost btn-sm" onclick="removeEditAttachment(${i})" title="ลบไฟล์แนบ">✕</button>
+      <button type="button" class="btn-ghost btn-sm" onclick="window.open('${esc(f.url)}','_blank')" title="เปิดลิงก์"><i class="ti ti-eye"></i> เปิดดู</button>
+      <button type="button" class="btn-ghost btn-sm" onclick="removeEditAttachment(${i})" title="ลบไฟล์แนบ"><i class="ti ti-x"></i></button>
     </div>`).join("") : `<div style="font-size:12.5px;color:var(--txt-3)">ยังไม่มีไฟล์แนบ</div>`;
 }
 function addEditAttachmentLink() {
@@ -2545,7 +2553,7 @@ function renderEditChecks() {
     <label class="check" style="background:var(--layer-2)">
       <input type="checkbox" ${c.on?"checked":""} onchange="editChecks[${i}].on=this.checked">
       <span class="ctext">${esc(c.text)}</span>
-      <button class="del-check" onclick="event.preventDefault();editChecks.splice(${i},1);renderEditChecks()">🗑</button>
+      <button class="del-check" onclick="event.preventDefault();editChecks.splice(${i},1);renderEditChecks()"><i class="ti ti-trash"></i></button>
     </label>`).join("") || `<div style="font-size:12px;color:var(--txt-3);padding:6px 2px">ยังไม่มีเชคลิสต์</div>`;
 }
 function addEditCheck() {
@@ -2641,7 +2649,7 @@ function openPermModal(memberId) {
   if (!isAdmin()) { toast("ต้องเป็น Admin","🔒"); return; }
   const m = memberById(memberId); if (!m) return;
   permEditId = m.id;
-  document.getElementById("permTitle").textContent = `⚙️ ตำแหน่งและสิทธิ์ — ${m.name}`;
+  document.getElementById("permTitle").innerHTML = `<i class="ti ti-settings"></i> ตำแหน่งและสิทธิ์ — ${esc(m.name)}`;
   const sel = document.getElementById("permRank");
   sel.value = rankCls(m.rank);
   const self = currentUser && m.id === currentUser.id;
@@ -2745,8 +2753,8 @@ function copyInviteLink() {
   const link = document.getElementById("inviteLinkText").textContent;
   const done = () => {
     const btn = document.getElementById("copyBtn");
-    btn.textContent = "✅ คัดลอกแล้ว!";
-    setTimeout(()=>{ btn.textContent = "📋 คัดลอกลิงก์"; }, 2000);
+    btn.innerHTML = '<i class="ti ti-check"></i> คัดลอกแล้ว!';
+    setTimeout(()=>{ btn.innerHTML = '<i class="ti ti-copy"></i> คัดลอกลิงก์'; }, 2000);
     toast("คัดลอกลิงก์แล้ว!","📋");
   };
   if (navigator.clipboard) navigator.clipboard.writeText(link).then(done).catch(()=>fallbackCopy(link, done));
@@ -2811,14 +2819,14 @@ async function renderBannedList() {
   const r = await db.from("banned_emails").select("email,banned_at").order("banned_at", { ascending:false });
   if (r.error) { wrap.innerHTML = `<div class="desc" style="text-align:center;padding:20px 0">โหลดรายชื่อไม่สำเร็จ: ${esc(r.error.message||"")}</div>`; return; }
   const rows = r.data || [];
-  if (!rows.length) { wrap.innerHTML = `<div class="desc" style="text-align:center;padding:20px 0">ไม่มีอีเมลที่ถูกแบนอยู่ 🎉</div>`; return; }
+  if (!rows.length) { wrap.innerHTML = `<div class="desc" style="text-align:center;padding:20px 0">ไม่มีอีเมลที่ถูกแบนอยู่</div>`; return; }
   wrap.innerHTML = rows.map(row => `
     <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 4px;border-bottom:1px solid var(--stroke)">
       <div style="min-width:0">
         <div style="font-size:14px;word-break:break-all">${esc(row.email)}</div>
         <div style="font-size:11px;color:var(--txt-2)">แบนเมื่อ ${row.banned_at ? new Date(row.banned_at).toLocaleString("th-TH") : "-"}</div>
       </div>
-      <button class="btn-primary btn-sm" style="flex:none" onclick="unbanEmail('${esc(row.email).replace(/'/g,"\\'")}')">✅ ปลดแบน</button>
+      <button class="btn-primary btn-sm" style="flex:none" onclick="unbanEmail('${esc(row.email).replace(/'/g,"\\'")}')"><i class="ti ti-check"></i> ปลดแบน</button>
     </div>`).join("");
 }
 async function unbanEmail(email) {
@@ -2881,20 +2889,20 @@ function showProfile() {
       <div style="font-size:48px;margin-bottom:8px">${esc(currentUser.emoji||"🧑‍💻")}</div>
       <div style="display:flex;gap:6px;align-items:center;justify-content:center">
         <input id="myNameInput" value="${esc(currentUser.name)}" maxlength="40" style="font-size:18px;font-weight:650;text-align:center;border:1px solid var(--stroke-2);border-radius:6px;padding:5px 9px;background:var(--control);color:var(--txt);max-width:220px" onkeydown="if(event.key==='Enter'){this.blur();setMyName()}">
-        <button class="btn-ghost btn-sm" onclick="setMyName()" title="บันทึกชื่อ">💾</button>
+        <button class="btn-ghost btn-sm" onclick="setMyName()" title="บันทึกชื่อ"><i class="ti ti-device-floppy"></i></button>
       </div>
       <span class="rank-badge ${rankCls(currentUser.rank)}" style="font-size:12px;margin-top:6px">${RANKS[rankCls(currentUser.rank)]}</span>
     </div>
     <div style="background:var(--layer-2);border:1px solid var(--stroke);border-radius:8px;padding:14px;font-size:13px">
-      <div style="margin-bottom:8px"><b>📧 อีเมล:</b> ${esc(currentUser.email||"—")}</div>
-      <div style="margin-bottom:8px"><b>💼 ตำแหน่ง:</b> ${esc(currentUser.position||"—")}</div>
-      <div><b>🔑 รหัสผ่าน:</b> ••••••••</div>
+      <div style="margin-bottom:8px"><b><i class="ti ti-mail"></i> อีเมล:</b> ${esc(currentUser.email||"—")}</div>
+      <div style="margin-bottom:8px"><b><i class="ti ti-briefcase"></i> ตำแหน่ง:</b> ${esc(currentUser.position||"—")}</div>
+      <div><b><i class="ti ti-key"></i> รหัสผ่าน:</b> ••••••••</div>
     </div>
     <div style="margin-top:14px">
       <div style="font-size:12.5px;color:var(--txt-2);font-weight:600;margin-bottom:7px">เปลี่ยนไอคอน</div>
       <div class="emoji-pick" id="profileEmojiPick">${PROFILE_EMOJIS.map((e,i)=>`<button type="button" class="${e===currentUser.emoji?'sel':''}" onclick="setMyEmoji(${i})" title="ใช้ไอคอนนี้">${e}</button>`).join("")}</div>
     </div>
-    <button class="btn-ghost btn-block" style="margin-top:12px" onclick="closeModal('profileOverlay');showChangePassword()">🔑 เปลี่ยนรหัสผ่าน</button>`;
+    <button class="btn-ghost btn-block" style="margin-top:12px" onclick="closeModal('profileOverlay');showChangePassword()"><i class="ti ti-key"></i> เปลี่ยนรหัสผ่าน</button>`;
   document.getElementById("profileOverlay").classList.add("show");
 }
 
