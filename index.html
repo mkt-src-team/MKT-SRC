@@ -316,7 +316,7 @@ button:disabled{opacity:.6;cursor:progress}
 #sidebar svg{width:18px;height:18px;flex:none;stroke:currentColor;fill:none;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round}
 .sidebar-header{display:flex;align-items:center;gap:8px;height:60px;padding:0 12px 0 14px;flex-shrink:0}
 .sidebar-brand{display:flex;align-items:center;gap:10px;min-width:0;flex:1}
-.sidebar-brand .badge{width:32px;height:32px;border-radius:8px;background:var(--accent);color:var(--accent-contrast);display:grid;place-items:center;font-weight:750;font-size:13px;letter-spacing:.3px;flex:none}
+.sidebar-brand .badge{width:32px;height:32px;border-radius:8px;background:linear-gradient(150deg,var(--accent),var(--accent-hover));color:var(--accent-contrast);display:grid;place-items:center;font-size:16px;flex:none;box-shadow:var(--shadow-2)}
 .sidebar-brand .text{display:flex;flex-direction:column;min-width:0;line-height:1.15}
 .sidebar-brand .text b{font-size:14px;font-weight:650;white-space:nowrap}
 .sidebar-brand .text b .src{color:var(--accent)}
@@ -525,7 +525,7 @@ button.cal-filter i{width:9px;height:9px;border-radius:3px;display:inline-block}
 <aside id="sidebar">
   <div class="sidebar-header">
     <div class="sidebar-brand">
-      <div class="badge">MS</div>
+      <div class="badge"><i class="ti ti-steering-wheel"></i></div>
       <div class="text"><b>MKT-<span class="src">SRC</span></b><small>Marketing Workspace</small></div>
     </div>
     <button class="sidebar-collapse-btn" onclick="toggleSidebarCollapse()" title="ย่อ/ขยายเมนู" aria-label="ย่อ/ขยายเมนู">
