@@ -1007,7 +1007,7 @@ function todayCounts() {
   const today = todayStr();
   const tasks = visibleTasks();
   const overdue = tasks.filter(t => isOverdue(t)).length;
-  const due = tasks.filter(t => !isOverdue(t) && taskStatus(t) !== "done" && t.due === today).length;
+  const due = tasks.filter(t => !isOverdue(t) && taskStatus(t) !== "done" && t.startDate && t.startDate <= today).length;
   return { total: overdue + due, overdue };
 }
 function initials(name) { const n = String(name||"").trim(); return n ? Array.from(n)[0].toUpperCase() : "?"; }
@@ -1947,7 +1947,7 @@ function renderAttention() {
   if (!tc.total) { el.innerHTML = ""; return; }
   const parts = [];
   if (tc.overdue) parts.push(`<b style="color:var(--danger)">เลยกำหนด ${tc.overdue} งาน</b>`);
-  if (dueToday) parts.push(`<b>ต้องส่งวันนี้ ${dueToday} งาน</b>`);
+  if (dueToday) parts.push(`<b>งานของวันนี้ ${dueToday} งาน</b>`);
   el.innerHTML = `<div class="attention ${tc.overdue?'bad':''}"><span><i class="ti ${tc.overdue?"ti-alert-triangle":"ti-calendar"}"></i></span><span>${currentUser && currentUser.rank==="intern"?"งานของคุณ: ":""}${parts.join(" · ")}</span><button class="btn-ghost btn-sm" onclick="openTasks('today')">ดูงานวันนี้ <i class="ti ti-arrow-right"></i></button></div>`;
 }
 function openTasks(filter) { state.filter = filter; navigateTo("today-tasks"); }
@@ -2143,7 +2143,7 @@ function renderTasksView() {
   const myDone = myAll.filter(t => taskStatus(t) === "done").sort((a,b) => String(b.completedAt||"").localeCompare(String(a.completedAt||"")));
   const tabs = TASK_TABS.filter(t => !(onlyMine && t.id === "mine"));   // เด็กฝึกงานเห็นแต่งานตัวเองอยู่แล้ว
   const overdue = tasks.filter(t => isOverdue(t)).sort(byDue);
-  const dueToday = tasks.filter(t => !isOverdue(t) && taskStatus(t) !== "done" && t.due === today);
+  const dueToday = tasks.filter(t => !isOverdue(t) && taskStatus(t) !== "done" && t.startDate && t.startDate <= today);
   const doing = tasks.filter(t => taskStatus(t) !== "done" && !isOverdue(t)).sort(byDue);
   const done = tasks.filter(t => taskStatus(t) === "done").sort((a,b) => String(b.completedAt||"").localeCompare(String(a.completedAt||"")));
   const counts = { mine: myOver.length + myDoing.length, today: overdue.length + dueToday.length, doing: doing.length, overdue: overdue.length, done: done.length, all: tasks.length };
@@ -2159,7 +2159,7 @@ function renderTasksView() {
       : empty("ยังไม่มีงานที่มอบหมายให้คุณ");
   } else if (f === "today") {
     body = (overdue.length || dueToday.length)
-      ? group('<i class="ti ti-alert-triangle"></i> เลยกำหนด', overdue) + group('<i class="ti ti-calendar"></i> ต้องส่งวันนี้', dueToday)
+      ? group('<i class="ti ti-alert-triangle"></i> เลยกำหนด', overdue) + group('<i class="ti ti-calendar"></i> งานของวันนี้', dueToday)
       : empty("ไม่มีงานเร่งด่วนวันนี้") ;
   } else if (f === "all") {
     const rest = [...overdue, ...doing, ...done];
