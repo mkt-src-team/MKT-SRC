@@ -203,4 +203,38 @@ END;
 $$;
 GRANT EXECUTE ON FUNCTION task_check_op(TEXT, TEXT, INT, TEXT, BOOLEAN) TO anon, authenticated;
 
+-- ============================================
+-- 13. เกมพักสมอง
+--   game_scores = คะแนนเกมงูรายสัปดาห์ เก็บ 1 แถวต่อคนต่อสัปดาห์ (id = memberId_วันจันทร์)
+--                 เก็บเฉพาะรอบที่คะแนนสูงสุด (เว็บอัปเดตเมื่อได้คะแนนมากกว่าเดิมเท่านั้น)
+--   wheel_spins = ประวัติการหมุนวงล้อสุ่ม
+-- ============================================
+CREATE TABLE IF NOT EXISTS game_scores (
+  id TEXT PRIMARY KEY,
+  member_id TEXT NOT NULL,
+  member_name TEXT DEFAULT '',
+  week_start TEXT NOT NULL,
+  score INT NOT NULL DEFAULT 0,
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS game_scores_week ON game_scores(week_start);
+ALTER TABLE game_scores ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "anon all game_scores" ON game_scores;
+CREATE POLICY "anon all game_scores" ON game_scores FOR ALL USING (TRUE) WITH CHECK (TRUE);
+
+CREATE TABLE IF NOT EXISTS wheel_spins (
+  id TEXT PRIMARY KEY,
+  by_id TEXT DEFAULT '',
+  by_name TEXT DEFAULT '',
+  result TEXT NOT NULL,
+  topic TEXT DEFAULT '',
+  mode TEXT DEFAULT 'team',
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+ALTER TABLE wheel_spins ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "anon all wheel_spins" ON wheel_spins;
+CREATE POLICY "anon all wheel_spins" ON wheel_spins FOR ALL USING (TRUE) WITH CHECK (TRUE);
+
+GRANT SELECT, INSERT, UPDATE, DELETE ON game_scores, wheel_spins TO anon, authenticated;
+
 -- ✅ เสร็จสิ้น! ตารางครบแล้ว

@@ -589,6 +589,42 @@ button{border-radius:99px;font-weight:500}
 .score-row2 .n{flex:1;font-size:13px}
 .stats{grid-template-columns:1.6fr 1fr 1fr 1fr}
 @media(max-width:1024px){.dash-grid{grid-template-columns:1fr}.hero-title{font-size:24px}.stats{grid-template-columns:repeat(3,1fr)!important;gap:8px}.stats .stat.feature{grid-column:1/-1}.stats .stat .value{font-size:22px}}
+
+/* GAMES */
+.game-grid{display:grid;grid-template-columns:1.4fr 1fr;gap:12px;align-items:start}
+.game-top{display:flex;justify-content:space-between;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+.snake-wrap{position:relative;max-width:420px;margin:0 auto}
+#snakeCanvas{width:100%;display:block;border-radius:12px;border:1px solid var(--stroke);touch-action:none}
+.snake-over{position:absolute;inset:0;border-radius:12px;background:color-mix(in srgb,var(--layer) 88%,transparent);display:none;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center;padding:20px}
+.snake-over.show{display:flex}
+.snake-over .h{font-family:"Kanit",sans-serif;font-size:22px}
+.snake-over .s{font-size:13px;color:var(--txt-2)}
+.snake-pad{display:none;flex-direction:column;align-items:center;gap:6px;margin-top:12px}
+.snake-pad div{display:flex;gap:6px}
+.snake-pad button{width:56px;height:46px;border-radius:14px;font-size:20px;padding:0}
+.game-hint{font-size:11.5px;color:var(--txt-3);text-align:center;margin-top:10px}
+.lb-row{display:flex;align-items:center;gap:9px;padding:8px 4px;border-bottom:1px solid var(--stroke)}
+.lb-row:last-child{border-bottom:none}
+.lb-row.me{background:var(--accent-tint);border-radius:10px}
+.lb-row .rk{width:18px;text-align:center;font-family:"Kanit",sans-serif}
+.lb-row .n{flex:1;min-width:0;font-size:13px}
+.champ-box{display:flex;align-items:center;gap:10px;margin-top:12px;padding:12px;border-radius:12px;background:var(--accent);color:var(--accent-contrast)}
+.champ-box i{font-size:22px}
+.champ-box div div:first-child{color:var(--txt-3)!important}
+.crown{color:#C9A227;font-size:.95em;vertical-align:-1px}
+.sql-note{padding:10px 14px;border:1px dashed var(--caution);color:var(--caution);border-radius:12px;font-size:12.5px;margin-bottom:12px}
+.wheel-modes{display:flex;gap:6px;justify-content:center;margin-bottom:12px;flex-wrap:wrap}
+.wheel-box{position:relative;width:min(300px,80vw);margin:0 auto}
+.wheel-box svg{width:100%;display:block;font-family:"IBM Plex Sans Thai",sans-serif}
+.wheel-pin{position:absolute;top:-8px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:11px solid transparent;border-right:11px solid transparent;border-top:20px solid var(--danger);z-index:2}
+.wheel-result{font-family:"Kanit",sans-serif;font-size:18px;min-height:28px;margin:14px 0 10px}
+.wheel-opt{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--txt-2);margin-top:10px}
+#wheelCustom{width:100%;background:var(--control);border:1px solid var(--stroke-2);color:var(--txt);border-radius:10px;padding:10px;font-family:inherit;font-size:13px;resize:vertical}
+.more-games{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:6px}
+.more-games button{display:flex;flex-direction:column;align-items:center;gap:4px;padding:12px 6px;border-radius:14px;font-size:12px}
+.more-games button i{font-size:22px}
+.more-label{font-size:11px;color:var(--txt-3);padding:0 2px}
+@media(max-width:1024px){.game-grid{grid-template-columns:1fr}.snake-pad{display:flex}}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
 </head>
@@ -1046,7 +1082,7 @@ try {
 } catch(e) { console.warn("supabase init", e); }
 
 /* ============ STATE ============ */
-function emptyData(){ return { members:[], tasks:[], requests:[], notifications:[], invites:[], announcements:[], events:[] }; }
+function emptyData(){ return { members:[], tasks:[], requests:[], notifications:[], invites:[], announcements:[], events:[], gameScores:[], spins:[] }; }
 let state = Object.assign(emptyData(), { tmpChecks:[], tEmoji:"ti-car", mEmoji:"🧑‍💻", editEmoji:"ti-car", filter:"today", mine:false });
 let currentUser = null; // {id,email,name,rank,emoji,position,phone,status,authUid}
 let lastSnapshot = "";
@@ -1063,7 +1099,9 @@ const SB_ICON = {
   today:'<svg viewBox="0 0 24 24"><path d="m3 7 2 2 4-4"/><path d="m3 17 2 2 4-4"/><path d="M13 6h8M13 12h8M13 18h8"/></svg>',
   calendar:'<svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/><path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01"/></svg>',
   timeline:'<svg viewBox="0 0 24 24"><path d="M3 5h10M7 12h12M5 19h8"/><circle cx="16" cy="5" r="1.5"/><circle cx="4" cy="12" r="1.5"/><circle cx="16" cy="19" r="1.5"/></svg>',
-  chevron:'<svg viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>'
+  chevron:'<svg viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>',
+  snake:'<svg viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="4"/><path d="M6 12h4M8 10v4"/><path d="M15 11h.01M18 13h.01"/></svg>',
+  wheel:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 3v9l6.4 6.4M12 12 5.6 18.4"/></svg>'
 };
 const SIDEBAR_MENU = [
   { group:'overview', label:'ภาพรวม', items:[
@@ -1073,6 +1111,10 @@ const SIDEBAR_MENU = [
   { group:'plan', label:'วางแผน', items:[
     { id:'event-cal', label:'ปฏิทิน', icon:'calendar' },
     { id:'campaign-timeline', label:'ไทม์ไลน์งาน', icon:'timeline', perm:'view_all_tasks' }
+  ]},
+  { group:'break', label:'พักสมอง', items:[
+    { id:'game-snake', label:'เกมงู', icon:'snake' },
+    { id:'game-wheel', label:'วงล้อสุ่ม', icon:'wheel' }
   ]}
 ];
 
@@ -1326,6 +1368,7 @@ async function pull(force) {
     renderCloudBar();
     if (pullAgain) { pullAgain = false; kickPull(); }
   }
+  pullGames();
 }
 
 /* Realtime: มีการเปลี่ยนแปลงในฐานข้อมูล → ดึงข้อมูลใหม่ทันที (RLS กรองให้เห็นเฉพาะที่มีสิทธิ์) */
@@ -1859,7 +1902,7 @@ function renderHeader() {
   </div>
   <div class="user-box" onclick="showProfile()" style="cursor:pointer">
     <span class="u-avatar">${esc(initials(currentUser.name))}</span>
-    <div><div class="u-name">${esc(currentUser.name)}</div><div class="u-role ${rankCls(currentUser.rank)}">${RANKS[currentUser.rank]||""}</div></div>
+    <div><div class="u-name">${esc(currentUser.name)} ${crownHtml(currentUser.id)}</div><div class="u-role ${rankCls(currentUser.rank)}">${RANKS[currentUser.rank]||""}</div></div>
   </div>`;
   if (canInviteDirect()) {
     html += `<button class="btn-ghost" onclick="openResetPassModal()"><i class="ti ti-key"></i> Reset</button>
@@ -1904,7 +1947,13 @@ function renderMobileActions() {
   const fab = document.getElementById("mobileFab");
   if (!el || !fab) return;
   if (!currentUser) { el.innerHTML = ""; fab.style.display = "none"; return; }
-  let html = `<div style="display:flex;gap:6px">
+  let html = `<div class="more-label">พักสมอง</div>
+    <div class="more-games">
+      <button class="btn-ghost" onclick="closeSidebarMobile();bottomNavGo('game-snake')"><i class="ti ti-device-gamepad-2"></i>เกมงู</button>
+      <button class="btn-ghost" onclick="closeSidebarMobile();bottomNavGo('game-wheel')"><i class="ti ti-chart-pie"></i>วงล้อสุ่ม</button>
+    </div>
+    <div class="more-label">ธีม</div>
+    <div style="display:flex;gap:6px">
       <button class="btn-ghost ${themeMode==='light'?'is-active-theme':''}" style="flex:1;padding:8px 4px;font-size:12px" onclick="setMode('light')"><i class="ti ti-sun"></i> สว่าง</button>
       <button class="btn-ghost ${themeMode==='dark'?'is-active-theme':''}" style="flex:1;padding:8px 4px;font-size:12px" onclick="setMode('dark')"><i class="ti ti-moon"></i> มืด</button>
       <button class="btn-ghost ${themeMode==='system'?'is-active-theme':''}" style="flex:1;padding:8px 4px;font-size:12px" onclick="setMode('system')"><i class="ti ti-device-desktop"></i> ระบบ</button>
@@ -2041,7 +2090,7 @@ function renderAttention() {
   }).join("");
   const members = state.members.filter(m=>m.status!=="pending").map(m=>({m, s:memberScore(m)})).sort((a,b)=>(b.s.hasTask-a.s.hasTask)||(b.s.score-a.s.score));
   const scores = members.slice(0,6).map(({m,s}) => { const md = moodFor(s);
-    return `<div class="score-row2">${avatarHtml(m.name,26)}<span class="n">${esc(m.name)}</span><span class="score-pill ${md.cls}">${esc(md.lbl)}${s.hasTask?" "+s.score+"%":""}</span></div>`; }).join("");
+    return `<div class="score-row2">${avatarHtml(m.name,26)}<span class="n">${esc(m.name)} ${crownHtml(m.id)}</span><span class="score-pill ${md.cls}">${esc(md.lbl)}${s.hasTask?" "+s.score+"%":""}</span></div>`; }).join("");
   el.innerHTML = `<div class="dash-card"><div class="dc-head"><h3>งานของวันนี้</h3><button class="dc-link" onclick="openTasks('today')">ดูทั้งหมด →</button></div>
       ${rows || `<div style="padding:18px 6px;color:var(--txt-3);font-size:13px">ไม่มีงานเร่งด่วนวันนี้</div>`}</div>
     <div class="dash-card"><div class="dc-head"><h3>คะแนนทีม</h3><span style="font-size:11.5px;color:var(--txt-3)">ส่งตรงเวลา</span></div>${scores || `<div style="padding:18px 6px;color:var(--txt-3);font-size:13px">ยังไม่มีสมาชิก</div>`}</div>`;
@@ -2095,7 +2144,7 @@ function renderTeam() {
       ${removeBtn}
       <div class="top">
         <div class="avatar">${esc(initials(m.name))}</div>
-        <div><div class="name">${esc(m.name)} <span class="rank-badge ${rk}">${rl}</span></div><div class="role">${esc(m.position)}</div></div>
+        <div><div class="name">${esc(m.name)} ${crownHtml(m.id)} <span class="rank-badge ${rk}">${rl}</span></div><div class="role">${esc(m.position)}</div></div>
       </div>
       <div class="mood-score"><div class="num">${s.hasTask?s.score+"%":"—"}</div>${s.hasTask?`<div style="margin-top:6px"><span class="score-pill ${mood.cls}">${esc(mood.lbl)}</span></div>`:""}<div style="font-size:12px;color:var(--txt-2);margin-top:6px">${esc(mood.t)}</div></div>
       <div class="bar ${mood.cls}"><i style="width:${s.hasTask?s.score:0}%"></i></div>
@@ -2204,13 +2253,16 @@ function routeView() {
   const item = SIDEBAR_MENU.flatMap(g=>g.items).find(i=>i.id===v);
   if (currentUser && item && item.perm && !can(item.perm)) { v = sidebarState.activeItem = "dashboard"; }
   if (!currentUser) { vr.innerHTML = ""; showDefaultSections(false); return; }
+  if (v !== "game-snake") stopSnake();
   if (v === "today-tasks") { showDefaultSections(false); renderTasksView(); }
   else if (v === "event-cal") { showDefaultSections(false); renderEventCalendar(); }
   else if (v === "campaign-timeline") { showDefaultSections(false); renderCampaignTimeline(); }
+  else if (v === "game-snake") { showDefaultSections(false); renderSnakeView(); }
+  else if (v === "game-wheel") { showDefaultSections(false); renderWheelView(); }
   else { vr.innerHTML = ""; showDefaultSections(true); renderStats(); renderBoard(); renderRequests(); renderTeam(); }
   // ปุ่มลอย ➕ เพิ่มงาน ทับแถวสุดท้ายของตารางปฏิทินพอดี (มือถือ) แตะช่องปฏิทินแล้วดันไปโดนปุ่มนี้แทน ซ่อนตอนอยู่หน้าปฏิทิน (มีปุ่ม "เพิ่มอีเวนต์" ของตัวเองอยู่แล้ว)
   const fab = document.getElementById("mobileFab");
-  if (fab && v === "event-cal") fab.style.display = "none";
+  if (fab && (v === "event-cal" || v.startsWith("game-"))) fab.style.display = "none";
 }
 
 /* ============ VIEW: งาน (หน้าเดียวสำหรับรายการงานทั้งหมด) ============ */
@@ -2948,6 +3000,296 @@ async function adminResetPassword() {
   const { error } = await db.auth.resetPasswordForEmail(m.email, { redirectTo: appUrl() });
   if (error) { toast("ส่งไม่สำเร็จ: " + error.message, "⚠️"); return; }
   toast(`ส่งลิงก์ตั้งรหัสใหม่ไปที่ ${m.email} แล้ว`,"✉️");
+}
+
+/* ============ พักสมอง: เกมงู (แข่งรายสัปดาห์) + วงล้อสุ่ม ============
+   กติกาเกมงู: 1 สัปดาห์ = จันทร์–อาทิตย์ เก็บเฉพาะ "รอบที่คะแนนสูงสุด" ของแต่ละคน (ไม่สะสม)
+   คนที่คะแนนสูงสุดของสัปดาห์ = แชมป์ ได้มงกุฎหน้าชื่อตลอดสัปดาห์ถัดไป
+   ข้อมูลอยู่ในตาราง game_scores / wheel_spins (ดู supabase-setup.sql ข้อ 13) — ถ้ายังไม่ได้รัน SQL ส่วนอื่นของเว็บยังใช้ได้ปกติ */
+function weekStart(d) {
+  const x = d ? new Date(d) : new Date();
+  x.setHours(0,0,0,0);
+  x.setDate(x.getDate() - ((x.getDay() + 6) % 7));
+  return fmtISO(x);
+}
+function prevWeekStart() { const d = new Date(weekStart() + "T00:00:00"); d.setDate(d.getDate() - 7); return fmtISO(d); }
+let gamesReady = null, gamesSnap = "";
+async function pullGames() {
+  if (!db || !currentUser) return;
+  const [gs, ws] = await Promise.all([
+    db.from("game_scores").select("*").in("week_start", [weekStart(), prevWeekStart()]),
+    db.from("wheel_spins").select("*").order("created_at",{ascending:false}).limit(20)
+  ]).catch(() => [{error:true},{error:true}]);
+  gamesReady = !(gs && gs.error);
+  const next = { gameScores: gamesReady ? (gs.data||[]) : [], spins: (ws && !ws.error) ? (ws.data||[]) : [] };
+  const snap = JSON.stringify(next);
+  if (snap === gamesSnap) return;
+  gamesSnap = snap;
+  Object.assign(state, next);
+  scheduleRender();
+}
+function weekBoard(wk) {
+  return state.gameScores.filter(r => r.week_start === wk)
+    .sort((a,b) => (b.score - a.score) || String(a.updated_at).localeCompare(String(b.updated_at)));
+}
+function championId() { const top = weekBoard(prevWeekStart())[0]; return top && top.score > 0 ? top.member_id : null; }
+function crownHtml(memberId) {
+  return memberId && memberId === championId() ? `<i class="ti ti-crown crown" title="แชมป์เกมงูสัปดาห์ที่แล้ว"></i>` : "";
+}
+function myWeekBest() { const r = currentUser && state.gameScores.find(x => x.member_id === currentUser.id && x.week_start === weekStart()); return r ? r.score : 0; }
+function setupNeededHtml() {
+  return `<div class="sql-note"><i class="ti ti-database-exclamation"></i> ยังไม่ได้ตั้งค่าตารางเกมในฐานข้อมูล — รันไฟล์ supabase-setup.sql ข้อ 13 ใน Supabase SQL Editor ก่อน จึงจะบันทึกคะแนน/ประวัติได้</div>`;
+}
+
+/* ---------- เกมงู ---------- */
+const SNK = { N:20, timer:null, running:false, over:false, snake:[], dir:[1,0], nextDir:[1,0], food:[0,0], score:0, speed:140 };
+function renderSnakeView() {
+  const vr = document.getElementById("viewRoot");
+  if (!document.getElementById("snakeCanvas")) {
+    vr.innerHTML = `
+      <div class="view-head"><div><h2><i class="ti ti-device-gamepad-2"></i> เกมงู</h2>
+        <div style="font-size:12.5px;color:var(--txt-2);margin-top:3px">แข่งรายสัปดาห์ · นับรอบที่ได้คะแนนสูงสุดของแต่ละคน</div></div></div>
+      <div id="snakeNote"></div>
+      <div class="game-grid">
+        <div class="dash-card game-main">
+          <div class="game-top"><span class="score-pill good">คะแนน <b id="snakeScore">0</b></span><span class="score-pill">สูงสุดสัปดาห์นี้ <b id="snakeBest">0</b></span></div>
+          <div class="snake-wrap">
+            <canvas id="snakeCanvas" width="400" height="400"></canvas>
+            <div class="snake-over" id="snakeOver"></div>
+          </div>
+          <div class="snake-pad">
+            <button onclick="snakeTurn(0,-1)" aria-label="ขึ้น"><i class="ti ti-chevron-up"></i></button>
+            <div><button onclick="snakeTurn(-1,0)" aria-label="ซ้าย"><i class="ti ti-chevron-left"></i></button><button onclick="snakeTurn(0,1)" aria-label="ลง"><i class="ti ti-chevron-down"></i></button><button onclick="snakeTurn(1,0)" aria-label="ขวา"><i class="ti ti-chevron-right"></i></button></div>
+          </div>
+          <div class="game-hint">คอม: ลูกศร / WASD · มือถือ: ปัดบนจอเกม หรือกดปุ่ม</div>
+        </div>
+        <div class="dash-card" id="snakeBoard"></div>
+      </div>`;
+    initSnakeInput();
+    snakeReset();
+    snakeDraw();
+    snakeOverlay("start");
+  }
+  document.getElementById("snakeNote").innerHTML = gamesReady === false ? setupNeededHtml() : "";
+  document.getElementById("snakeBest").textContent = myWeekBest();
+  renderSnakeBoard();
+}
+function renderSnakeBoard() {
+  const el = document.getElementById("snakeBoard"); if (!el) return;
+  const rows = weekBoard(weekStart());
+  const champ = weekBoard(prevWeekStart())[0];
+  const champM = champ && memberById(champ.member_id);
+  const end = new Date(weekStart() + "T00:00:00"); end.setDate(end.getDate() + 6);
+  el.innerHTML = `
+    <div class="dc-head"><h3>อันดับสัปดาห์นี้</h3><span style="font-size:11.5px;color:var(--txt-3)">ปิดรอบ ${end.toLocaleDateString("th-TH",{day:"numeric",month:"short"})} 23:59</span></div>
+    ${rows.length ? rows.slice(0,10).map((r,i) => { const m = memberById(r.member_id); const nm = m ? m.name : (r.member_name||"?");
+      return `<div class="lb-row ${currentUser && r.member_id===currentUser.id?'me':''}"><b class="rk">${i+1}</b>${avatarHtml(nm,24)}<span class="n">${esc(nm)} ${crownHtml(r.member_id)}</span>${i===0?'<span class="score-pill good">กำลังนำ</span>':''}<b>${r.score}</b></div>`; }).join("")
+      : `<div style="padding:16px 4px;color:var(--txt-3);font-size:13px">ยังไม่มีใครเล่นสัปดาห์นี้ — เป็นคนแรกเลย!</div>`}
+    <div class="champ-box"><i class="ti ti-crown"></i><div><div style="font-size:11.5px;color:var(--txt-3)">แชมป์สัปดาห์ที่แล้ว</div>
+      <div style="font-weight:500">${champM ? `${esc(champM.name)} · ${champ.score} คะแนน` : "ยังไม่มี"}</div></div></div>
+    <div class="game-hint" style="text-align:left">ผู้ชนะแต่ละสัปดาห์ได้มงกุฎหน้าชื่อตลอดสัปดาห์ถัดไป</div>`;
+}
+function snakeReset() {
+  const m = Math.floor(SNK.N/2);
+  SNK.snake = [[m,m],[m-1,m],[m-2,m]]; SNK.dir = [1,0]; SNK.nextDir = [1,0];
+  SNK.score = 0; SNK.speed = 140; SNK.over = false;
+  snakeFood();
+  const sc = document.getElementById("snakeScore"); if (sc) sc.textContent = "0";
+}
+function snakeFood() {
+  do { SNK.food = [Math.floor(Math.random()*SNK.N), Math.floor(Math.random()*SNK.N)]; }
+  while (SNK.snake.some(p => p[0]===SNK.food[0] && p[1]===SNK.food[1]));
+}
+function snakeStart() {
+  if (SNK.over) snakeReset();
+  snakeOverlay(null);
+  SNK.running = true;
+  clearTimeout(SNK.timer);
+  snakeLoop();
+}
+function stopSnake() { clearTimeout(SNK.timer); SNK.running = false; }
+function snakeLoop() {
+  if (!SNK.running || !document.getElementById("snakeCanvas")) { SNK.running = false; return; }
+  snakeStep();
+  if (SNK.running) SNK.timer = setTimeout(snakeLoop, SNK.speed);
+}
+function snakeStep() {
+  SNK.dir = SNK.nextDir;
+  const h = [SNK.snake[0][0] + SNK.dir[0], SNK.snake[0][1] + SNK.dir[1]];
+  if (h[0] < 0 || h[1] < 0 || h[0] >= SNK.N || h[1] >= SNK.N || SNK.snake.some(p => p[0]===h[0] && p[1]===h[1])) return snakeGameOver();
+  SNK.snake.unshift(h);
+  if (h[0]===SNK.food[0] && h[1]===SNK.food[1]) {
+    SNK.score++; SNK.speed = Math.max(60, SNK.speed - 4);
+    document.getElementById("snakeScore").textContent = SNK.score;
+    snakeFood();
+  } else SNK.snake.pop();
+  snakeDraw();
+}
+function snakeTurn(dx, dy) {
+  if (!SNK.running) { snakeStart(); }
+  if (dx === -SNK.dir[0] && dy === -SNK.dir[1]) return;
+  SNK.nextDir = [dx, dy];
+}
+function snakeDraw() {
+  const cv = document.getElementById("snakeCanvas"); if (!cv) return;
+  const c = cv.getContext("2d"), S = cv.width / SNK.N, cs = getComputedStyle(document.documentElement);
+  c.fillStyle = cs.getPropertyValue("--layer-2").trim(); c.fillRect(0,0,cv.width,cv.height);
+  c.fillStyle = cs.getPropertyValue("--stroke").trim();
+  for (let i=0;i<SNK.N;i++) for (let j=0;j<SNK.N;j++) if ((i+j)%2===0) c.fillRect(i*S,j*S,S,S);
+  c.fillStyle = cs.getPropertyValue("--danger").trim();
+  c.beginPath(); c.arc(SNK.food[0]*S+S/2, SNK.food[1]*S+S/2, S*0.36, 0, Math.PI*2); c.fill();
+  const body = cs.getPropertyValue("--txt").trim();
+  SNK.snake.forEach((p,i) => {
+    c.fillStyle = body; c.globalAlpha = i === 0 ? 1 : Math.max(0.45, 1 - i*0.03);
+    c.beginPath(); c.roundRect ? c.roundRect(p[0]*S+1.5, p[1]*S+1.5, S-3, S-3, 5) : c.rect(p[0]*S+1.5, p[1]*S+1.5, S-3, S-3); c.fill();
+  });
+  c.globalAlpha = 1;
+}
+function snakeOverlay(kind, extra) {
+  const el = document.getElementById("snakeOver"); if (!el) return;
+  if (!kind) { el.classList.remove("show"); el.innerHTML = ""; return; }
+  el.classList.add("show");
+  el.innerHTML = kind === "start"
+    ? `<div class="h">พร้อมไหม?</div><div class="s">กินจุดแดงให้ได้มากที่สุด ห้ามชนกำแพงหรือตัวเอง</div><button class="btn-primary" onclick="snakeStart()"><i class="ti ti-player-play"></i> เริ่มเล่น</button>`
+    : `<div class="h">จบเกม · ${SNK.score} คะแนน</div><div class="s">${extra||""}</div><button class="btn-primary" onclick="snakeStart()"><i class="ti ti-refresh"></i> เล่นอีกครั้ง</button>`;
+}
+async function snakeGameOver() {
+  SNK.running = false; SNK.over = true;
+  const score = SNK.score, prev = myWeekBest();
+  snakeOverlay("over", score > prev ? "สถิติใหม่ของสัปดาห์นี้!" : `สถิติสัปดาห์นี้ของคุณ ${prev} คะแนน`);
+  if (score > prev) await saveSnakeScore(score);
+}
+async function saveSnakeScore(score) {
+  if (!db || !currentUser || score <= 0) return;
+  const wk = weekStart();
+  const cur = await db.from("game_scores").select("score").eq("id", currentUser.id + "_" + wk).maybeSingle();
+  if (cur.error) { gamesReady = false; renderSnakeView(); return; }
+  if (cur.data && cur.data.score >= score) return;
+  const row = { id: currentUser.id + "_" + wk, member_id: currentUser.id, member_name: currentUser.name, week_start: wk, score, updated_at: new Date().toISOString() };
+  const r = await db.from("game_scores").upsert(row);
+  if (r.error) { toast("บันทึกคะแนนไม่สำเร็จ: " + (r.error.message||""), "⚠️"); return; }
+  state.gameScores = state.gameScores.filter(x => x.id !== row.id).concat(row);
+  toast(`บันทึกสถิติใหม่ ${score} คะแนน`, "ti-trophy");
+  renderSnakeView();
+  pullGames();
+}
+let snakeInputReady = false;
+function initSnakeInput() {
+  if (snakeInputReady) return;
+  snakeInputReady = true;
+  const KEYS = { ArrowUp:[0,-1], ArrowDown:[0,1], ArrowLeft:[-1,0], ArrowRight:[1,0], w:[0,-1], s:[0,1], a:[-1,0], d:[1,0], W:[0,-1], S:[0,1], A:[-1,0], D:[1,0] };
+  document.addEventListener("keydown", e => {
+    if (sidebarState.activeItem !== "game-snake" || !document.getElementById("snakeCanvas")) return;
+    if (/INPUT|TEXTAREA|SELECT/.test((e.target.tagName||""))) return;
+    if (KEYS[e.key]) { e.preventDefault(); snakeTurn(KEYS[e.key][0], KEYS[e.key][1]); }
+    else if ((e.key === " " || e.key === "Enter") && !SNK.running) { e.preventDefault(); snakeStart(); }
+  });
+  let t0 = null;
+  document.addEventListener("touchstart", e => { if (e.target.id === "snakeCanvas") t0 = [e.touches[0].clientX, e.touches[0].clientY]; }, { passive:true });
+  document.addEventListener("touchmove", e => { if (e.target.id === "snakeCanvas") e.preventDefault(); }, { passive:false });
+  document.addEventListener("touchend", e => {
+    if (!t0 || e.target.id !== "snakeCanvas") return;
+    const dx = e.changedTouches[0].clientX - t0[0], dy = e.changedTouches[0].clientY - t0[1]; t0 = null;
+    if (Math.max(Math.abs(dx), Math.abs(dy)) < 20) { if (!SNK.running) snakeStart(); return; }
+    Math.abs(dx) > Math.abs(dy) ? snakeTurn(dx > 0 ? 1 : -1, 0) : snakeTurn(0, dy > 0 ? 1 : -1);
+  });
+}
+
+/* ---------- วงล้อสุ่ม ---------- */
+const WHL = { mode:"team", exclude:true, picked:[], rot:0, spinning:false, result:"" };
+function wheelItems() {
+  const base = WHL.mode === "team"
+    ? state.members.filter(m => m.status !== "pending").map(m => m.name)
+    : (lsGet("mkt_wheel_custom") || "").split("\n").map(x => x.trim()).filter(Boolean);
+  const left = WHL.exclude ? base.filter(x => !WHL.picked.includes(x)) : base;
+  return left;
+}
+function renderWheelView() {
+  const vr = document.getElementById("viewRoot");
+  if (!document.getElementById("wheelSvg")) {
+    vr.innerHTML = `
+      <div class="view-head"><div><h2><i class="ti ti-chart-pie"></i> วงล้อสุ่ม</h2>
+        <div style="font-size:12.5px;color:var(--txt-2);margin-top:3px">สุ่มคนเลี้ยงข้าว · คนพรีเซนต์ · คนรับงานด่วน · กินอะไรดี</div></div></div>
+      <div id="wheelNote"></div>
+      <div class="game-grid">
+        <div class="dash-card game-main" style="text-align:center">
+          <div class="wheel-modes" id="wheelModes"></div>
+          <div class="field" style="max-width:320px;margin:0 auto 12px;text-align:left"><input id="wheelTopic" placeholder="สุ่มเพื่ออะไร เช่น เลี้ยงข้าวเที่ยง" maxlength="60"></div>
+          <div class="wheel-box"><div class="wheel-pin"></div><svg id="wheelSvg" viewBox="-110 -110 220 220"></svg></div>
+          <div class="wheel-result" id="wheelResult"></div>
+          <button class="btn-primary" id="wheelBtn" onclick="spinWheel()"><i class="ti ti-refresh"></i> หมุนวงล้อ</button>
+        </div>
+        <div class="dash-card" id="wheelSide"></div>
+      </div>`;
+    drawWheel();
+  }
+  document.getElementById("wheelNote").innerHTML = gamesReady === false ? setupNeededHtml() : "";
+  renderWheelSide();
+}
+function renderWheelSide() {
+  document.getElementById("wheelModes").innerHTML = `
+    <button class="cal-filter ${WHL.mode==='team'?'on':''}" onclick="setWheelMode('team')"><i class="ti ti-users"></i> สุ่มคนในทีม</button>
+    <button class="cal-filter ${WHL.mode==='custom'?'on':''}" onclick="setWheelMode('custom')"><i class="ti ti-pencil"></i> พิมพ์ตัวเลือกเอง</button>`;
+  const side = document.getElementById("wheelSide");
+  const keepText = document.getElementById("wheelCustom");
+  const custom = WHL.mode === "custom" ? `<textarea id="wheelCustom" rows="6" placeholder="ใส่ตัวเลือก บรรทัดละ 1 อย่าง" oninput="lsSet('mkt_wheel_custom',this.value);drawWheel()">${esc(keepText ? keepText.value : (lsGet("mkt_wheel_custom")||""))}</textarea>` : "";
+  side.innerHTML = `
+    <div class="dc-head"><h3>ตัวเลือก</h3>${WHL.picked.length?`<button class="dc-link" onclick="WHL.picked=[];drawWheel();renderWheelSide()">รีเซ็ตคนที่โดนแล้ว (${WHL.picked.length})</button>`:''}</div>
+    ${custom}
+    <label class="wheel-opt"><input type="checkbox" ${WHL.exclude?'checked':''} onchange="WHL.exclude=this.checked;drawWheel()"> ตัดคนที่โดนแล้วออกจากวงล้อ</label>
+    <div class="dc-head" style="margin-top:14px"><h3>ประวัติการสุ่ม</h3><span style="font-size:11.5px;color:var(--txt-3)">ทั้งทีมเห็นเหมือนกัน</span></div>
+    ${state.spins.length ? state.spins.slice(0,10).map(r => `<div class="lb-row"><span class="n"><b>${esc(r.result)}</b>${r.topic?` <span style="color:var(--txt-3)">— ${esc(r.topic)}</span>`:''}<div style="font-size:11px;color:var(--txt-3)">สุ่มโดย ${esc(r.by_name||"")} · ${timeAgo(r.created_at)}</div></span></div>`).join("")
+      : `<div style="padding:12px 4px;color:var(--txt-3);font-size:13px">ยังไม่มีประวัติ</div>`}`;
+}
+function setWheelMode(m) { if (WHL.spinning) return; WHL.mode = m; WHL.picked = []; WHL.result = ""; document.getElementById("wheelResult").textContent = ""; drawWheel(); renderWheelSide(); }
+function drawWheel() {
+  const svg = document.getElementById("wheelSvg"); if (!svg || WHL.spinning) return;
+  const items = wheelItems(), n = items.length;
+  if (!n) { svg.innerHTML = `<circle r="104" fill="var(--layer-2)" stroke="var(--stroke-2)"/><text text-anchor="middle" dominant-baseline="middle" font-size="12" fill="var(--txt-3)">ไม่มีตัวเลือก</text>`; return; }
+  const a = 2*Math.PI/n, r = 104;
+  let h = "";
+  items.forEach((nm, i) => {
+    const s = i*a - Math.PI/2, e = s + a, dark = i % 2 === 0;
+    const large = a > Math.PI ? 1 : 0;
+    h += n === 1 ? `<circle r="${r}" fill="var(--txt)"/>` :
+      `<path d="M0 0 L${r*Math.cos(s)} ${r*Math.sin(s)} A${r} ${r} 0 ${large} 1 ${r*Math.cos(e)} ${r*Math.sin(e)}Z" fill="${dark?'var(--txt)':'var(--layer)'}" stroke="var(--txt)" stroke-width="1"/>`;
+    const m = s + a/2, tx = 64*Math.cos(m), ty = 64*Math.sin(m);
+    const label = nm.length > 12 ? nm.slice(0,11) + "…" : nm;
+    h += `<text x="${tx}" y="${ty}" fill="${dark?'var(--layer)':'var(--txt)'}" font-size="${n>10?9:11.5}" text-anchor="middle" dominant-baseline="middle" transform="rotate(${(()=>{const d=m*180/Math.PI;return d>90&&d<270?d+180:d})()} ${tx} ${ty})">${esc(label)}</text>`;
+  });
+  h += `<circle r="13" fill="var(--layer)" stroke="var(--txt)" stroke-width="1.5"/>`;
+  svg.innerHTML = h;
+}
+function spinWheel() {
+  if (WHL.spinning) return;
+  const items = wheelItems();
+  if (items.length < 2) { toast(items.length ? "ต้องมีตัวเลือกอย่างน้อย 2 อย่าง" : "ไม่มีตัวเลือกให้สุ่ม", "⚠️"); return; }
+  const idx = Math.floor(Math.random() * items.length), seg = 360 / items.length;
+  const target = 360 - (idx*seg + seg/2);
+  WHL.rot += 360*6 + ((target - WHL.rot) % 360 + 360) % 360;
+  WHL.spinning = true;
+  document.getElementById("wheelBtn").disabled = true;
+  document.getElementById("wheelResult").textContent = "";
+  const svg = document.getElementById("wheelSvg");
+  svg.style.transition = "transform 4s cubic-bezier(.15,.7,.2,1)";
+  svg.style.transform = `rotate(${WHL.rot}deg)`;
+  setTimeout(async () => {
+    WHL.spinning = false;
+    const result = items[idx], topic = (document.getElementById("wheelTopic")||{}).value||"";
+    const btn = document.getElementById("wheelBtn"); if (btn) btn.disabled = false;
+    const res = document.getElementById("wheelResult"); if (res) res.innerHTML = `ได้ <b>${esc(result)}</b>${topic?` — ${esc(topic.trim())}`:""}`;
+    if (!WHL.picked.includes(result)) WHL.picked.push(result);
+    if (db && currentUser) {
+      const row = { id: uid(), by_id: currentUser.id, by_name: currentUser.name, result, topic: topic.trim(), mode: WHL.mode, created_at: new Date().toISOString() };
+      const r = await db.from("wheel_spins").insert(row);
+      if (!r.error) state.spins = [row, ...state.spins].slice(0,20); else gamesReady = false;
+    }
+    if (document.getElementById("wheelSvg")) {
+      svg.style.transition = "none"; WHL.rot = 0; svg.style.transform = "rotate(0deg)";
+      drawWheel(); renderWheelView();
+    }
+    pullGames();
+  }, 4100);
 }
 
 /* ============ PROFILE ============ */
