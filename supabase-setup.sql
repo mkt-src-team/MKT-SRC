@@ -184,4 +184,9 @@ CREATE POLICY "anon all wheel_spins" ON wheel_spins FOR ALL USING (TRUE) WITH CH
 
 GRANT SELECT, INSERT, UPDATE, DELETE ON game_scores, wheel_spins TO anon, authenticated;
 
+-- ============================================
+-- 14. รูปโปรไฟล์ — เก็บรูปย่อ 160px (JPEG ~10KB) เป็นข้อความ data URL ในตาราง members
+-- ============================================
+ALTER TABLE members ADD COLUMN IF NOT EXISTS avatar TEXT DEFAULT '';
+
 -- ✅ เสร็จสิ้น! ตารางครบแล้ว

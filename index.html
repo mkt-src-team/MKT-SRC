@@ -613,6 +613,8 @@ button{border-radius:99px;font-weight:500}
 .snake-legend .dot-food{width:10px;height:10px;border-radius:50%;background:var(--danger);display:inline-block}
 .snake-legend .dot-bomb{width:11px;height:11px;border-radius:50%;background:var(--txt);display:inline-block;position:relative}
 .snake-legend .dot-bomb::after{content:"";position:absolute;top:-4px;right:-3px;width:4px;height:4px;border-radius:50%;background:var(--danger)}
+.initials,.avatar,.u-avatar,.s-avatar{overflow:hidden}
+.initials img,.avatar img,.u-avatar img,.s-avatar img{width:100%;height:100%;object-fit:cover;display:block;border-radius:50%}
 .prize-card{position:relative;overflow:hidden;text-align:center;border-radius:14px;padding:16px 14px 14px;background:var(--accent);color:var(--accent-contrast)}
 .prize-card::before{content:"";position:absolute;inset:-40% -40% auto;height:160%;background:radial-gradient(circle at 50% 30%,rgba(255,205,90,.22),transparent 55%);pointer-events:none}
 .prize-tag{display:inline-block;border:1px solid rgba(255,210,110,.55);color:#E9B949;border-radius:99px;padding:2px 11px;font-size:11px}
@@ -1122,7 +1124,7 @@ try {
 } catch(e) { console.warn("supabase init", e); }
 
 /* ============ STATE ============ */
-function emptyData(){ return { members:[], tasks:[], requests:[], notifications:[], invites:[], announcements:[], events:[], gameScores:[], spins:[] }; }
+function emptyData(){ return { members:[], tasks:[], requests:[], notifications:[], invites:[], announcements:[], events:[], gameScores:[], spins:[], avatars:{} }; }
 let state = Object.assign(emptyData(), { tmpChecks:[], tEmoji:"ti-car", mEmoji:"🧑‍💻", editEmoji:"ti-car", filter:"today", mine:false });
 let currentUser = null; // {id,email,name,rank,emoji,position,phone,status,authUid}
 let lastSnapshot = "";
@@ -1189,7 +1191,7 @@ function renderSidebar() {
   const name = document.getElementById('sidebarName');
   const role = document.getElementById('sidebarRole');
   if (currentUser) {
-    avatar.textContent = initials(currentUser.name);
+    avatar.innerHTML = avatarInner(currentUser.name, currentUser.id);
     name.textContent = currentUser.name;
     role.textContent = (RANKS[currentUser.rank] || "") + (currentUser.position && currentUser.position !== RANKS[currentUser.rank] ? " · " + currentUser.position : "");
   } else {
@@ -1233,7 +1235,56 @@ const TASK_EMOJIS = ["🚗","📣","🎨","💻","📊","📝","📸","🎬","�
 // ไอคอนงาน: ของใหม่เก็บเป็นชื่อคลาส "ti-..." ในช่อง emoji เดิม — งานเก่าที่เก็บเป็นอีโมจิจะแปลงเป็นไอคอนตามลำดับเดียวกันตอนแสดงผล
 const TASK_ICONS = ["ti-car","ti-speakerphone","ti-palette","ti-device-laptop","ti-chart-bar","ti-notes","ti-camera","ti-video","ti-shopping-bag","ti-trending-up","ti-tool","ti-star","ti-flame"];
 function taskIco(e) { if (e && e.startsWith("ti-")) return e; const i = TASK_EMOJIS.indexOf(e); return i >= 0 ? TASK_ICONS[i] : "ti-car"; }
-function avatarHtml(name, size) { return `<span class="initials" style="width:${size}px;height:${size}px;font-size:${Math.round(size*.44)}px">${esc(initials(name))}</span>`; }
+/* รูปโปรไฟล์: เก็บเป็น data URL (JPEG ย่อ 160px) ในคอลัมน์ members.avatar — โหลดแยกจาก pull() หลัก
+   เพื่อให้เว็บยังทำงานได้แม้ยังไม่ได้รัน SQL เพิ่มคอลัมน์ (ข้อ 14) */
+const AVATAR_OK = /^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/;
+function avatarSrc(id) { const a = id && state.avatars && state.avatars[id]; return a && AVATAR_OK.test(a) ? a : ""; }
+function avatarInner(name, id) { const src = avatarSrc(id); return src ? `<img src="${src}" alt="">` : esc(initials(name)); }
+function avatarHtml(name, size, id) { return `<span class="initials" style="width:${size}px;height:${size}px;font-size:${Math.round(size*.44)}px">${avatarInner(name, id)}</span>`; }
+let avatarsReady = null, avatarsAt = 0, avatarsSnap = "";
+async function pullAvatars(force) {
+  if (!db || !currentUser || (!force && Date.now() - avatarsAt < 60000)) return;
+  avatarsAt = Date.now();
+  const r = await db.from("members").select("id,avatar").then(x => x, () => ({ error:true }));
+  avatarsReady = !r.error;
+  if (r.error) return;
+  const map = {}; (r.data || []).forEach(m => { if (m.avatar) map[m.id] = m.avatar; });
+  const snap = JSON.stringify(map);
+  if (snap === avatarsSnap) return;
+  avatarsSnap = snap; state.avatars = map; scheduleRender();
+}
+function pickAvatarFile() {
+  if (avatarsReady === false) { toast("ต้องรัน SQL เพิ่มคอลัมน์รูปโปรไฟล์ก่อน (supabase-setup.sql ข้อ 14)", "⚠️"); return; }
+  const inp = document.createElement("input");
+  inp.type = "file"; inp.accept = "image/*";
+  inp.onchange = () => { const f = inp.files && inp.files[0]; if (f) uploadAvatar(f); };
+  inp.click();
+}
+function uploadAvatar(file) {
+  if (!/^image\//.test(file.type)) { toast("เลือกไฟล์รูปภาพเท่านั้น", "⚠️"); return; }
+  const img = new Image(), url = URL.createObjectURL(file);
+  img.onload = async () => {
+    URL.revokeObjectURL(url);
+    const S = 160, side = Math.min(img.width, img.height);
+    const cv = document.createElement("canvas"); cv.width = cv.height = S;
+    const c = cv.getContext("2d");
+    c.fillStyle = "#fff"; c.fillRect(0, 0, S, S);
+    c.drawImage(img, (img.width - side) / 2, (img.height - side) / 2, side, side, 0, 0, S, S);
+    const data = cv.toDataURL("image/jpeg", 0.82);
+    await saveAvatar(data);
+  };
+  img.onerror = () => { URL.revokeObjectURL(url); toast("เปิดไฟล์รูปนี้ไม่ได้ ลองรูปอื่น (JPG/PNG)", "⚠️"); };
+  img.src = url;
+}
+async function saveAvatar(data) {
+  const r = await db.from("members").update({ avatar: data }).eq("id", currentUser.id);
+  if (r.error) { toast("บันทึกรูปไม่สำเร็จ: " + (r.error.message || ""), "⚠️"); return; }
+  state.avatars = Object.assign({}, state.avatars, { [currentUser.id]: data });
+  if (!data) delete state.avatars[currentUser.id];
+  avatarsSnap = JSON.stringify(state.avatars);
+  toast(data ? "เปลี่ยนรูปโปรไฟล์แล้ว" : "ลบรูปโปรไฟล์แล้ว", "✅");
+  render(); showProfile();
+}
 const MEMBER_EMOJIS = ["🙂","🧑‍💻","👩‍💼","👨‍💼","👩‍🎨","👨‍💻","👩‍🔬","🧑‍🚀","🦸","🦹","🐱","🐶","🦊","🐼","🐯"];
 function isAdmin() { return !!currentUser && (currentUser.rank==="boss" || currentUser.rank==="dev"); }
 /* ============ สิทธิ์รายบุคคล (ต้องตรงกับ supabase-perms.sql) ============ */
@@ -1409,6 +1460,7 @@ async function pull(force) {
     if (pullAgain) { pullAgain = false; kickPull(); }
   }
   pullGames();
+  pullAvatars(force);
 }
 
 /* Realtime: มีการเปลี่ยนแปลงในฐานข้อมูล → ดึงข้อมูลใหม่ทันที (RLS กรองให้เห็นเฉพาะที่มีสิทธิ์) */
@@ -1942,7 +1994,7 @@ function renderHeader() {
     </div>
   </div>
   <div class="user-box" onclick="showProfile()" style="cursor:pointer">
-    <span class="u-avatar">${esc(initials(currentUser.name))}</span>
+    <span class="u-avatar">${avatarInner(currentUser.name, currentUser.id)}</span>
     <div><div class="u-name">${esc(currentUser.name)} ${crownHtml(currentUser.id)}</div><div class="u-role ${rankCls(currentUser.rank)}">${RANKS[currentUser.rank]||""}</div></div>
   </div>`;
   if (canInviteDirect()) {
@@ -2131,7 +2183,7 @@ function renderAttention() {
   }).join("");
   const members = state.members.filter(m=>m.status!=="pending").map(m=>({m, s:memberScore(m)})).sort((a,b)=>(b.s.hasTask-a.s.hasTask)||(b.s.score-a.s.score));
   const scores = members.slice(0,6).map(({m,s}) => { const md = moodFor(s);
-    return `<div class="score-row2">${avatarHtml(m.name,26)}<span class="n">${esc(m.name)} ${crownHtml(m.id)}</span><span class="score-pill ${md.cls}">${esc(md.lbl)}${s.hasTask?" "+s.score+"%":""}</span></div>`; }).join("");
+    return `<div class="score-row2">${avatarHtml(m.name,26,m.id)}<span class="n">${esc(m.name)} ${crownHtml(m.id)}</span><span class="score-pill ${md.cls}">${esc(md.lbl)}${s.hasTask?" "+s.score+"%":""}</span></div>`; }).join("");
   el.innerHTML = `<div class="dash-card"><div class="dc-head"><h3>งานของวันนี้</h3><button class="dc-link" onclick="openTasks('today')">ดูทั้งหมด →</button></div>
       ${rows || `<div style="padding:18px 6px;color:var(--txt-3);font-size:13px">ไม่มีงานเร่งด่วนวันนี้</div>`}</div>
     <div class="dash-card"><div class="dc-head"><h3>คะแนนทีม</h3><span style="font-size:11.5px;color:var(--txt-3)">ส่งตรงเวลา</span></div>${scores || `<div style="padding:18px 6px;color:var(--txt-3);font-size:13px">ยังไม่มีสมาชิก</div>`}</div>`;
@@ -2170,7 +2222,7 @@ function renderTeam() {
         ${removeBtn}
         <div style="position:absolute;top:8px;right:40px;background:var(--caution);color:#fff;font-size:11px;padding:2px 8px;border-radius:20px;font-weight:600"><i class="ti ti-hourglass"></i> รอเข้าระบบ</div>
         <div class="top">
-          <div class="avatar" style="opacity:.6">${esc(initials(m.name))}</div>
+          <div class="avatar" style="opacity:.6">${avatarInner(m.name, m.id)}</div>
           <div><div class="name">${esc(m.name)} <span class="rank-badge ${rk}">${rl}</span></div><div class="role">${esc(m.email)}</div></div>
         </div>
         <div style="text-align:center;padding:16px 0">
@@ -2184,7 +2236,7 @@ function renderTeam() {
     return `<div class="member">
       ${removeBtn}
       <div class="top">
-        <div class="avatar">${esc(initials(m.name))}</div>
+        <div class="avatar">${avatarInner(m.name, m.id)}</div>
         <div><div class="name">${esc(m.name)} ${crownHtml(m.id)} <span class="rank-badge ${rk}">${rl}</span></div><div class="role">${esc(m.position)}</div></div>
       </div>
       <div class="mood-score"><div class="num">${s.hasTask?s.score+"%":"—"}</div>${s.hasTask?`<div style="margin-top:6px"><span class="score-pill ${mood.cls}">${esc(mood.lbl)}</span></div>`:""}<div style="font-size:12px;color:var(--txt-2);margin-top:6px">${esc(mood.t)}</div></div>
@@ -3128,7 +3180,7 @@ function renderSnakeBoard() {
       <div class="prize-crown"><i class="ti ti-crown crown"></i></div>
       <div class="prize-title">มงกุฎทองหน้าชื่อ</div>
       <div class="prize-desc">ติดหน้าชื่อคุณ<b>ทุกหน้าในเว็บ</b>ตลอด 1 สัปดาห์เต็ม — ทั้งทีมเห็น</div>
-      <div class="prize-preview">${avatarHtml(currentUser ? currentUser.name : "?", 26)}<span>${esc(currentUser ? currentUser.name : "")} <i class="ti ti-crown crown"></i></span><span class="prize-you">ชื่อคุณจะเป็นแบบนี้</span></div>
+      <div class="prize-preview">${avatarHtml(currentUser ? currentUser.name : "?", 26, currentUser && currentUser.id)}<span>${esc(currentUser ? currentUser.name : "")} <i class="ti ti-crown crown"></i></span><span class="prize-you">ชื่อคุณจะเป็นแบบนี้</span></div>
       <div class="prize-rules">
         <div><i class="ti ti-calendar-week"></i> แข่งจันทร์–อาทิตย์ ปิดรอบ ${end.toLocaleDateString("th-TH",{day:"numeric",month:"short"})} 23:59</div>
         <div><i class="ti ti-trophy"></i> นับรอบที่คะแนนสูงสุดของแต่ละคน เล่นกี่รอบก็ได้</div>
@@ -3138,7 +3190,7 @@ function renderSnakeBoard() {
     </div>
     <div class="dc-head" style="margin-top:14px"><h3>อันดับสัปดาห์นี้</h3><span style="font-size:11.5px;color:var(--txt-3)">ปิดรอบ ${end.toLocaleDateString("th-TH",{day:"numeric",month:"short"})} 23:59</span></div>
     ${rows.length ? rows.slice(0,10).map((r,i) => { const m = memberById(r.member_id); const nm = m ? m.name : (r.member_name||"?");
-      return `<div class="lb-row ${currentUser && r.member_id===currentUser.id?'me':''}"><b class="rk">${i+1}</b>${avatarHtml(nm,24)}<span class="n">${esc(nm)} ${crownHtml(r.member_id)}</span>${i===0?'<span class="score-pill good">กำลังนำ</span>':''}<b>${r.score}</b></div>`; }).join("")
+      return `<div class="lb-row ${currentUser && r.member_id===currentUser.id?'me':''}"><b class="rk">${i+1}</b>${avatarHtml(nm,24,r.member_id)}<span class="n">${esc(nm)} ${crownHtml(r.member_id)}</span>${i===0?'<span class="score-pill good">กำลังนำ</span>':''}<b>${r.score}</b></div>`; }).join("")
       : `<div style="padding:16px 4px;color:var(--txt-3);font-size:13px">ยังไม่มีใครเล่นสัปดาห์นี้ — เป็นคนแรกเลย!</div>`}
     <div class="champ-box"><i class="ti ti-crown"></i><div><div style="font-size:11.5px;color:var(--txt-3)">แชมป์สัปดาห์ที่แล้ว</div>
       <div style="font-weight:500">${champM ? `${esc(champM.name)} <i class="ti ti-crown crown"></i> · ${champ.score} คะแนน` : "ยังไม่มี"}</div></div></div>`;
@@ -3461,7 +3513,11 @@ function showProfile() {
   if (!currentUser) return;
   document.getElementById("profileInfo").innerHTML = `
     <div style="text-align:center;margin-bottom:16px">
-      <div style="display:flex;justify-content:center;margin-bottom:10px">${avatarHtml(currentUser.name,64)}</div>
+      <div style="display:flex;justify-content:center;margin-bottom:8px">${avatarHtml(currentUser.name,84,currentUser.id)}</div>
+      <div style="display:flex;gap:6px;justify-content:center;margin-bottom:12px">
+        <button class="btn-ghost btn-sm" onclick="pickAvatarFile()"><i class="ti ti-camera"></i> ${avatarSrc(currentUser.id) ? "เปลี่ยนรูป" : "อัปโหลดรูป"}</button>
+        ${avatarSrc(currentUser.id) ? `<button class="btn-ghost btn-sm" onclick="if(confirm('ลบรูปโปรไฟล์?'))saveAvatar('')"><i class="ti ti-trash"></i> ลบรูป</button>` : ""}
+      </div>
       <div style="display:flex;gap:6px;align-items:center;justify-content:center">
         <input id="myNameInput" value="${esc(currentUser.name)}" maxlength="40" style="font-size:18px;font-weight:650;text-align:center;border:1px solid var(--stroke-2);border-radius:6px;padding:5px 9px;background:var(--control);color:var(--txt);max-width:220px" onkeydown="if(event.key==='Enter'){this.blur();setMyName()}">
         <button class="btn-ghost btn-sm" onclick="setMyName()" title="บันทึกชื่อ"><i class="ti ti-device-floppy"></i></button>
