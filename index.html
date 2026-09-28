@@ -1916,7 +1916,7 @@ function renderMobileActions() {
       <button class="btn-ghost" onclick="closeSidebarMobile();openBoardModal()"><i class="ti ti-pin"></i> ประกาศ</button>`;
   }
   const showingMobileNow = forceView === "mobile" ? true : forceView === "desktop" ? false : (window.innerWidth <= 1024);
-  html += `<button class="btn-ghost" onclick="cycleForceView()">${showingMobileNow ? '<i class="ti ti-device-desktop"></i> ดูเวอร์ชันคอม' : '<i class="ti ti-device-mobile"></i> ดูเวอร์ชันมือถือ'}</button>`;
+  if (canForceView) html += `<button class="btn-ghost" onclick="cycleForceView()">${showingMobileNow ? '<i class="ti ti-device-desktop"></i> ดูเวอร์ชันคอม' : '<i class="ti ti-device-mobile"></i> ดูเวอร์ชันมือถือ'}</button>`;
   html += `<button class="btn-ghost btn-sm" onclick="logout()">ออก</button>`;
   el.innerHTML = html;
   fab.style.display = (canInviteDirect() || canCreateTask()) ? "" : "none";
@@ -1926,7 +1926,10 @@ function renderMobileActions() {
 /* ============ สลับมือถือ/คอม — อยู่ในเมนู "เพิ่มเติม" (มือถือ) และมุมล่างซ้ายของ sidebar (คอม กันเผื่อบังคับคอมแล้วหาทางกลับไม่เจอ) สลับได้ทั้ง 2 ทาง ============
    forceView: "auto" (ตามขนาดจอจริง) | "mobile" (บังคับมือถือ) | "desktop" (บังคับคอม)
    ใช้ reload หน้าเสมอ เพราะ iOS Safari ไม่ปรับ viewport สดๆ ให้แบบไม่รีโหลด ============ */
-let forceView = lsGet("mkt_force_view") || "auto";
+// ปุ่มสลับมุมมองใช้ได้เฉพาะอุปกรณ์จอสัมผัส (มือถือ/iPad) — เบราว์เซอร์บนคอมไม่รับการเปลี่ยน viewport เลยซ่อนปุ่มบนคอม
+const canForceView = window.matchMedia && window.matchMedia("(pointer: coarse), (hover: none)").matches;
+let forceView = canForceView ? (lsGet("mkt_force_view") || "auto") : "auto";
+if (!canForceView) lsSet("mkt_force_view", "auto");
 function applyForceView() {
   const vp = document.getElementById("viewportMeta");
   if (vp) vp.setAttribute("content",
@@ -1935,6 +1938,7 @@ function applyForceView() {
     "width=device-width, initial-scale=1.0");
   const btn = document.getElementById("sidebarViewToggleBtn");
   if (!btn) return;
+  if (!canForceView) { btn.style.display = "none"; return; }
   const showingMobile = forceView === "mobile" ? true : forceView === "desktop" ? false : (window.innerWidth <= 1024);
   btn.innerHTML = showingMobile ? '<i class="ti ti-device-desktop"></i> ดูเวอร์ชันคอม' : '<i class="ti ti-device-mobile"></i> ดูเวอร์ชันมือถือ';
 }
