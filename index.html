@@ -627,7 +627,8 @@ button{border-radius:99px;font-weight:500}
 .prize-title{font-family:"Kanit",sans-serif;font-size:19px}
 .prize-desc{font-size:12.5px;color:var(--txt-3);margin-top:3px}
 .prize-desc b{color:#EDEDEA;font-weight:500}
-.prize-preview{display:flex;align-items:center;justify-content:center;gap:8px;margin:12px auto 0;padding:8px 12px;border-radius:99px;background:rgba(255,255,255,.08);width:fit-content;font-size:13.5px}
+.prize-preview{display:flex;align-items:center;justify-content:center;gap:12px;margin:18px auto 0;padding:14px 20px 10px 14px;border-radius:99px;background:linear-gradient(135deg,rgba(233,185,73,.16),rgba(255,255,255,.04));border:1px solid rgba(233,185,73,.35);width:fit-content}
+.prize-preview .pv-name{font-family:"Kanit",sans-serif;font-size:18px;line-height:1.2}
 .prize-preview .initials{background:#EDEDEA;color:#111}
 .prize-you{font-size:10.5px;color:var(--txt-3)}
 .prize-rules{text-align:left;margin-top:12px;display:grid;gap:6px;font-size:12px;color:var(--txt-3)}
@@ -3189,7 +3190,10 @@ function renderSnakeBoard() {
       <div class="prize-crown"><i class="ti ti-crown crown"></i></div>
       <div class="prize-title">มงกุฎทองหน้าชื่อ</div>
       <div class="prize-desc">ติดหน้าชื่อคุณ<b>ทุกหน้าในเว็บ</b>ตลอด 1 สัปดาห์เต็ม — ทั้งทีมเห็น</div>
-      <div class="prize-preview">${avatarHtml(currentUser ? currentUser.name : "?", 26, currentUser && currentUser.id)}<span>${esc(currentUser ? currentUser.name : "")} <i class="ti ti-crown crown"></i></span><span class="prize-you">ชื่อคุณจะเป็นแบบนี้</span></div>
+      <div class="prize-preview">
+        <span class="initials is-champ" style="width:46px;height:46px;font-size:20px">${avatarInner(currentUser ? currentUser.name : "?", currentUser && currentUser.id)}<i class="ti ti-crown crown onhead"></i></span>
+        <div style="text-align:left"><div class="pv-name">${esc(currentUser ? currentUser.name : "")} <i class="ti ti-crown crown"></i></div><div class="prize-you">ชื่อคุณจะเป็นแบบนี้</div></div>
+      </div>
       <div class="prize-rules">
         <div><i class="ti ti-calendar-week"></i> แข่งจันทร์–อาทิตย์ ปิดรอบ ${end.toLocaleDateString("th-TH",{day:"numeric",month:"short"})} 23:59</div>
         <div><i class="ti ti-trophy"></i> นับรอบที่คะแนนสูงสุดของแต่ละคน เล่นกี่รอบก็ได้</div>
