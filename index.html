@@ -613,6 +613,9 @@ button{border-radius:99px;font-weight:500}
 .snake-legend .dot-food{width:10px;height:10px;border-radius:50%;background:var(--danger);display:inline-block}
 .snake-legend .dot-bomb{width:11px;height:11px;border-radius:50%;background:var(--txt);display:inline-block;position:relative}
 .snake-legend .dot-bomb::after{content:"";position:absolute;top:-4px;right:-3px;width:4px;height:4px;border-radius:50%;background:var(--danger)}
+.ctext-input{flex:1;min-width:0;font:inherit;font-size:14px;color:var(--txt);background:transparent;border:1px solid transparent;border-radius:8px;padding:5px 8px;outline:none}
+.ctext-input:hover{border-color:var(--stroke-2)}
+.ctext-input:focus,.ctext-input.editing{border-color:var(--txt);background:var(--control)}
 .initials,.avatar,.u-avatar,.s-avatar{position:relative;overflow:visible}
 .is-champ{box-shadow:0 0 0 2px #E9B949,0 0 12px rgba(233,185,73,.5)!important;animation:champRing 2.2s ease-in-out infinite}
 @keyframes champRing{0%,100%{box-shadow:0 0 0 2px #E9B949,0 0 6px rgba(233,185,73,.35)}50%{box-shadow:0 0 0 2px #FFE08A,0 0 16px rgba(255,210,90,.75)}}
@@ -2318,7 +2321,7 @@ function renderTaskCard(t) {
         <label class="check">
           <input type="checkbox" ${c.on?"checked":""} ${canTick?"":"disabled"} onchange="toggleCheck('${id}',${i},this)">
           <span class="ctext">${esc(c.text)}</span>
-          ${canChecklist?`<button class="del-check" title="ลบหัวข้อย่อย" onclick="event.preventDefault();delCheck('${id}',${i})"><i class="ti ti-trash"></i></button>`:""}
+          ${canChecklist?`<button class="del-check" title="แก้ไขข้อความ" onclick="event.preventDefault();startEditCheck('${id}',${i},this)"><i class="ti ti-pencil"></i></button><button class="del-check" title="ลบหัวข้อย่อย" onclick="event.preventDefault();delCheck('${id}',${i})"><i class="ti ti-trash"></i></button>`:""}
         </label>`).join("")}
       ${canChecklist?`<div class="add-check">
         <input placeholder="เพิ่มหัวข้อย่อย..." onkeydown="if(event.key==='Enter'){addCheck('${id}',this)}">
@@ -2803,7 +2806,7 @@ function renderEditChecks() {
   document.getElementById("editCheckList").innerHTML = editChecks.map((c,i)=>`
     <label class="check" style="background:var(--layer-2)">
       <input type="checkbox" ${c.on?"checked":""} onchange="editChecks[${i}].on=this.checked">
-      <span class="ctext">${esc(c.text)}</span>
+      <input class="ctext-input" value="${esc(c.text)}" oninput="editChecks[${i}].text=this.value" title="แก้ข้อความได้เลย">
       <button class="del-check" onclick="event.preventDefault();editChecks.splice(${i},1);renderEditChecks()"><i class="ti ti-trash"></i></button>
     </label>`).join("") || `<div style="font-size:12px;color:var(--txt-3);padding:6px 2px">ยังไม่มีเชคลิสต์</div>`;
 }
@@ -2827,7 +2830,7 @@ function updateTask() {
   if (!canManageTasks() && who !== t.who) { toast("ไม่มีสิทธิ์มอบหมายให้คนอื่น","🔒"); return; }
   if (startDate && due && due < startDate) { toast("วันกำหนดส่งต้องไม่ก่อนวันเริ่มงาน","⚠️"); return; }
   const prevWho = t.who;
-  Object.assign(t, { title, desc:document.getElementById("editDesc").value.trim(), who, freq:document.getElementById("editFreq").value, startDate, due, emoji:state.editEmoji || t.emoji, checks:editChecks.map(c=>({text:c.text, on:c.on})), attachments:state.editAttachments||[] });
+  Object.assign(t, { title, desc:document.getElementById("editDesc").value.trim(), who, freq:document.getElementById("editFreq").value, startDate, due, emoji:state.editEmoji || t.emoji, checks:editChecks.filter(c=>String(c.text).trim()).map(c=>({text:String(c.text).trim(), on:c.on})), attachments:state.editAttachments||[] });
   const total = t.checks.length, done = t.checks.filter(c=>c.on).length;
   if (total > 0 && done === total) { t.status = "done"; if (!t.completedAt) t.completedAt = new Date().toISOString(); }
   else if (t.status === "done") { t.status = "doing"; t.completedAt = null; }
@@ -2865,6 +2868,36 @@ function addCheck(tid, inp) {
   const v = inp.value.trim(); if (!v) return;
   inp.value = "";
   checkOp(tid, "add", { text:v });
+}
+// แก้ข้อความหัวข้อย่อยในการ์ดงาน: เปลี่ยนข้อความเป็นช่องพิมพ์ Enter/คลิกออก = บันทึก, Esc = ยกเลิก
+function startEditCheck(tid, i, btn) {
+  const t = state.tasks.find(x=>x.id===tid);
+  if (!canEditChecklist(t) || !t.checks[i]) { toast("ไม่มีสิทธิ์","🔒"); return; }
+  const row = btn.closest(".check"), span = row && row.querySelector(".ctext");
+  if (!span || row.querySelector(".ctext-input")) return;
+  const inp = document.createElement("input");
+  inp.className = "ctext-input editing"; inp.value = t.checks[i].text; inp.maxLength = 200;
+  let done = false;
+  const finish = save => {
+    if (done) return; done = true;
+    const v = inp.value.trim();
+    if (save && v && v !== t.checks[i].text) saveCheckText(tid, i, v);
+    else if (inp.isConnected) inp.replaceWith(span);
+  };
+  inp.onkeydown = e => { if (e.key === "Enter") { e.preventDefault(); finish(true); } else if (e.key === "Escape") { finish(false); } };
+  inp.onblur = () => finish(true);
+  inp.onclick = e => e.preventDefault();
+  span.replaceWith(inp);
+  inp.focus(); inp.select();
+}
+async function saveCheckText(tid, i, text) {
+  const t = state.tasks.find(x=>x.id===tid); if (!t || !t.checks[i]) return;
+  const old = t.checks[i].text;
+  t.checks[i].text = text;
+  render();
+  const r = await dbw(db.from("tasks").update({ checks: t.checks }).eq("id", tid), "แก้ข้อความไม่สำเร็จ");
+  if (r && r.error) { t.checks[i].text = old; render(); return; }
+  toast("แก้ข้อความแล้ว","✏️");
 }
 function delCheck(tid, i) {
   const t = state.tasks.find(x=>x.id===tid);
