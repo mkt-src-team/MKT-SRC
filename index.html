@@ -617,7 +617,13 @@ button{border-radius:99px;font-weight:500}
 .wheel-box{position:relative;width:min(300px,80vw);margin:0 auto}
 .wheel-box svg{width:100%;display:block;font-family:"IBM Plex Sans Thai",sans-serif}
 .wheel-pin{position:absolute;top:-8px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:11px solid transparent;border-right:11px solid transparent;border-top:20px solid var(--danger);z-index:2}
-.wheel-result{font-family:"Kanit",sans-serif;font-size:18px;min-height:28px;margin:14px 0 10px}
+.wheel-result{margin:10px 0 14px}
+.wheel-count{font-size:12px;color:var(--txt-3);margin-top:12px}
+.wheel-actions{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.wheel-card{display:inline-block;min-width:220px;padding:14px 22px;border-radius:16px;background:var(--accent);color:var(--accent-contrast);animation:up .25s ease}
+.wheel-card .lbl{font-size:12px;color:var(--txt-3)}
+.wheel-card .win{font-family:"Kanit",sans-serif;font-size:26px;line-height:1.2}
+.wheel-picked{font-size:12px;color:var(--txt-3);margin-top:8px}
 .wheel-opt{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--txt-2);margin-top:10px}
 #wheelCustom{width:100%;background:var(--control);border:1px solid var(--stroke-2);color:var(--txt);border-radius:10px;padding:10px;font-family:inherit;font-size:13px;resize:vertical}
 .more-games{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:6px}
@@ -3197,10 +3203,33 @@ function initSnakeInput() {
 
 /* ---------- วงล้อสุ่ม ---------- */
 const WHL = { mode:"team", exclude:true, picked:[], rot:0, spinning:false, result:"" };
-function wheelItems() {
-  const base = WHL.mode === "team"
+try { WHL.picked = JSON.parse(lsGet("mkt_wheel_picked") || "[]") || []; WHL.mode = lsGet("mkt_wheel_mode") || "team"; } catch(e) { WHL.picked = []; }
+function saveWheelState() { lsSet("mkt_wheel_picked", JSON.stringify(WHL.picked)); lsSet("mkt_wheel_mode", WHL.mode); }
+function wheelBase() {
+  return WHL.mode === "team"
     ? state.members.filter(m => m.status !== "pending").map(m => m.name)
     : (lsGet("mkt_wheel_custom") || "").split("\n").map(x => x.trim()).filter(Boolean);
+}
+function resetWheel() {
+  if (WHL.spinning) return;
+  WHL.picked = []; WHL.result = ""; saveWheelState();
+  const res = document.getElementById("wheelResult"); if (res) res.innerHTML = "";
+  drawWheel(); renderWheelSide(); renderWheelCount();
+}
+function renderWheelCount() {
+  const el = document.getElementById("wheelCount"); if (!el) return;
+  const all = wheelBase().length, left = wheelItems().length;
+  el.textContent = WHL.exclude && WHL.picked.length ? `เหลือ ${left} จาก ${all}${left <= 1 ? " · กดเริ่มใหม่เพื่อเอาทุกคนกลับเข้าวงล้อ" : ""}` : `ทั้งหมด ${all} ตัวเลือก`;
+}
+async function clearWheelHistory() {
+  if (!isAdmin()) return;
+  if (!confirm("ล้างประวัติการสุ่มทั้งหมด? (ทั้งทีมจะไม่เห็นอีก)")) return;
+  const r = await db.from("wheel_spins").delete().neq("id", "");
+  if (r.error) { toast("ล้างประวัติไม่สำเร็จ: " + (r.error.message||""), "⚠️"); return; }
+  state.spins = []; renderWheelSide(); toast("ล้างประวัติแล้ว", "🗑");
+}
+function wheelItems() {
+  const base = wheelBase();
   const left = WHL.exclude ? base.filter(x => !WHL.picked.includes(x)) : base;
   return left;
 }
@@ -3216,8 +3245,12 @@ function renderWheelView() {
           <div class="wheel-modes" id="wheelModes"></div>
           <div class="field" style="max-width:320px;margin:0 auto 12px;text-align:left"><input id="wheelTopic" placeholder="สุ่มเพื่ออะไร เช่น เลี้ยงข้าวเที่ยง" maxlength="60"></div>
           <div class="wheel-box"><div class="wheel-pin"></div><svg id="wheelSvg" viewBox="-110 -110 220 220"></svg></div>
+          <div class="wheel-count" id="wheelCount"></div>
           <div class="wheel-result" id="wheelResult"></div>
-          <button class="btn-primary" id="wheelBtn" onclick="spinWheel()"><i class="ti ti-refresh"></i> หมุนวงล้อ</button>
+          <div class="wheel-actions">
+            <button class="btn-primary" id="wheelBtn" onclick="spinWheel()"><i class="ti ti-refresh"></i> หมุนวงล้อ</button>
+            <button class="btn-ghost" onclick="resetWheel()"><i class="ti ti-rotate-clockwise-2"></i> เริ่มใหม่</button>
+          </div>
         </div>
         <div class="dash-card" id="wheelSide"></div>
       </div>`;
@@ -3225,6 +3258,7 @@ function renderWheelView() {
   }
   document.getElementById("wheelNote").innerHTML = gamesReady === false ? setupNeededHtml() : "";
   renderWheelSide();
+  renderWheelCount();
 }
 function renderWheelSide() {
   document.getElementById("wheelModes").innerHTML = `
@@ -3232,16 +3266,17 @@ function renderWheelSide() {
     <button class="cal-filter ${WHL.mode==='custom'?'on':''}" onclick="setWheelMode('custom')"><i class="ti ti-pencil"></i> พิมพ์ตัวเลือกเอง</button>`;
   const side = document.getElementById("wheelSide");
   const keepText = document.getElementById("wheelCustom");
-  const custom = WHL.mode === "custom" ? `<textarea id="wheelCustom" rows="6" placeholder="ใส่ตัวเลือก บรรทัดละ 1 อย่าง" oninput="lsSet('mkt_wheel_custom',this.value);drawWheel()">${esc(keepText ? keepText.value : (lsGet("mkt_wheel_custom")||""))}</textarea>` : "";
+  const custom = WHL.mode === "custom" ? `<textarea id="wheelCustom" rows="6" placeholder="ใส่ตัวเลือก บรรทัดละ 1 อย่าง" oninput="lsSet('mkt_wheel_custom',this.value);drawWheel();renderWheelCount()">${esc(keepText ? keepText.value : (lsGet("mkt_wheel_custom")||""))}</textarea>` : "";
   side.innerHTML = `
-    <div class="dc-head"><h3>ตัวเลือก</h3>${WHL.picked.length?`<button class="dc-link" onclick="WHL.picked=[];drawWheel();renderWheelSide()">รีเซ็ตคนที่โดนแล้ว (${WHL.picked.length})</button>`:''}</div>
+    <div class="dc-head"><h3>ตัวเลือก</h3></div>
     ${custom}
-    <label class="wheel-opt"><input type="checkbox" ${WHL.exclude?'checked':''} onchange="WHL.exclude=this.checked;drawWheel()"> ตัดคนที่โดนแล้วออกจากวงล้อ</label>
-    <div class="dc-head" style="margin-top:14px"><h3>ประวัติการสุ่ม</h3><span style="font-size:11.5px;color:var(--txt-3)">ทั้งทีมเห็นเหมือนกัน</span></div>
+    <label class="wheel-opt"><input type="checkbox" ${WHL.exclude?'checked':''} onchange="WHL.exclude=this.checked;drawWheel();renderWheelCount()"> ตัดคนที่โดนแล้วออกจากวงล้อ</label>
+    ${WHL.picked.length ? `<div class="wheel-picked">โดนไปแล้ว: ${WHL.picked.map(esc).join(", ")}</div>` : ""}
+    <div class="dc-head" style="margin-top:14px"><h3>ประวัติการสุ่ม</h3>${isAdmin() && state.spins.length ? `<button class="dc-link" onclick="clearWheelHistory()">ล้างประวัติ</button>` : `<span style="font-size:11.5px;color:var(--txt-3)">ทั้งทีมเห็นเหมือนกัน</span>`}</div>
     ${state.spins.length ? state.spins.slice(0,10).map(r => `<div class="lb-row"><span class="n"><b>${esc(r.result)}</b>${r.topic?` <span style="color:var(--txt-3)">— ${esc(r.topic)}</span>`:''}<div style="font-size:11px;color:var(--txt-3)">สุ่มโดย ${esc(r.by_name||"")} · ${timeAgo(r.created_at)}</div></span></div>`).join("")
       : `<div style="padding:12px 4px;color:var(--txt-3);font-size:13px">ยังไม่มีประวัติ</div>`}`;
 }
-function setWheelMode(m) { if (WHL.spinning) return; WHL.mode = m; WHL.picked = []; WHL.result = ""; document.getElementById("wheelResult").textContent = ""; drawWheel(); renderWheelSide(); }
+function setWheelMode(m) { if (WHL.spinning) return; WHL.mode = m; WHL.picked = []; WHL.result = ""; saveWheelState(); document.getElementById("wheelResult").innerHTML = ""; drawWheel(); renderWheelSide(); renderWheelCount(); }
 function drawWheel() {
   const svg = document.getElementById("wheelSvg"); if (!svg || WHL.spinning) return;
   const items = wheelItems(), n = items.length;
@@ -3277,8 +3312,10 @@ function spinWheel() {
     WHL.spinning = false;
     const result = items[idx], topic = (document.getElementById("wheelTopic")||{}).value||"";
     const btn = document.getElementById("wheelBtn"); if (btn) btn.disabled = false;
-    const res = document.getElementById("wheelResult"); if (res) res.innerHTML = `ได้ <b>${esc(result)}</b>${topic?` — ${esc(topic.trim())}`:""}`;
     if (!WHL.picked.includes(result)) WHL.picked.push(result);
+    saveWheelState();
+    const res = document.getElementById("wheelResult");
+    if (res) res.innerHTML = `<div class="wheel-card"><div class="lbl">${topic.trim() ? esc(topic.trim()) : "ผลการสุ่ม"}</div><div class="win">${esc(result)}</div></div>`;
     if (db && currentUser) {
       const row = { id: uid(), by_id: currentUser.id, by_name: currentUser.name, result, topic: topic.trim(), mode: WHL.mode, created_at: new Date().toISOString() };
       const r = await db.from("wheel_spins").insert(row);
