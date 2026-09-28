@@ -24,40 +24,42 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3/dist/tabler-icons.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@500;600&family=IBM+Plex+Sans+Thai:wght@400;500;600&display=swap" rel="stylesheet">
 
 <style>
-/* ============ WINDOWS 11 — LIGHT ============ */
+/* ============ MONOCHROME — LIGHT (ขาวดำ เรียบหรู) ============ */
 :root, [data-theme="light"]{
-  --bg:#f3f3f3;--layer:#ffffff;--layer-2:#f9f9f9;
-  --stroke:#e5e5e5;--stroke-2:#d0d0d0;
-  --txt:#1a1a1a;--txt-2:#5e5e5e;--txt-3:#8a8a8a;
-  --accent:#005fb8;--accent-hover:#1a6ebf;--accent-tint:rgba(0,95,184,.10);--accent-contrast:#ffffff;
-  --control:#ffffff;--control-hover:#ededed;
-  --success:#0f7b0f;--success-tint:rgba(15,123,15,.10);
-  --caution:#9d5d00;--caution-tint:rgba(157,93,0,.12);
-  --danger:#c42b1c;--danger-tint:rgba(196,43,28,.10);
-  --burgundy:#9b1b22;--burgundy-tint:rgba(155,27,34,.10);
-  --track:#e5e5e5;
-  --shadow:0 1px 3px rgba(0,0,0,.06);--shadow-2:0 4px 14px rgba(0,0,0,.10);
-  --flyout:0 10px 30px rgba(0,0,0,.20);--mica:rgba(243,243,243,.82);--overlay:rgba(0,0,0,.32);
+  --bg:#F5F5F3;--layer:#ffffff;--layer-2:#FAFAF8;
+  --stroke:#E4E4E0;--stroke-2:#D6D6D1;
+  --txt:#111111;--txt-2:#6B6B66;--txt-3:#9A9A95;
+  --accent:#111111;--accent-hover:#2A2A2A;--accent-tint:rgba(17,17,17,.06);--accent-contrast:#ffffff;
+  --control:#ffffff;--control-hover:#F0F0EC;
+  --success:#3E6B47;--success-tint:rgba(62,107,71,.10);
+  --caution:#8A6D2B;--caution-tint:rgba(138,109,43,.10);
+  --danger:#B4382E;--danger-tint:rgba(180,56,46,.08);
+  --burgundy:#7A2E2A;--burgundy-tint:rgba(122,46,42,.08);
+  --track:#E4E4E0;
+  --shadow:0 1px 2px rgba(0,0,0,.04);--shadow-2:0 6px 20px rgba(0,0,0,.07);
+  --flyout:0 12px 32px rgba(0,0,0,.14);--mica:rgba(255,255,255,.85);--overlay:rgba(0,0,0,.35);
 }
-/* ============ WINDOWS 11 — DARK ============ */
+/* ============ MONOCHROME — DARK (ดำนุ่ม ไม่ใช่ดำสนิท สบายตา) ============ */
 [data-theme="dark"]{
-  --bg:#202020;--layer:#2b2b2b;--layer-2:#323232;
-  --stroke:#3b3b3b;--stroke-2:#4a4a4a;
-  --txt:#ffffff;--txt-2:#c9c9c9;--txt-3:#9a9a9a;
-  --accent:#60cdff;--accent-hover:#7ad6ff;--accent-tint:rgba(96,205,255,.16);--accent-contrast:#000000;
-  --control:#3a3a3a;--control-hover:#454545;
-  --success:#6ccb5f;--success-tint:rgba(108,203,95,.16);
-  --caution:#fce100;--caution-tint:rgba(252,225,0,.14);
-  --danger:#ff99a4;--danger-tint:rgba(255,153,164,.16);
-  --burgundy:#e85d6a;--burgundy-tint:rgba(232,93,106,.16);
-  --track:#3b3b3b;
-  --shadow:0 1px 3px rgba(0,0,0,.3);--shadow-2:0 4px 14px rgba(0,0,0,.4);
-  --flyout:0 10px 30px rgba(0,0,0,.55);--mica:rgba(32,32,32,.82);--overlay:rgba(0,0,0,.55);
+  --bg:#141414;--layer:#1B1B1B;--layer-2:#212121;
+  --stroke:#262626;--stroke-2:#333333;
+  --txt:#EDEDEA;--txt-2:#9A9A95;--txt-3:#6E6E6A;
+  --accent:#EDEDEA;--accent-hover:#FFFFFF;--accent-tint:rgba(237,237,234,.08);--accent-contrast:#141414;
+  --control:#1F1F1F;--control-hover:#2A2A2A;
+  --success:#8FBF95;--success-tint:rgba(143,191,149,.12);
+  --caution:#D6B56A;--caution-tint:rgba(214,181,106,.12);
+  --danger:#E5847A;--danger-tint:rgba(229,132,122,.12);
+  --burgundy:#D98A84;--burgundy-tint:rgba(217,138,132,.12);
+  --track:#333333;
+  --shadow:0 1px 2px rgba(0,0,0,.3);--shadow-2:0 6px 20px rgba(0,0,0,.45);
+  --flyout:0 12px 32px rgba(0,0,0,.6);--mica:rgba(27,27,27,.85);--overlay:rgba(0,0,0,.6);
 }
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:"Segoe UI Variable Text","Segoe UI",system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--txt);min-height:100vh;min-height:100dvh;padding-bottom:60px;-webkit-font-smoothing:antialiased;transition:background .2s,color .2s}
+body{font-family:"IBM Plex Sans Thai",system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--txt);min-height:100vh;min-height:100dvh;padding-bottom:60px;-webkit-font-smoothing:antialiased;transition:background .2s,color .2s}
 
 /* HEADER */
 header{position:sticky;top:0;z-index:50;background:var(--mica);backdrop-filter:saturate(160%) blur(20px);-webkit-backdrop-filter:saturate(160%) blur(20px);border-bottom:1px solid var(--stroke);padding:10px 20px;display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}
@@ -516,6 +518,77 @@ button.cal-filter i{width:9px;height:9px;border-radius:3px;display:inline-block}
   .u-name{max-width:70px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .notif-panel{position:fixed;width:auto;left:10px;right:10px;top:70px;max-height:70vh}
 }
+
+/* ============ MONOCHROME LAYER — ขาวดำ เรียบหรู (ทับสไตล์เดิม) ============ */
+h1,h2,h3,h4,.logo h1,.sidebar-brand .text b,.stat .value,.hero-title,.dash-card h3,.cal-title{font-family:"Kanit","IBM Plex Sans Thai",sans-serif;font-weight:500;letter-spacing:-.01em}
+.logo h1 .src,.sidebar-brand .text b .src,.auth-modal h3 .src{color:var(--txt-3)}
+.logo .badge,.sidebar-brand .badge,.auth-logo{background:var(--accent)!important;color:var(--accent-contrast);box-shadow:none}
+button{border-radius:99px;font-weight:500}
+.btn-sm{border-radius:99px}
+.btn-block{border-radius:12px}
+.combo{border-radius:99px}
+.btn-burgundy{background:var(--accent);color:var(--accent-contrast)}
+.btn-danger{border-color:var(--stroke-2)}
+.btn-danger:hover{border-color:var(--danger)}
+.stat,.member,.task,.board-card,.empty,.modal,.req-card,.cal-cell,.tl-row,.role-banner,.cloud-bar,.user-box,.dash-card{border-radius:14px}
+.stat,.member,.task{box-shadow:none}
+.stat:hover,.member:hover{transform:none;box-shadow:var(--shadow-2)}
+.tag,.chip,.rank-badge{border-radius:99px;background:transparent!important;border:1px solid var(--stroke-2);font-weight:500}
+.tag.overdue{border-color:var(--danger)!important;color:var(--danger)}
+.tag.done{border-color:var(--stroke-2)!important;color:var(--txt-2)}
+.tag.doing{border-color:var(--txt)!important;color:var(--txt)}
+.tag.daily,.tag.weekly,.tag.monthly{color:var(--txt-2);border-color:var(--stroke-2)!important}
+.rank-badge{color:var(--txt-2)!important}
+.rank-badge.boss,.rank-badge.dev{color:var(--txt)!important;border-color:var(--txt)}
+.u-role.boss,.u-role.dev,.u-role.employee{color:var(--txt-2)}
+.task.done{border-color:var(--stroke)}
+.task-icon{background:transparent;font-size:19px}
+.bar>i,.bar.good>i,.bar.warn>i{background:var(--txt)}
+.bar.bad>i{background:var(--danger)}
+.bar{height:4px}
+.combo-item.on{background:var(--accent-tint)}
+.notif-item.unread{background:var(--accent-tint)}
+.cloud-bar .dot{box-shadow:none}
+.empty .e-emoji{font-size:40px;color:var(--txt-3);filter:none}
+.emoji-pick button{border-radius:12px;font-size:19px}
+.initials{border-radius:50%;background:var(--accent);color:var(--accent-contrast);display:grid;place-items:center;font-family:"Kanit",sans-serif;font-weight:500;flex:none;text-transform:uppercase}
+.u-avatar{background:var(--accent)!important;color:var(--accent-contrast);font-size:12px!important}
+.avatar{background:var(--accent)!important;color:var(--accent-contrast);border:none!important;font-size:17px!important;font-family:"Kanit",sans-serif}
+.score-pill{display:inline-flex;align-items:center;gap:5px;border-radius:99px;padding:3px 11px;font-size:11.5px;border:1px solid var(--stroke-2);color:var(--txt-2);white-space:nowrap}
+.score-pill.good{border-color:var(--txt);color:var(--txt)}
+.score-pill.bad{border-color:var(--danger);color:var(--danger)}
+.mood-score{text-align:center;margin:10px 0 4px}
+.mood-score .num{font-family:"Kanit",sans-serif;font-size:30px;font-weight:500;line-height:1}
+/* HERO */
+.hero{margin:4px 0 18px}
+.hero .date-pill{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--stroke-2);border-radius:99px;padding:3px 12px;font-size:12px;color:var(--txt-2)}
+.hero-title{font-size:30px;line-height:1.15;margin-top:10px}
+.hero-title span{color:var(--txt-3)}
+/* STAT: การ์ดแรกเด่นสีดำ */
+.stats .stat.feature{background:var(--accent);color:var(--accent-contrast);border-color:var(--accent)}
+.stats .stat.feature .label,.stats .stat.feature .sub{color:var(--txt-3)!important}
+.stats .stat.feature .bar{background:rgba(127,127,127,.35)}
+.stats .stat.feature .bar>i{background:var(--accent-contrast)}
+/* DASH GRID: งานวันนี้ + คะแนนทีม */
+.dash-grid{display:grid;grid-template-columns:1.6fr 1fr;gap:12px;margin-bottom:28px}
+.dash-card{background:var(--layer);border:1px solid var(--stroke);padding:14px}
+.dash-card .dc-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.dash-card h3{font-size:15px}
+.dash-card .dc-link{background:none;border:none;padding:0;font-size:12px;color:var(--txt-3);font-weight:400}
+.dash-card .dc-link:hover{color:var(--txt)}
+.dash-row{display:flex;align-items:center;gap:11px;padding:9px 6px;border-radius:10px;cursor:pointer}
+.dash-row:hover{background:var(--layer-2)}
+.dash-row .ic{width:34px;height:34px;border-radius:10px;border:1px solid var(--stroke);display:grid;place-items:center;font-size:16px;flex:none}
+.dash-row .t{font-weight:500;font-size:13.5px}
+.dash-row .s{font-size:11.5px;color:var(--txt-2)}
+.dash-row .s.late{color:var(--danger)}
+.dash-row .mbar{width:56px;height:3px;border-radius:9px;background:var(--track);flex:none}
+.dash-row .mbar i{display:block;height:100%;border-radius:9px;background:var(--txt)}
+.dash-row .mbar.late i{background:var(--danger)}
+.score-row2{display:flex;align-items:center;gap:9px;padding:7px 2px}
+.score-row2 .n{flex:1;font-size:13px}
+.stats{grid-template-columns:1.6fr 1fr 1fr 1fr}
+@media(max-width:1024px){.dash-grid{grid-template-columns:1fr}.hero-title{font-size:24px}.stats{grid-template-columns:repeat(3,1fr)!important;gap:8px}.stats .stat.feature{grid-column:1/-1}.stats .stat .value{font-size:22px}}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
 </head>
@@ -579,8 +652,9 @@ button.cal-filter i{width:9px;height:9px;border-radius:3px;display:inline-block}
   <div id="roleBanner"></div>
   <div id="cloudBar"></div>
   <div id="viewRoot"></div>
+  <div class="hero" id="hero"></div>
   <div class="stats" id="stats"></div>
-  <div id="attention"></div>
+  <div class="dash-grid" id="attention"></div>
 
   <!-- Board ประกาศ -->
   <section id="boardSection">
@@ -594,7 +668,7 @@ button.cal-filter i{width:9px;height:9px;border-radius:3px;display:inline-block}
   <!-- Requests (for admin) -->
   <section id="reqSection" style="display:none">
     <div class="sec-head">
-      <h2>📬 คำขอรออนุมัติ</h2>
+      <h2><i class="ti ti-inbox"></i> คำขอรออนุมัติ</h2>
       <span class="hint" id="reqCount"></span>
     </div>
     <div id="reqList"></div>
@@ -604,7 +678,7 @@ button.cal-filter i{width:9px;height:9px;border-radius:3px;display:inline-block}
   <section id="teamSection">
     <div class="sec-head">
       <h2><i class="ti ti-users"></i> ทีมงาน & คะแนนความพึงพอใจ</h2>
-      <span class="hint">😍 ดีเยี่ยม (≥80%) | 😊 ดี (≥75%) | 🙂 ปานกลาง (≥50%) | 😢 เลยกำหนด | ต่ำกว่า 50%/ยังไม่มีงาน → โชว์อีโมจิของตัวเอง</span>
+      <span class="hint">คะแนน = สัดส่วนงานที่ส่งตรงเวลา · ดีเยี่ยม ≥80% · ดี ≥75% · ปานกลาง ≥50%</span>
     </div>
     <div class="team-grid" id="teamGrid"></div>
   </section>
@@ -615,7 +689,7 @@ button.cal-filter i{width:9px;height:9px;border-radius:3px;display:inline-block}
 <!-- AUTH MODAL -->
 <div class="overlay auth-overlay" id="authOverlay">
   <div class="modal auth-modal">
-    <div class="auth-logo">🚗</div>
+    <div class="auth-logo"><i class="ti ti-steering-wheel"></i></div>
     <h3>MKT-<span class="src">SRC</span></h3>
     <p class="desc" id="authDesc">ระบบติดตามงานทีม • เข้าสู่ระบบ</p>
     <div class="auth-tabs" id="authTabs">
@@ -715,9 +789,9 @@ button.cal-filter i{width:9px;height:9px;border-radius:3px;display:inline-block}
     <div class="field">
       <label>ประเภทงาน *</label>
       <select id="tFreq">
-        <option value="daily">📅 รายวัน</option>
-        <option value="weekly">📆 รายอาทิตย์</option>
-        <option value="monthly">🗓️ รายเดือน</option>
+        <option value="daily">รายวัน</option>
+        <option value="weekly">รายอาทิตย์</option>
+        <option value="monthly">รายเดือน</option>
       </select>
     </div>
     <div class="field"><label>วันเริ่มงาน *</label><input type="date" id="tStartDate"></div>
@@ -750,9 +824,9 @@ button.cal-filter i{width:9px;height:9px;border-radius:3px;display:inline-block}
     <div class="field">
       <label>ประเภทงาน *</label>
       <select id="editFreq">
-        <option value="daily">📅 รายวัน</option>
-        <option value="weekly">📆 รายอาทิตย์</option>
-        <option value="monthly">🗓️ รายเดือน</option>
+        <option value="daily">รายวัน</option>
+        <option value="weekly">รายอาทิตย์</option>
+        <option value="monthly">รายเดือน</option>
       </select>
     </div>
     <div class="field"><label>วันเริ่มงาน *</label><input type="date" id="editStartDate"></div>
@@ -792,14 +866,14 @@ button.cal-filter i{width:9px;height:9px;border-radius:3px;display:inline-block}
     <div class="field">
       <label>ตำแหน่ง *</label>
       <select id="mRank">
-        <option value="employee">💼 พนักงาน</option>
-        <option value="intern">🎓 เด็กฝึกงาน</option>
-        <option value="dev">💻 Dev</option>
-        <option value="boss">👑 Boss</option>
+        <option value="employee">พนักงาน</option>
+        <option value="intern">เด็กฝึกงาน</option>
+        <option value="dev">Dev</option>
+        <option value="boss">Boss</option>
       </select>
     </div>
     <div class="field"><label>ตำแหน่งงาน (.Job Title)</label><input id="mPos" placeholder="เช่น Marketing, Designer, Developer"></div>
-    <div class="field"><label>อีโมจิตัวแทน</label><div class="emoji-pick" id="mEmojiPick"></div></div>
+    
     <div class="modal-foot">
       <button class="btn-ghost" onclick="closeModal('teamOverlay')">ยกเลิก</button>
       <button class="btn-primary" onclick="saveMember()"><i class="ti ti-mail"></i> ส่งคำเชิญ</button>
@@ -902,12 +976,12 @@ button.cal-filter i{width:9px;height:9px;border-radius:3px;display:inline-block}
     <div class="field"><label>ชื่ออีเวนต์ *</label><input id="evTitle" placeholder="เช่น แคมเปญเปิดตัวสินค้าใหม่"></div>
     <div class="field"><label>ประเภท</label>
       <select id="evType" style="width:100%;padding:9px;border-radius:6px;border:1px solid var(--stroke-2);background:var(--control);color:var(--txt)">
-        <option value="event">🎪 Event / กิจกรรม</option>
-        <option value="campaign">🎯 Campaign / แคมเปญ</option>
-        <option value="content">📱 Content / คอนเทนต์</option>
-        <option value="launch">🚀 Launch / เปิดตัว</option>
-        <option value="meeting">👥 Meeting / ประชุม</option>
-        <option value="deadline">⏰ Deadline / กำหนดสำคัญ</option>
+        <option value="event">Event / กิจกรรม</option>
+        <option value="campaign">Campaign / แคมเปญ</option>
+        <option value="content">Content / คอนเทนต์</option>
+        <option value="launch">Launch / เปิดตัว</option>
+        <option value="meeting">Meeting / ประชุม</option>
+        <option value="deadline">Deadline / กำหนดสำคัญ</option>
       </select>
     </div>
     <div style="display:flex;gap:10px">
@@ -931,10 +1005,10 @@ button.cal-filter i{width:9px;height:9px;border-radius:3px;display:inline-block}
     <div class="field">
       <label>ตำแหน่ง</label>
       <select id="permRank" onchange="onPermRankChange()">
-        <option value="boss">👑 Boss</option>
-        <option value="dev">💻 Dev</option>
-        <option value="employee">💼 พนักงาน</option>
-        <option value="intern">🎓 เด็กฝึกงาน</option>
+        <option value="boss">Boss</option>
+        <option value="dev">Dev</option>
+        <option value="employee">พนักงาน</option>
+        <option value="intern">เด็กฝึกงาน</option>
       </select>
       <small id="permRankNote" style="display:block;color:var(--caution);margin-top:6px"></small>
     </div>
@@ -973,7 +1047,7 @@ try {
 
 /* ============ STATE ============ */
 function emptyData(){ return { members:[], tasks:[], requests:[], notifications:[], invites:[], announcements:[], events:[] }; }
-let state = Object.assign(emptyData(), { tmpChecks:[], tEmoji:"🚗", mEmoji:"🧑‍💻", editEmoji:"🚗", filter:"today", mine:false });
+let state = Object.assign(emptyData(), { tmpChecks:[], tEmoji:"ti-car", mEmoji:"🧑‍💻", editEmoji:"ti-car", filter:"today", mine:false });
 let currentUser = null; // {id,email,name,rank,emoji,position,phone,status,authUid}
 let lastSnapshot = "";
 let cloudState = db ? "loading" : "off";
@@ -1010,7 +1084,7 @@ function todayCounts() {
   const due = tasks.filter(t => !isOverdue(t) && taskStatus(t) !== "done" && (t.due === today || t.startDate === today)).length;
   return { total: overdue + due, overdue };
 }
-function initials(name) { const n = String(name||"").trim(); return n ? Array.from(n)[0].toUpperCase() : "?"; }
+function initials(name) { const n = String(name||"").trim().replace(/^[เแโใไ]+/, ""); return n ? Array.from(n)[0].toUpperCase() : "?"; }
 
 function renderSidebar() {
   const nav = document.getElementById('sidebarNav');
@@ -1074,6 +1148,10 @@ const RANK_EMOJI = { boss:"ti-crown", dev:"ti-code", employee:"ti-briefcase", in
 const FREQ_MAP = { daily:'<i class="ti ti-repeat"></i> รายวัน', weekly:'<i class="ti ti-calendar-week"></i> รายอาทิตย์', monthly:'<i class="ti ti-calendar-month"></i> รายเดือน' };
 const EV_ICON = { event:"ti-confetti", campaign:"ti-target-arrow", content:"ti-device-mobile", launch:"ti-rocket", meeting:"ti-users", deadline:"ti-clock-exclamation" };
 const TASK_EMOJIS = ["🚗","📣","🎨","💻","📊","📝","📸","🎬","🛍️","📈","🔧","⭐","🔥"];
+// ไอคอนงาน: ของใหม่เก็บเป็นชื่อคลาส "ti-..." ในช่อง emoji เดิม — งานเก่าที่เก็บเป็นอีโมจิจะแปลงเป็นไอคอนตามลำดับเดียวกันตอนแสดงผล
+const TASK_ICONS = ["ti-car","ti-speakerphone","ti-palette","ti-device-laptop","ti-chart-bar","ti-notes","ti-camera","ti-video","ti-shopping-bag","ti-trending-up","ti-tool","ti-star","ti-flame"];
+function taskIco(e) { if (e && e.startsWith("ti-")) return e; const i = TASK_EMOJIS.indexOf(e); return i >= 0 ? TASK_ICONS[i] : "ti-car"; }
+function avatarHtml(name, size) { return `<span class="initials" style="width:${size}px;height:${size}px;font-size:${Math.round(size*.44)}px">${esc(initials(name))}</span>`; }
 const MEMBER_EMOJIS = ["🙂","🧑‍💻","👩‍💼","👨‍💼","👩‍🎨","👨‍💻","👩‍🔬","🧑‍🚀","🦸","🦹","🐱","🐶","🦊","🐼","🐯"];
 function isAdmin() { return !!currentUser && (currentUser.rank==="boss" || currentUser.rank==="dev"); }
 /* ============ สิทธิ์รายบุคคล (ต้องตรงกับ supabase-perms.sql) ============ */
@@ -1177,14 +1255,14 @@ function memberById(id) { return state.members.find(m => m.id === id); }
 
 /* ============ DB MAPPERS ============ */
 function mapMember(r){ return { id:r.id, name:r.name||"", position:r.position||"", emoji:r.emoji||"🧑‍💻", email:r.email||"", phone:r.phone||"", rank:r.rank||"employee", status:r.status||"active", authUid:r.auth_uid||null, perms:(r.perms && typeof r.perms==="object" && !Array.isArray(r.perms)) ? r.perms : {}, loginCount:r.login_count||0, lastLoginDate:r.last_login_date||null }; }
-function mapTask(r){ return { id:r.id, title:r.title||"", desc:r.description||"", who:r.who||"", startDate:r.start_date||"", due:r.due||"", freq:r.freq||"daily", emoji:r.emoji||"🚗", status:r.status||"doing", checks:Array.isArray(r.checks)?r.checks:[], attachments:Array.isArray(r.attachments)?r.attachments:[], createdAt:r.created_at||new Date().toISOString(), completedAt:r.completed_at||null, createdBy:r.created_by||"" }; }
+function mapTask(r){ return { id:r.id, title:r.title||"", desc:r.description||"", who:r.who||"", startDate:r.start_date||"", due:r.due||"", freq:r.freq||"daily", emoji:r.emoji||"ti-car", status:r.status||"doing", checks:Array.isArray(r.checks)?r.checks:[], attachments:Array.isArray(r.attachments)?r.attachments:[], createdAt:r.created_at||new Date().toISOString(), completedAt:r.completed_at||null, createdBy:r.created_by||"" }; }
 function mapRequest(r){ return { id:r.id, fromId:r.from_id||"", fromName:r.from_name||"", type:r.type||"create", title:r.title||"", description:r.description||"", who:r.who||"", startDate:r.start_date||"", due:r.due||"", freq:r.freq||"daily", emoji:r.emoji||"", checks:Array.isArray(r.checks)?r.checks:[], taskId:r.task_id||"", status:r.status||"pending", note:r.note||"", createdAt:r.created_at||new Date().toISOString() }; }
 function mapNotif(r){ return { id:r.id, fromId:r.from_id||"", fromName:r.from_name||"", toRank:r.to_rank||"", toId:r.to_id||"", type:r.type||"", title:r.title||"", message:r.message||"", linkId:r.link_id||"", isRead:!!r.is_read, createdAt:r.created_at||new Date().toISOString() }; }
 function mapInvite(r){ return { id:r.id, email:r.email||"", rank:r.rank||"employee", createdBy:r.created_by||"", createdAt:r.created_at||new Date().toISOString() }; }
 function mapAnn(r){ return { id:r.id, title:r.title||"", content:r.content||"", authorName:r.author_name||"", authorId:r.author_id||"", isPinned:!!r.is_pinned, ackedBy:Array.isArray(r.acked_by)?r.acked_by:[], createdAt:r.created_at||new Date().toISOString() }; }
 function mapEvent(r){ return { id:r.id, title:r.title||"", date:r.event_date||"", time:r.time||"", type:r.type||"event", desc:r.description||"", by:r.created_by||"", createdAt:r.created_at||new Date().toISOString() }; }
 
-function taskRow(t){ return { title:t.title, description:t.desc||"", who:t.who||"", start_date:t.startDate||"", due:t.due||"", freq:t.freq||"daily", emoji:t.emoji||"🚗", status:t.status||"doing", checks:t.checks||[], attachments:t.attachments||[], completed_at:t.completedAt||null }; }
+function taskRow(t){ return { title:t.title, description:t.desc||"", who:t.who||"", start_date:t.startDate||"", due:t.due||"", freq:t.freq||"daily", emoji:t.emoji||"ti-car", status:t.status||"doing", checks:t.checks||[], attachments:t.attachments||[], completed_at:t.completedAt||null }; }
 function requestRow(r){ return { id:r.id, from_id:r.fromId, from_name:r.fromName, type:r.type, title:r.title, description:r.description||"", who:r.who||"", start_date:r.startDate||"", due:r.due||"", freq:r.freq||"daily", emoji:r.emoji||"", checks:r.checks||[], task_id:r.taskId||"", status:r.status, note:r.note||"" }; }
 function eventRow(e){ return { title:e.title, event_date:e.date||"", time:e.time||"", type:e.type||"event", description:e.desc||"" }; }
 function annRow(a){ return { title:a.title, content:a.content||"", author_name:a.authorName||"", author_id:a.authorId||"", is_pinned:!!a.isPinned }; }
@@ -1425,7 +1503,7 @@ function afterLogin(welcome) {
   ["setupPass","setupPass2"].forEach(id => document.getElementById(id).value = "");
   // ล้าง ?invite=... ออกจาก URL
   if (window.location.search || window.location.hash) { try { history.replaceState(null, "", appUrl()); } catch(e) {} }
-  if (welcome) toast(`ยินดีต้อนรับ ${currentUser.name}!`, RANK_EMOJI[currentUser.rank] || "👋");
+  if (welcome) toast(`ยินดีต้อนรับ ${currentUser.name}!`, RANK_EMOJI[currentUser.rank] || "ti-hand-stop");
   cloudState = "loading";
   render();
   startSync();
@@ -1709,7 +1787,7 @@ async function approveRequest(reqId) {
   const req = state.requests.find(r => r.id === reqId);
   if (!canApproveReq(req)) { toast("คำขอนี้ต้องให้ Boss/Dev อนุมัติ","🔒"); return; }
   if (req.type === "create") {
-    const t = { id:uid(), title:req.title, desc:req.description, who:req.who, startDate:req.startDate||"", due:req.due, freq:req.freq||"daily", emoji:req.emoji||"🚗", status:"doing", checks:req.checks||[], createdAt:new Date().toISOString(), completedAt:null, createdBy:req.fromId };
+    const t = { id:uid(), title:req.title, desc:req.description, who:req.who, startDate:req.startDate||"", due:req.due, freq:req.freq||"daily", emoji:req.emoji||"ti-car", status:"doing", checks:req.checks||[], createdAt:new Date().toISOString(), completedAt:null, createdBy:req.fromId };
     state.tasks.unshift(t);
     const r = await dbw(db.from("tasks").insert(Object.assign({ id:t.id, created_by:t.createdBy }, taskRow(t))), "สร้างงานไม่สำเร็จ");
     if (r.error) return;
@@ -1759,14 +1837,13 @@ function memberScore(m) {
   const score = graded===0 ? 100 : Math.round(onTime/graded*100);
   return {score,total:tasks.length,onTime,late,pending,hasTask:true};
 }
-function moodFor(s, memberEmoji) {
-  const base = memberEmoji || "🙂";
-  if (!s.hasTask) return {e:base,t:"ยังไม่มีงาน",cls:""};
-  if (s.late>0) return {e:"😢",t:`เลยกำหนด ${s.late} งาน`,cls:"bad"};
-  if (s.onTime>0 && s.score>=80) return {e:"😍",t:"ทำงานตรงเวลา สุดยอด!",cls:"good"};
-  if (s.score>=75) return {e:"😊",t:"ทำงานดี ตรงเวลา",cls:"good"};
-  if (s.score>=50) return {e:"🙂",t:"ปานกลาง",cls:"warn"};
-  return {e:base,t:"กำลังทำงานอยู่",cls:""};
+function moodFor(s) {
+  if (!s.hasTask) return {t:"ยังไม่มีงาน",lbl:"—",cls:""};
+  if (s.late>0) return {t:`เลยกำหนด ${s.late} งาน`,lbl:"ต้องเร่ง",cls:"bad"};
+  if (s.onTime>0 && s.score>=80) return {t:"ส่งงานตรงเวลา",lbl:"ดีเยี่ยม",cls:"good"};
+  if (s.score>=75) return {t:"ส่งงานตรงเวลา",lbl:"ดี",cls:"good"};
+  if (s.score>=50) return {t:"ปานกลาง",lbl:"ปานกลาง",cls:"warn"};
+  return {t:"กำลังทำงานอยู่",lbl:"กำลังทำ",cls:""};
 }
 
 /* ============ RENDER ============ */
@@ -1781,7 +1858,7 @@ function renderHeader() {
     </div>
   </div>
   <div class="user-box" onclick="showProfile()" style="cursor:pointer">
-    <span class="u-avatar">${esc(currentUser.emoji||"🧑‍💻")}</span>
+    <span class="u-avatar">${esc(initials(currentUser.name))}</span>
     <div><div class="u-name">${esc(currentUser.name)}</div><div class="u-role ${rankCls(currentUser.rank)}">${RANKS[currentUser.rank]||""}</div></div>
   </div>`;
   if (canInviteDirect()) {
@@ -1928,27 +2005,42 @@ function renderStats() {
   const over = tasks.filter(t=>isOverdue(t)).length;
   const doing = total - done - over;
   const active = state.members.filter(m=>m.status!=="pending");
-  const avg = active.length ? Math.round(active.reduce((a,m)=>a+memberScore(m).score,0)/active.length) : 0;
   const pend = state.members.length - active.length;
+  const pct = total ? Math.round(done/total*100) : 0;
+  const tc = todayCounts();
+  const h = new Date().getHours();
+  const greet = h < 12 ? "สวัสดีตอนเช้า" : h < 17 ? "สวัสดีตอนบ่าย" : "สวัสดีตอนเย็น";
+  const hero = document.getElementById("hero");
+  if (hero) hero.innerHTML = currentUser ? `<span class="date-pill"><i class="ti ti-calendar"></i> ${new Date().toLocaleDateString("th-TH",{weekday:"long",day:"numeric",month:"long"})}</span>
+    <div class="hero-title">${greet} ${esc(currentUser.name)}<br><span>${tc.total ? `วันนี้${currentUser.rank==="intern"?"คุณ":"ทีม"}มี ${tc.total} งาน` : "วันนี้ไม่มีงานเร่งด่วน"}</span></div>` : "";
   document.getElementById("stats").innerHTML = `
+    <button type="button" class="stat stat-link feature" onclick="openTasks('all')"><div class="label">ความคืบหน้างานทั้งหมด</div><div class="value">${pct}%</div><div class="bar"><i style="width:${pct}%"></i></div><div class="sub">เสร็จ ${done} จาก ${total} งาน</div></button>
     <div class="stat"><div class="label"><i class="ti ti-users"></i> สมาชิกทีม</div><div class="value">${active.length}</div><div class="sub">${pend?`+ รอเข้าระบบ ${pend} คน`:"คนในทีม"}</div></div>
-    <button type="button" class="stat stat-link" onclick="openTasks('all')"><div class="label"><i class="ti ti-clipboard-list"></i> งานทั้งหมด</div><div class="value">${total}</div><div class="sub">กำลังทำ ${doing} งาน →</div></button>
-    <button type="button" class="stat stat-link" onclick="openTasks('done')"><div class="label"><i class="ti ti-circle-check"></i> เสร็จแล้ว</div><div class="value" style="color:var(--success)">${done}</div><div class="sub">${total?Math.round(done/total*100):0}% ของงานทั้งหมด →</div></button>
-    <button type="button" class="stat stat-link" onclick="openTasks('overdue')"><div class="label"><i class="ti ti-alert-triangle"></i> เลยกำหนด</div><div class="value" style="color:${over?'var(--danger)':'var(--txt-3)'}">${over}</div><div class="sub">${over?"ต้องเร่งมือ →":"ไม่มี"}</div></button>
-    <div class="stat"><div class="label"><i class="ti ti-target"></i> คะแนนเฉลี่ยทีม</div><div class="value">${avg}%</div><div class="sub">ส่งงานตรงเวลา</div></div>`;
+    <button type="button" class="stat stat-link" onclick="openTasks('doing')"><div class="label"><i class="ti ti-loader-2"></i> กำลังทำ</div><div class="value">${doing}</div><div class="sub">ดูงาน →</div></button>
+    <button type="button" class="stat stat-link" onclick="openTasks('overdue')"><div class="label"><i class="ti ti-alert-triangle"></i> เลยกำหนด</div><div class="value" style="color:${over?'var(--danger)':'var(--txt-3)'}">${over}</div><div class="sub">${over?"ต้องเร่งมือ →":"ไม่มี"}</div></button>`;
   renderAttention();
 }
-/* แถบเตือนสั้นๆ บน Dashboard — ชี้ไปหน้างาน ไม่แสดงรายการงานซ้ำ */
+/* Dashboard: งานของวันนี้ (ย่อ) + คะแนนทีม */
 function renderAttention() {
   const el = document.getElementById("attention");
   if (!el) return;
-  const tc = todayCounts();
-  const dueToday = tc.total - tc.overdue;
-  if (!tc.total) { el.innerHTML = ""; return; }
-  const parts = [];
-  if (tc.overdue) parts.push(`<b style="color:var(--danger)">เลยกำหนด ${tc.overdue} งาน</b>`);
-  if (dueToday) parts.push(`<b>งานของวันนี้ ${dueToday} งาน</b>`);
-  el.innerHTML = `<div class="attention ${tc.overdue?'bad':''}"><span><i class="ti ${tc.overdue?"ti-alert-triangle":"ti-calendar"}"></i></span><span>${currentUser && currentUser.rank==="intern"?"งานของคุณ: ":""}${parts.join(" · ")}</span><button class="btn-ghost btn-sm" onclick="openTasks('today')">ดูงานวันนี้ <i class="ti ti-arrow-right"></i></button></div>`;
+  if (!currentUser) { el.innerHTML = ""; return; }
+  const today = todayStr();
+  const tasks = visibleTasks();
+  const list = [...tasks.filter(t=>isOverdue(t)), ...tasks.filter(t=>!isOverdue(t) && taskStatus(t)!=="done" && (t.due===today || t.startDate===today))];
+  const rows = list.slice(0,5).map(t => {
+    const who = memberById(t.who), over = isOverdue(t);
+    const c = t.checks||[], pc = c.length ? Math.round(c.filter(x=>x.on).length/c.length*100) : 0;
+    return `<div class="dash-row" onclick="openTasks('today')"><div class="ic"><i class="ti ${taskIco(t.emoji)}"></i></div>
+      <div style="flex:1;min-width:0"><div class="t">${esc(t.title)}</div><div class="s ${over?'late':''}">${who?esc(who.name):"ไม่ระบุ"} · ${over?"เลยกำหนด "+fmtDate(t.due):"ส่ง "+fmtDate(t.due)}</div></div>
+      <div class="mbar ${over?'late':''}"><i style="width:${pc}%"></i></div></div>`;
+  }).join("");
+  const members = state.members.filter(m=>m.status!=="pending").map(m=>({m, s:memberScore(m)})).sort((a,b)=>(b.s.hasTask-a.s.hasTask)||(b.s.score-a.s.score));
+  const scores = members.slice(0,6).map(({m,s}) => { const md = moodFor(s);
+    return `<div class="score-row2">${avatarHtml(m.name,26)}<span class="n">${esc(m.name)}</span><span class="score-pill ${md.cls}">${esc(md.lbl)}${s.hasTask?" "+s.score+"%":""}</span></div>`; }).join("");
+  el.innerHTML = `<div class="dash-card"><div class="dc-head"><h3>งานของวันนี้</h3><button class="dc-link" onclick="openTasks('today')">ดูทั้งหมด →</button></div>
+      ${rows || `<div style="padding:18px 6px;color:var(--txt-3);font-size:13px">ไม่มีงานเร่งด่วนวันนี้</div>`}</div>
+    <div class="dash-card"><div class="dc-head"><h3>คะแนนทีม</h3><span style="font-size:11.5px;color:var(--txt-3)">ส่งตรงเวลา</span></div>${scores || `<div style="padding:18px 6px;color:var(--txt-3);font-size:13px">ยังไม่มีสมาชิก</div>`}</div>`;
 }
 function openTasks(filter) { state.filter = filter; navigateTo("today-tasks"); }
 
@@ -1971,7 +2063,7 @@ function renderTeam() {
   }
   g.innerHTML = state.members.map(m => {
     const id = sid(m.id);
-    const s = memberScore(m), mood = moodFor(s, m.emoji);
+    const s = memberScore(m), mood = moodFor(s);
     const sc = !s.hasTask ? 'var(--txt-3)' : (s.score>=75?'var(--success)':s.score>=50?'var(--caution)':'var(--danger)');
     const rk = rankCls(m.rank), rl = RANKS[rk];
     let removeBtn = '';
@@ -1984,7 +2076,7 @@ function renderTeam() {
         ${removeBtn}
         <div style="position:absolute;top:8px;right:40px;background:var(--caution);color:#fff;font-size:11px;padding:2px 8px;border-radius:20px;font-weight:600"><i class="ti ti-hourglass"></i> รอเข้าระบบ</div>
         <div class="top">
-          <div class="avatar" style="filter:grayscale(0.5)">${esc(m.emoji||"🧑‍💻")}</div>
+          <div class="avatar" style="opacity:.6">${esc(initials(m.name))}</div>
           <div><div class="name">${esc(m.name)} <span class="rank-badge ${rk}">${rl}</span></div><div class="role">${esc(m.email)}</div></div>
         </div>
         <div style="text-align:center;padding:16px 0">
@@ -1998,11 +2090,10 @@ function renderTeam() {
     return `<div class="member">
       ${removeBtn}
       <div class="top">
-        <div class="avatar">${esc(m.emoji||"🧑‍💻")}</div>
+        <div class="avatar">${esc(initials(m.name))}</div>
         <div><div class="name">${esc(m.name)} <span class="rank-badge ${rk}">${rl}</span></div><div class="role">${esc(m.position)}</div></div>
       </div>
-      <div class="mood pop">${esc(mood.e)}</div>
-      <div style="text-align:center;font-size:12px;color:var(--txt-2);margin-bottom:6px">${esc(mood.t)}</div>
+      <div class="mood-score"><div class="num">${s.hasTask?s.score+"%":"—"}</div>${s.hasTask?`<div style="margin-top:6px"><span class="score-pill ${mood.cls}">${esc(mood.lbl)}</span></div>`:""}<div style="font-size:12px;color:var(--txt-2);margin-top:6px">${esc(mood.t)}</div></div>
       <div class="bar ${mood.cls}"><i style="width:${s.hasTask?s.score:0}%"></i></div>
       <div class="score-row"><span>คะแนนความพึงพอใจ</span><b style="color:${sc}">${s.hasTask?s.score+"%":"—"}</b></div>
       <div class="mini">
@@ -2033,7 +2124,6 @@ function renderTaskCard(t) {
   let tag = `<span class="tag doing"><i class="ti ti-hourglass"></i>กำลังทำ</span>`;
   if (st==="done") tag=`<span class="tag done"><i class="ti ti-circle-check"></i>เสร็จแล้ว</span>`;
   else if (over) tag=`<span class="tag overdue"><i class="ti ti-alert-triangle"></i>เลยกำหนด</span>`;
-  const tEmoji = (st==="done"||pct===100)?"😍":(over?"😢":(t.emoji||"🚗"));
   const canEdit = canEditTask(t);
   const canDel = canDeleteTaskDirect(t);
   const reqDel = !canDel && mine && can("request_task");
@@ -2051,7 +2141,7 @@ function renderTaskCard(t) {
 
   return `<div class="task ${st==='done'?'done':''} ${over?'overdue':''}">
     <div class="task-head">
-      <div class="task-icon">${esc(t.emoji||"🚗")}</div>
+      <div class="task-icon"><i class="ti ${taskIco(t.emoji)}"></i></div>
       <div class="task-main">
         <div class="task-title">${esc(t.title)} ${tag}</div>
         <div class="task-meta">
@@ -2062,7 +2152,6 @@ function renderTaskCard(t) {
         </div>
         ${t.desc?`<div style="font-size:12.5px;color:var(--txt-2);margin-top:7px">${esc(t.desc)}</div>`:""}
       </div>
-      <div class="task-emoji" title="${st==='done'?'เสร็จ':over?'เลยกำหนด':'กำลังทำ'}">${esc(tEmoji)}</div>
     </div>
     <div class="task-prog">
       <div class="info"><span>ความคืบหน้า</span><span>${pct}%</span></div>
@@ -2099,7 +2188,7 @@ function render() {
 }
 
 /* ============ VIEW ROUTER ============ */
-const DEFAULT_SECTIONS = ["stats","attention","boardSection","reqSection","teamSection"];
+const DEFAULT_SECTIONS = ["hero","stats","attention","boardSection","reqSection","teamSection"];
 function showDefaultSections(show) {
   DEFAULT_SECTIONS.forEach(id => { const el = document.getElementById(id); if (el) el.style.display = show ? "" : "none"; });
 }
@@ -2406,7 +2495,7 @@ function tlRowHtml(t) {
   const who = memberById(t.who);
   const color = st==="done" ? "var(--success)" : (over ? "var(--danger)" : "var(--accent)");
   return `<div class="tl-row" onclick="openEditTaskModal('${sid(t.id)}')" style="cursor:pointer">
-    <div style="font-size:22px;flex-shrink:0">${esc(t.emoji||"🚗")}</div>
+    <div class="task-icon" style="width:36px;height:36px;font-size:17px"><i class="ti ${taskIco(t.emoji)}"></i></div>
     <div class="tl-info">
       <div class="tl-title">${esc(t.title)} ${over?'<span class="tag overdue" style="font-size:10px"><i class="ti ti-alert-triangle"></i> เลยกำหนด</span>':(st==="done"?'<span class="tag done" style="font-size:10px"><i class="ti ti-check"></i></span>':"")}</div>
       <div class="tl-meta"><i class="ti ti-user"></i> ${who?esc(who.name):"ไม่ระบุ"} • <i class="ti ti-calendar"></i> ${fmtDate(t.startDate)} → ${fmtDate(t.due)}</div>
@@ -2421,15 +2510,15 @@ function openTaskModal() {
   if (!currentUser) { showAuth(); return; }
   if (!canCreateTask()) { toast("ไม่มีสิทธิ์สร้างงาน","🔒"); return; }
   if (state.members.length === 0) { toast("กรุณาเพิ่มคนในทีมก่อน","👥"); if (isAdmin()) openTeamModal(); return; }
-  state.tmpChecks = []; state.tEmoji = "🚗";
+  state.tmpChecks = []; state.tEmoji = "ti-car";
   document.getElementById("tTitle").value = "";
   document.getElementById("tDesc").value = "";
   document.getElementById("tFreq").value = "daily";
   document.getElementById("tStartDate").value = todayStr();   // (แก้บั๊ก) รีเซ็ตทุกครั้ง
   document.getElementById("tDue").value = todayStr();
   document.getElementById("tCheck").value = "";
-  document.querySelector("#taskOverlay h3").textContent = can("create_task") ? "🚗 เพิ่มงานใหม่" : "📬 ขอสร้างงานใหม่";
-  renderEmojiPick("tEmojiPick","t",TASK_EMOJIS);
+  document.querySelector("#taskOverlay h3").innerHTML = can("create_task") ? '<i class="ti ti-plus"></i> เพิ่มงานใหม่' : '<i class="ti ti-send"></i> ขอสร้างงานใหม่';
+  renderEmojiPick("tEmojiPick","t",TASK_ICONS);
   renderTmpChecks(); syncWhoSelect();
   document.getElementById("taskOverlay").classList.add("show");
   setTimeout(()=>document.getElementById("tTitle").focus(), 100);
@@ -2438,7 +2527,7 @@ function syncWhoSelect() {
   const sel = document.getElementById("tWho");
   const opts = state.members.filter(m => m.status !== "pending");
   sel.innerHTML = opts.length
-    ? opts.map(m=>`<option value="${esc(m.id)}" ${currentUser && m.id===currentUser.id?"selected":""}>${esc(m.emoji||"🧑‍💻")} ${esc(m.name)} — ${RANKS[rankCls(m.rank)]}</option>`).join("")
+    ? opts.map(m=>`<option value="${esc(m.id)}" ${currentUser && m.id===currentUser.id?"selected":""}>${esc(m.name)} — ${RANKS[rankCls(m.rank)]}</option>`).join("")
     : `<option value="">— ยังไม่มีสมาชิก —</option>`;
 }
 function addTmpCheck() {
@@ -2483,7 +2572,7 @@ function saveTaskDirect() {
   dbw(db.from("tasks").insert(Object.assign({ id:t.id, created_by:t.createdBy }, taskRow(t))), "เพิ่มงานไม่สำเร็จ");
   closeModal("taskOverlay");
   render();
-  toast("เพิ่มงานเรียบร้อยแล้ว","🚗");
+  toast("เพิ่มงานเรียบร้อยแล้ว","✅");
   if (f.who !== currentUser.id) notify({ toId:f.who, type:"task", title:"งานใหม่ได้รับมอบหมาย", message:`คุณได้รับมอบหมายงาน "${f.title}"` });
 }
 
@@ -2501,11 +2590,11 @@ function openEditTaskModal(tid) {
   document.getElementById("editFreq").value = freqCls(t.freq);
   editChecks = (t.checks||[]).map(c=>({text:c.text, on:!!c.on}));
   const sel = document.getElementById("editWho");
-  sel.innerHTML = state.members.map(m=>`<option value="${esc(m.id)}" ${m.id===t.who?"selected":""}>${esc(m.emoji||"🧑‍💻")} ${esc(m.name)} — ${RANKS[rankCls(m.rank)]}</option>`).join("");
+  sel.innerHTML = state.members.map(m=>`<option value="${esc(m.id)}" ${m.id===t.who?"selected":""}>${esc(m.name)} — ${RANKS[rankCls(m.rank)]}</option>`).join("");
   sel.disabled = !canManageTasks();
   sel.title = canManageTasks() ? "" : "ไม่มีสิทธิ์มอบหมายให้คนอื่น";
-  state.editEmoji = t.emoji || "🚗";   // (แก้บั๊ก) ตั้งก่อนวาด ให้ไฮไลต์ถูกตัว
-  renderEmojiPick("editEmojiPick","edit",TASK_EMOJIS);
+  state.editEmoji = taskIco(t.emoji);   // (แก้บั๊ก) ตั้งก่อนวาด ให้ไฮไลต์ถูกตัว
+  renderEmojiPick("editEmojiPick","edit",TASK_ICONS);
   renderEditChecks();
   state.editAttachments = (t.attachments || []).map(a => Object.assign({}, a));
   renderEditAttachments();
@@ -2628,7 +2717,7 @@ async function completeTask(tid) {
   if (!canManageTasks() && t.who !== currentUser?.id) { toast("ไม่มีสิทธิ์ปิดงานนี้","🔒"); return; }
   if (await checkOp(tid, "all", { on:true })) {
     const who = memberById(t.who);
-    toast(who ? `เยี่ยม ${who.name}! 😍` : "ทำเสร็จแล้ว 🎉", "🎉");
+    toast(who ? `เยี่ยม ${who.name}! งานเสร็จแล้ว` : "ทำเสร็จแล้ว", "🎉");
   }
 }
 function canReopenTask(t) { return canManageTasks() || (!!t && !!currentUser && t.who === currentUser.id && can("reopen_task")); }
@@ -2710,7 +2799,6 @@ function openTeamModal() {
   document.getElementById("mRank").value = "employee";
   document.getElementById("mPos").value = "";
   state.mEmoji = "🧑‍💻";
-  renderEmojiPick("mEmojiPick","m",MEMBER_EMOJIS);
   document.getElementById("teamOverlay").classList.add("show");
   setTimeout(()=>document.getElementById("mName").focus(),100);
 }
@@ -2844,7 +2932,7 @@ async function unbanEmail(email) {
 /* ============ ADMIN RESET PASSWORD ============ */
 function openResetPassModal() {
   if (!isAdmin()) return;
-  document.getElementById("resetUser").innerHTML = state.members.map(m=>`<option value="${esc(m.id)}">${esc(m.emoji)} ${esc(m.name)} (${RANKS[rankCls(m.rank)]})${m.authUid?"":" — ยังไม่ย้ายเข้าระบบใหม่"}</option>`).join("");
+  document.getElementById("resetUser").innerHTML = state.members.map(m=>`<option value="${esc(m.id)}">${esc(m.name)} (${RANKS[rankCls(m.rank)]})${m.authUid?"":" — ยังไม่ย้ายเข้าระบบใหม่"}</option>`).join("");
   document.getElementById("resetPassOverlay").classList.add("show");
 }
 async function adminResetPassword() {
@@ -2889,7 +2977,7 @@ function showProfile() {
   if (!currentUser) return;
   document.getElementById("profileInfo").innerHTML = `
     <div style="text-align:center;margin-bottom:16px">
-      <div style="font-size:48px;margin-bottom:8px">${esc(currentUser.emoji||"🧑‍💻")}</div>
+      <div style="display:flex;justify-content:center;margin-bottom:10px">${avatarHtml(currentUser.name,64)}</div>
       <div style="display:flex;gap:6px;align-items:center;justify-content:center">
         <input id="myNameInput" value="${esc(currentUser.name)}" maxlength="40" style="font-size:18px;font-weight:650;text-align:center;border:1px solid var(--stroke-2);border-radius:6px;padding:5px 9px;background:var(--control);color:var(--txt);max-width:220px" onkeydown="if(event.key==='Enter'){this.blur();setMyName()}">
         <button class="btn-ghost btn-sm" onclick="setMyName()" title="บันทึกชื่อ"><i class="ti ti-device-floppy"></i></button>
@@ -2901,10 +2989,6 @@ function showProfile() {
       <div style="margin-bottom:8px"><b><i class="ti ti-briefcase"></i> ตำแหน่ง:</b> ${esc(currentUser.position||"—")}</div>
       <div><b><i class="ti ti-key"></i> รหัสผ่าน:</b> ••••••••</div>
     </div>
-    <div style="margin-top:14px">
-      <div style="font-size:12.5px;color:var(--txt-2);font-weight:600;margin-bottom:7px">เปลี่ยนไอคอน</div>
-      <div class="emoji-pick" id="profileEmojiPick">${PROFILE_EMOJIS.map((e,i)=>`<button type="button" class="${e===currentUser.emoji?'sel':''}" onclick="setMyEmoji(${i})" title="ใช้ไอคอนนี้">${e}</button>`).join("")}</div>
-    </div>
     <button class="btn-ghost btn-block" style="margin-top:12px" onclick="closeModal('profileOverlay');showChangePassword()"><i class="ti ti-key"></i> เปลี่ยนรหัสผ่าน</button>`;
   document.getElementById("profileOverlay").classList.add("show");
 }
@@ -2913,11 +2997,11 @@ function showProfile() {
 function renderEmojiPick(cid, prefix, list) {
   const cur = prefix==="t" ? state.tEmoji : prefix==="edit" ? state.editEmoji : state.mEmoji;
   document.getElementById(cid).innerHTML = list.map((e,i)=>
-    `<button type="button" class="${e===cur?'sel':''}" onclick="pickEmoji('${prefix}',${i})">${e}</button>`).join("");
+    `<button type="button" class="${e===cur?'sel':''}" onclick="pickEmoji('${prefix}',${i})"><i class="ti ${e}"></i></button>`).join("");
 }
 function pickEmoji(prefix, i) {
-  if (prefix==="t") { state.tEmoji = TASK_EMOJIS[i]; renderEmojiPick("tEmojiPick","t",TASK_EMOJIS); }
-  else if (prefix==="edit") { state.editEmoji = TASK_EMOJIS[i]; renderEmojiPick("editEmojiPick","edit",TASK_EMOJIS); }
+  if (prefix==="t") { state.tEmoji = TASK_EMOJIS[i]; renderEmojiPick("tEmojiPick","t",TASK_ICONS); }
+  else if (prefix==="edit") { state.editEmoji = TASK_EMOJIS[i]; renderEmojiPick("editEmojiPick","edit",TASK_ICONS); }
   else { state.mEmoji = MEMBER_EMOJIS[i]; renderEmojiPick("mEmojiPick","m",MEMBER_EMOJIS); }
 }
 
@@ -2992,7 +3076,7 @@ async function boot() {
     const em = (data.session.user && data.session.user.email) || "";
     await db.auth.signOut();
     showAuth();
-    if (r.error === "LEGACY_NEEDS_PASSWORD") { document.getElementById("loginEmail").value = em; showAuthInfo("ยืนยันอีเมลเรียบร้อย ✅ — เข้าสู่ระบบด้วยรหัสผ่านเดิมอีกครั้งเพื่อย้ายบัญชีให้เสร็จ"); }
+    if (r.error === "LEGACY_NEEDS_PASSWORD") { document.getElementById("loginEmail").value = em; showAuthInfo("ยืนยันอีเมลเรียบร้อย — เข้าสู่ระบบด้วยรหัสผ่านเดิมอีกครั้งเพื่อย้ายบัญชีให้เสร็จ"); }
     else if (r.error && r.error !== "NOT_AUTHENTICATED") showAuthError(AUTH_ERR[r.error] || r.error);
     return;
   }
