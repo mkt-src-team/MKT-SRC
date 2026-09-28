@@ -613,7 +613,11 @@ button{border-radius:99px;font-weight:500}
 .snake-legend .dot-food{width:10px;height:10px;border-radius:50%;background:var(--danger);display:inline-block}
 .snake-legend .dot-bomb{width:11px;height:11px;border-radius:50%;background:var(--txt);display:inline-block;position:relative}
 .snake-legend .dot-bomb::after{content:"";position:absolute;top:-4px;right:-3px;width:4px;height:4px;border-radius:50%;background:var(--danger)}
-.initials,.avatar,.u-avatar,.s-avatar{overflow:hidden}
+.initials,.avatar,.u-avatar,.s-avatar{position:relative;overflow:visible}
+.is-champ{box-shadow:0 0 0 2px #E9B949,0 0 12px rgba(233,185,73,.5)!important;animation:champRing 2.2s ease-in-out infinite}
+@keyframes champRing{0%,100%{box-shadow:0 0 0 2px #E9B949,0 0 6px rgba(233,185,73,.35)}50%{box-shadow:0 0 0 2px #FFE08A,0 0 16px rgba(255,210,90,.75)}}
+.crown.onhead{position:absolute;left:50%;top:0;margin:0;font-size:1.15em;transform:translate(-50%,-72%) rotate(-14deg);pointer-events:none;z-index:1}
+@media (prefers-reduced-motion:reduce){.is-champ{animation:none}}
 .initials img,.avatar img,.u-avatar img,.s-avatar img{width:100%;height:100%;object-fit:cover;display:block;border-radius:50%}
 .prize-card{position:relative;overflow:hidden;text-align:center;border-radius:14px;padding:16px 14px 14px;background:var(--accent);color:var(--accent-contrast)}
 .prize-card::before{content:"";position:absolute;inset:-40% -40% auto;height:160%;background:radial-gradient(circle at 50% 30%,rgba(255,205,90,.22),transparent 55%);pointer-events:none}
@@ -1191,7 +1195,8 @@ function renderSidebar() {
   const name = document.getElementById('sidebarName');
   const role = document.getElementById('sidebarRole');
   if (currentUser) {
-    avatar.innerHTML = avatarInner(currentUser.name, currentUser.id);
+    avatar.innerHTML = avatarInner(currentUser.name, currentUser.id) + champDeco(currentUser.id);
+    avatar.classList.toggle("is-champ", isChamp(currentUser.id));
     name.textContent = currentUser.name;
     role.textContent = (RANKS[currentUser.rank] || "") + (currentUser.position && currentUser.position !== RANKS[currentUser.rank] ? " · " + currentUser.position : "");
   } else {
@@ -1240,7 +1245,11 @@ function taskIco(e) { if (e && e.startsWith("ti-")) return e; const i = TASK_EMO
 const AVATAR_OK = /^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/;
 function avatarSrc(id) { const a = id && state.avatars && state.avatars[id]; return a && AVATAR_OK.test(a) ? a : ""; }
 function avatarInner(name, id) { const src = avatarSrc(id); return src ? `<img src="${src}" alt="">` : esc(initials(name)); }
-function avatarHtml(name, size, id) { return `<span class="initials" style="width:${size}px;height:${size}px;font-size:${Math.round(size*.44)}px">${avatarInner(name, id)}</span>`; }
+// แชมป์เกมงูสัปดาห์ก่อน: สวมมงกุฎบนรูป + ขอบทอง
+function isChamp(id) { return !!id && typeof championId === "function" && id === championId(); }
+function champCls(id) { return isChamp(id) ? " is-champ" : ""; }
+function champDeco(id) { return isChamp(id) ? `<i class="ti ti-crown crown onhead" title="แชมป์เกมงูสัปดาห์ที่แล้ว"></i>` : ""; }
+function avatarHtml(name, size, id) { return `<span class="initials${champCls(id)}" style="width:${size}px;height:${size}px;font-size:${Math.round(size*.44)}px">${avatarInner(name, id)}${champDeco(id)}</span>`; }
 let avatarsReady = null, avatarsAt = 0, avatarsSnap = "";
 async function pullAvatars(force) {
   if (!db || !currentUser || (!force && Date.now() - avatarsAt < 60000)) return;
@@ -1994,7 +2003,7 @@ function renderHeader() {
     </div>
   </div>
   <div class="user-box" onclick="showProfile()" style="cursor:pointer">
-    <span class="u-avatar">${avatarInner(currentUser.name, currentUser.id)}</span>
+    <span class="u-avatar${champCls(currentUser.id)}">${avatarInner(currentUser.name, currentUser.id)}${champDeco(currentUser.id)}</span>
     <div><div class="u-name">${esc(currentUser.name)} ${crownHtml(currentUser.id)}</div><div class="u-role ${rankCls(currentUser.rank)}">${RANKS[currentUser.rank]||""}</div></div>
   </div>`;
   if (canInviteDirect()) {
@@ -2236,7 +2245,7 @@ function renderTeam() {
     return `<div class="member">
       ${removeBtn}
       <div class="top">
-        <div class="avatar">${avatarInner(m.name, m.id)}</div>
+        <div class="avatar${champCls(m.id)}">${avatarInner(m.name, m.id)}${champDeco(m.id)}</div>
         <div><div class="name">${esc(m.name)} ${crownHtml(m.id)} <span class="rank-badge ${rk}">${rl}</span></div><div class="role">${esc(m.position)}</div></div>
       </div>
       <div class="mood-score"><div class="num">${s.hasTask?s.score+"%":"—"}</div>${s.hasTask?`<div style="margin-top:6px"><span class="score-pill ${mood.cls}">${esc(mood.lbl)}</span></div>`:""}<div style="font-size:12px;color:var(--txt-2);margin-top:6px">${esc(mood.t)}</div></div>
