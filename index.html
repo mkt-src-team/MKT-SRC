@@ -611,7 +611,21 @@ button{border-radius:99px;font-weight:500}
 .champ-box{display:flex;align-items:center;gap:10px;margin-top:12px;padding:12px;border-radius:12px;background:var(--accent);color:var(--accent-contrast)}
 .champ-box i{font-size:22px}
 .champ-box div div:first-child{color:var(--txt-3)!important}
-.crown{color:#C9A227;font-size:.95em;vertical-align:-1px}
+/* มงกุฎแชมป์เกมงู — ทองวิบวับ ของแรร์ (ข้อยกเว้นเดียวของโทนขาวดำ) */
+.crown{position:relative;display:inline-block;font-size:1.05em;vertical-align:-2px;margin:0 2px;
+  background:linear-gradient(110deg,#A8740C 0%,#E9B949 22%,#FFF4C2 32%,#E9B949 42%,#B8860B 60%,#FFE08A 80%,#A8740C 100%);
+  background-size:260% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 0 2px rgba(255,196,64,.55));
+  animation:crownShine 2.6s linear infinite,crownGlow 2.2s ease-in-out infinite}
+.crown::after{content:"";position:absolute;top:-3px;right:-4px;width:6px;height:6px;
+  background:radial-gradient(circle,#FFF8D6 0 30%,rgba(255,215,90,.9) 45%,transparent 70%);
+  clip-path:polygon(50% 0,62% 38%,100% 50%,62% 62%,50% 100%,38% 62%,0 50%,38% 38%);
+  animation:crownTwinkle 1.8s ease-in-out infinite}
+.crown::marker{content:""}
+@keyframes crownShine{from{background-position:130% 0}to{background-position:-130% 0}}
+@keyframes crownGlow{0%,100%{filter:drop-shadow(0 0 2px rgba(255,196,64,.45))}50%{filter:drop-shadow(0 0 7px rgba(255,210,90,.95))}}
+@keyframes crownTwinkle{0%,100%{opacity:0;transform:scale(.3) rotate(0)}45%{opacity:1;transform:scale(1.25) rotate(45deg)}60%{opacity:.8;transform:scale(1) rotate(60deg)}}
+@media (prefers-reduced-motion:reduce){.crown,.crown::after{animation:none}}
 .sql-note{padding:10px 14px;border:1px dashed var(--caution);color:var(--caution);border-radius:12px;font-size:12.5px;margin-bottom:12px}
 .wheel-modes{display:flex;gap:6px;justify-content:center;margin-bottom:12px;flex-wrap:wrap}
 .wheel-box{position:relative;width:min(300px,80vw);margin:0 auto}
@@ -1421,7 +1435,8 @@ function isTypingInMain() {
   return !!a && a.closest && !!a.closest("main") && (a.tagName === "INPUT" || a.tagName === "TEXTAREA" || a.tagName === "SELECT") && a.type !== "checkbox";
 }
 function scheduleRender() {
-  if (isTypingInMain()) { pendingRender = true; return; }
+  // ระหว่างเล่นเกมงู ไม่วาดหน้าใหม่ทั้งหน้า (ทำให้เกมกระตุก) — เก็บไว้วาดตอนจบเกม
+  if (isTypingInMain() || (typeof SNK !== "undefined" && SNK.running)) { pendingRender = true; return; }
   pendingRender = false;
   render();
 }
@@ -3064,8 +3079,8 @@ function renderSnakeView() {
             <div class="snake-over" id="snakeOver"></div>
           </div>
           <div class="snake-pad">
-            <button onclick="snakeTurn(0,-1)" aria-label="ขึ้น"><i class="ti ti-chevron-up"></i></button>
-            <div><button onclick="snakeTurn(-1,0)" aria-label="ซ้าย"><i class="ti ti-chevron-left"></i></button><button onclick="snakeTurn(0,1)" aria-label="ลง"><i class="ti ti-chevron-down"></i></button><button onclick="snakeTurn(1,0)" aria-label="ขวา"><i class="ti ti-chevron-right"></i></button></div>
+            <button onpointerdown="event.preventDefault();snakeTurn(0,-1)" aria-label="ขึ้น"><i class="ti ti-chevron-up"></i></button>
+            <div><button onpointerdown="event.preventDefault();snakeTurn(-1,0)" aria-label="ซ้าย"><i class="ti ti-chevron-left"></i></button><button onpointerdown="event.preventDefault();snakeTurn(0,1)" aria-label="ลง"><i class="ti ti-chevron-down"></i></button><button onpointerdown="event.preventDefault();snakeTurn(1,0)" aria-label="ขวา"><i class="ti ti-chevron-right"></i></button></div>
           </div>
           <div class="game-hint">คอม: ลูกศร / WASD · มือถือ: ปัดบนจอเกม หรือกดปุ่ม</div>
         </div>
@@ -3109,45 +3124,61 @@ function snakeFood() {
 function snakeStart() {
   if (SNK.over) snakeReset();
   snakeOverlay(null);
+  snakeColors();
+  SNK.queue = [];
   SNK.running = true;
-  clearTimeout(SNK.timer);
-  snakeLoop();
+  SNK.last = performance.now();
+  cancelAnimationFrame(SNK.timer);
+  SNK.timer = requestAnimationFrame(snakeLoop);
 }
-function stopSnake() { clearTimeout(SNK.timer); SNK.running = false; }
-function snakeLoop() {
-  if (!SNK.running || !document.getElementById("snakeCanvas")) { SNK.running = false; return; }
-  snakeStep();
-  if (SNK.running) SNK.timer = setTimeout(snakeLoop, SNK.speed);
+function stopSnake() {
+  cancelAnimationFrame(SNK.timer);
+  const was = SNK.running; SNK.running = false;
+  if (was && pendingRender) { pendingRender = false; setTimeout(render, 0); }
+}
+function snakeLoop(now) {
+  if (!SNK.running || !document.getElementById("snakeCanvas")) { stopSnake(); return; }
+  if (now - SNK.last >= SNK.speed) { SNK.last = now; snakeStep(); }
+  if (SNK.running) SNK.timer = requestAnimationFrame(snakeLoop);
 }
 function snakeStep() {
-  SNK.dir = SNK.nextDir;
-  const h = [SNK.snake[0][0] + SNK.dir[0], SNK.snake[0][1] + SNK.dir[1]];
-  if (h[0] < 0 || h[1] < 0 || h[0] >= SNK.N || h[1] >= SNK.N || SNK.snake.some(p => p[0]===h[0] && p[1]===h[1])) return snakeGameOver();
+  if (SNK.queue.length) SNK.dir = SNK.queue.shift();
+  // ทะลุกำแพงได้: ออกขอบไหนก็โผล่อีกฝั่ง — ตายเมื่อชนตัวเองเท่านั้น
+  const h = [(SNK.snake[0][0] + SNK.dir[0] + SNK.N) % SNK.N, (SNK.snake[0][1] + SNK.dir[1] + SNK.N) % SNK.N];
+  const eat = h[0] === SNK.food[0] && h[1] === SNK.food[1];
+  const body = eat ? SNK.snake : SNK.snake.slice(0, -1);
+  if (body.some(p => p[0] === h[0] && p[1] === h[1])) return snakeGameOver();
   SNK.snake.unshift(h);
-  if (h[0]===SNK.food[0] && h[1]===SNK.food[1]) {
+  if (eat) {
     SNK.score++; SNK.speed = Math.max(60, SNK.speed - 4);
     document.getElementById("snakeScore").textContent = SNK.score;
     snakeFood();
   } else SNK.snake.pop();
   snakeDraw();
 }
+// คิวทิศทาง (สูงสุด 3) กดเร็วๆ ต่อกันไม่หล่น — เช็คกลับหัวกับทิศล่าสุดในคิว ไม่ใช่ทิศเดิม
 function snakeTurn(dx, dy) {
-  if (!SNK.running) { snakeStart(); }
-  if (dx === -SNK.dir[0] && dy === -SNK.dir[1]) return;
-  SNK.nextDir = [dx, dy];
+  if (!SNK.running) snakeStart();
+  const last = SNK.queue.length ? SNK.queue[SNK.queue.length - 1] : SNK.dir;
+  if ((dx === last[0] && dy === last[1]) || (dx === -last[0] && dy === -last[1])) return;
+  if (SNK.queue.length < 3) SNK.queue.push([dx, dy]);
+}
+function snakeColors() {
+  const cs = getComputedStyle(document.documentElement), v = k => cs.getPropertyValue(k).trim();
+  SNK.col = { bg:v("--layer-2"), grid:v("--stroke"), food:v("--danger"), body:v("--txt") };
 }
 function snakeDraw() {
   const cv = document.getElementById("snakeCanvas"); if (!cv) return;
-  const c = cv.getContext("2d"), S = cv.width / SNK.N, cs = getComputedStyle(document.documentElement);
-  c.fillStyle = cs.getPropertyValue("--layer-2").trim(); c.fillRect(0,0,cv.width,cv.height);
-  c.fillStyle = cs.getPropertyValue("--stroke").trim();
-  for (let i=0;i<SNK.N;i++) for (let j=0;j<SNK.N;j++) if ((i+j)%2===0) c.fillRect(i*S,j*S,S,S);
-  c.fillStyle = cs.getPropertyValue("--danger").trim();
-  c.beginPath(); c.arc(SNK.food[0]*S+S/2, SNK.food[1]*S+S/2, S*0.36, 0, Math.PI*2); c.fill();
-  const body = cs.getPropertyValue("--txt").trim();
-  SNK.snake.forEach((p,i) => {
-    c.fillStyle = body; c.globalAlpha = i === 0 ? 1 : Math.max(0.45, 1 - i*0.03);
-    c.beginPath(); c.roundRect ? c.roundRect(p[0]*S+1.5, p[1]*S+1.5, S-3, S-3, 5) : c.rect(p[0]*S+1.5, p[1]*S+1.5, S-3, S-3); c.fill();
+  if (!SNK.running || !SNK.col) snakeColors();
+  const c = cv.getContext("2d"), S = cv.width / SNK.N, col = SNK.col;
+  c.fillStyle = col.bg; c.fillRect(0, 0, cv.width, cv.height);
+  c.fillStyle = col.grid;
+  for (let i = 0; i < SNK.N; i++) for (let j = 0; j < SNK.N; j++) if ((i + j) % 2 === 0) c.fillRect(i*S, j*S, S, S);
+  c.fillStyle = col.food;
+  c.beginPath(); c.arc(SNK.food[0]*S + S/2, SNK.food[1]*S + S/2, S*0.36, 0, Math.PI*2); c.fill();
+  SNK.snake.forEach((p, i) => {
+    c.fillStyle = col.body; c.globalAlpha = i === 0 ? 1 : Math.max(0.45, 1 - i*0.03);
+    c.beginPath(); c.roundRect ? c.roundRect(p[0]*S + 1.5, p[1]*S + 1.5, S - 3, S - 3, 5) : c.rect(p[0]*S + 1.5, p[1]*S + 1.5, S - 3, S - 3); c.fill();
   });
   c.globalAlpha = 1;
 }
@@ -3156,11 +3187,12 @@ function snakeOverlay(kind, extra) {
   if (!kind) { el.classList.remove("show"); el.innerHTML = ""; return; }
   el.classList.add("show");
   el.innerHTML = kind === "start"
-    ? `<div class="h">พร้อมไหม?</div><div class="s">กินจุดแดงให้ได้มากที่สุด ห้ามชนกำแพงหรือตัวเอง</div><button class="btn-primary" onclick="snakeStart()"><i class="ti ti-player-play"></i> เริ่มเล่น</button>`
+    ? `<div class="h">พร้อมไหม?</div><div class="s">กินจุดแดงให้ได้มากที่สุด ทะลุกำแพงได้ ห้ามชนตัวเอง</div><button class="btn-primary" onclick="snakeStart()"><i class="ti ti-player-play"></i> เริ่มเล่น</button>`
     : `<div class="h">จบเกม · ${SNK.score} คะแนน</div><div class="s">${extra||""}</div><button class="btn-primary" onclick="snakeStart()"><i class="ti ti-refresh"></i> เล่นอีกครั้ง</button>`;
 }
 async function snakeGameOver() {
   SNK.running = false; SNK.over = true;
+  if (pendingRender) { pendingRender = false; setTimeout(render, 0); }
   const score = SNK.score, prev = myWeekBest();
   snakeOverlay("over", score > prev ? "สถิติใหม่ของสัปดาห์นี้!" : `สถิติสัปดาห์นี้ของคุณ ${prev} คะแนน`);
   if (score > prev) await saveSnakeScore(score);
