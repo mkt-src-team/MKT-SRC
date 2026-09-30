@@ -628,6 +628,16 @@ button{border-radius:99px;font-weight:500}
 .miss-name.red{color:#D2382B}.miss-name.orange{color:#E07B24}
 .miss-name small{font-weight:500;font-size:12.5px;opacity:.9}
 .miss-banner:hover .mb-run{animation-play-state:paused}
+/* การ์ดสมาชิกที่ขาดเข้าระบบ: กรอบไฟวิ่งรอบการ์ด (ส้ม 2 วัน / แดง 3 วันขึ้นไป) */
+@property --missAng{syntax:"<angle>";inherits:false;initial-value:0deg}
+.member.miss-run{position:relative;border-color:transparent!important;
+  background:linear-gradient(var(--layer),var(--layer)) padding-box,
+  conic-gradient(from var(--missAng),var(--mc) 0 18%,transparent 30% 50%,var(--mc) 50% 68%,transparent 80%) border-box!important;
+  border:3px solid transparent!important;animation:missSpin 2.2s linear infinite,missCardGlow 1.6s ease-in-out infinite}
+.member.miss-orange{--mc:#E07B24}.member.miss-red{--mc:#D2382B}
+@keyframes missSpin{to{--missAng:360deg}}
+@keyframes missCardGlow{0%,100%{box-shadow:0 0 0 0 transparent}50%{box-shadow:0 0 14px 1px var(--mc)}}
+.member.miss-run .name{color:var(--mc)}
 .ctext-input{flex:1;min-width:0;font:inherit;font-size:14px;color:var(--txt);background:transparent;border:1px solid transparent;border-radius:8px;padding:5px 8px;outline:none}
 .ctext-input:hover{border-color:var(--stroke-2)}
 .ctext-input:focus,.ctext-input.editing{border-color:var(--txt);background:var(--control)}
@@ -2304,7 +2314,7 @@ function renderTeam() {
       </div>`;
     }
     const notMigrated = isAdmin() && !m.authUid;
-    return `<div class="member">
+    return `<div class="member${((rk==="employee"||rk==="intern") && ["orange","red"].includes(missLevel(missedDays(m)))) ? " miss-run miss-" + missLevel(missedDays(m)) : ""}">
       ${removeBtn}
       <div class="top">
         <div class="avatar${champCls(m.id)}">${avatarInner(m.name, m.id)}${champDeco(m.id)}</div>
