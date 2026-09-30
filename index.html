@@ -618,11 +618,16 @@ button{border-radius:99px;font-weight:500}
 .field .check input[type=checkbox]{width:19px;height:19px;padding:0;flex:none;border-radius:4px}
 .field .check .ctext-input{width:auto;flex:1;padding:6px 10px;border:1px solid var(--stroke-2);background:var(--control);border-radius:8px}
 .field .check .ctext-input:focus{border-color:var(--txt);box-shadow:none}
-.miss-banner{grid-column:1/-1;border:2px solid #D2382B;background:rgba(210,56,43,.10);border-radius:14px;padding:12px 14px}
-.miss-banner .mb-head{color:#D2382B;font-weight:700;font-family:Kanit,sans-serif;margin-bottom:8px;display:flex;gap:6px;align-items:center}
-.miss-banner .mb-list{display:flex;flex-wrap:wrap;gap:6px}
-.miss-name{background:#D2382B;color:#fff;border-radius:999px;padding:3px 10px;font-size:13px;font-weight:600}
-.miss-name small{opacity:.85;font-weight:400;margin-left:4px}
+.miss-banner{display:flex;align-items:center;gap:0;border:2px solid #D2382B;background:rgba(210,56,43,.10);border-radius:14px;margin-bottom:16px;overflow:hidden;animation:missPulse 1.6s ease-in-out infinite}
+@keyframes missPulse{0%,100%{box-shadow:0 0 0 0 rgba(210,56,43,.45)}50%{box-shadow:0 0 0 5px rgba(210,56,43,0)}}
+.miss-banner .mb-head{flex:none;background:#D2382B;color:#fff;font-weight:700;font-family:Kanit,sans-serif;padding:10px 12px;display:flex;gap:6px;align-items:center;white-space:nowrap;z-index:1}
+.mb-track{flex:1;overflow:hidden;min-width:0}
+.mb-run{display:inline-flex;gap:28px;padding:10px 14px;white-space:nowrap;animation:missRun linear infinite}
+@keyframes missRun{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+.miss-name{font-weight:700;font-size:15px;display:inline-flex;gap:6px;align-items:center}
+.miss-name.red{color:#D2382B}.miss-name.orange{color:#E07B24}
+.miss-name small{font-weight:500;font-size:12.5px;opacity:.9}
+.miss-banner:hover .mb-run{animation-play-state:paused}
 .ctext-input{flex:1;min-width:0;font:inherit;font-size:14px;color:var(--txt);background:transparent;border:1px solid transparent;border-radius:8px;padding:5px 8px;outline:none}
 .ctext-input:hover{border-color:var(--stroke-2)}
 .ctext-input:focus,.ctext-input.editing{border-color:var(--txt);background:var(--control)}
@@ -748,6 +753,7 @@ button{border-radius:99px;font-weight:500}
   <div id="roleBanner"></div>
   <div id="cloudBar"></div>
   <div id="viewRoot"></div>
+  <div id="missBar"></div>
   <div class="hero" id="hero"></div>
   <div class="stats" id="stats"></div>
   <div class="dash-grid" id="attention"></div>
@@ -2221,14 +2227,20 @@ function renderStats() {
 }
 /* Dashboard: งานของวันนี้ (ย่อ) + คะแนนทีม */
 function missBanner() {
-  const reds = state.members.filter(m => isCheckinRank(m) && missLevel(missedDays(m)) === "red");
-  if (!reds.length) return "";
-  const list = reds.map(m => { const d = missedDays(m); return `<span class="miss-name">${esc(m.name)} <small>${d >= 99 ? "ยังไม่เคยเข้า" : d + " วัน"}</small></span>`; }).join("");
-  return `<div class="miss-banner"><div class="mb-head"><i class="ti ti-alert-octagon"></i> ไม่เข้าระบบติดต่อกัน 3 วันขึ้นไป</div><div class="mb-list">${list}</div></div>`;
+  const bad = state.members.filter(m => isCheckinRank(m) && ["orange","red"].includes(missLevel(missedDays(m))))
+    .sort((x, y) => missedDays(y) - missedDays(x));
+  if (!bad.length) return "";
+  const item = m => { const d = missedDays(m), lv = missLevel(d);
+    return `<span class="miss-name ${lv}"><i class="ti ti-alert-triangle"></i> ${esc(m.name)} <small>${d >= 99 ? "ยังไม่เคยเข้าระบบ" : "ไม่เข้าระบบ " + d + " วัน"}</small></span>`; };
+  const row = bad.map(item).join("");
+  const dur = Math.max(12, bad.length * 6);
+  return `<div class="miss-banner"><div class="mb-head"><i class="ti ti-alert-octagon"></i> ขาดการเข้าระบบ</div>
+    <div class="mb-track"><div class="mb-run" style="animation-duration:${dur}s">${row}${row}${row}${row}</div></div></div>`;
 }
 function renderAttention() {
   const el = document.getElementById("attention");
   if (!el) return;
+  const mb = document.getElementById("missBar"); if (mb) mb.innerHTML = currentUser ? missBanner() : "";
   if (!currentUser) { el.innerHTML = ""; return; }
   const today = todayStr();
   const tasks = visibleTasks();
@@ -2243,7 +2255,7 @@ function renderAttention() {
   const members = state.members.filter(m=>m.status!=="pending").map(m=>({m, s:memberScore(m)})).sort((a,b)=>(b.s.hasTask-a.s.hasTask)||(b.s.score-a.s.score));
   const scores = members.slice(0,6).map(({m,s}) => { const md = moodFor(s);
     return `<div class="score-row2">${avatarHtml(m.name,26,m.id)}<span class="n">${esc(m.name)} ${crownHtml(m.id)}</span><span class="score-pill ${md.cls}">${esc(md.lbl)}${s.hasTask?" "+s.score+"%":""}</span></div>`; }).join("");
-  el.innerHTML = missBanner() + `<div class="dash-card"><div class="dc-head"><h3>งานของวันนี้</h3><button class="dc-link" onclick="openTasks('today')">ดูทั้งหมด →</button></div>
+  el.innerHTML = `<div class="dash-card"><div class="dc-head"><h3>งานของวันนี้</h3><button class="dc-link" onclick="openTasks('today')">ดูทั้งหมด →</button></div>
       ${rows || `<div style="padding:18px 6px;color:var(--txt-3);font-size:13px">ไม่มีงานเร่งด่วนวันนี้</div>`}</div>
     <div class="dash-card"><div class="dc-head"><h3>คะแนนทีม</h3><span style="font-size:11.5px;color:var(--txt-3)">ส่งตรงเวลา</span></div>${scores || `<div style="padding:18px 6px;color:var(--txt-3);font-size:13px">ยังไม่มีสมาชิก</div>`}</div>`;
 }
