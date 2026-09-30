@@ -618,6 +618,11 @@ button{border-radius:99px;font-weight:500}
 .field .check input[type=checkbox]{width:19px;height:19px;padding:0;flex:none;border-radius:4px}
 .field .check .ctext-input{width:auto;flex:1;padding:6px 10px;border:1px solid var(--stroke-2);background:var(--control);border-radius:8px}
 .field .check .ctext-input:focus{border-color:var(--txt);box-shadow:none}
+.miss-banner{grid-column:1/-1;border:2px solid #D2382B;background:rgba(210,56,43,.10);border-radius:14px;padding:12px 14px}
+.miss-banner .mb-head{color:#D2382B;font-weight:700;font-family:Kanit,sans-serif;margin-bottom:8px;display:flex;gap:6px;align-items:center}
+.miss-banner .mb-list{display:flex;flex-wrap:wrap;gap:6px}
+.miss-name{background:#D2382B;color:#fff;border-radius:999px;padding:3px 10px;font-size:13px;font-weight:600}
+.miss-name small{opacity:.85;font-weight:400;margin-left:4px}
 .ctext-input{flex:1;min-width:0;font:inherit;font-size:14px;color:var(--txt);background:transparent;border:1px solid transparent;border-radius:8px;padding:5px 8px;outline:none}
 .ctext-input:hover{border-color:var(--stroke-2)}
 .ctext-input:focus,.ctext-input.editing{border-color:var(--txt);background:var(--control)}
@@ -1260,6 +1265,35 @@ function champCls(id) { return isChamp(id) ? " is-champ" : ""; }
 function champDeco(id) { return isChamp(id) ? `<i class="ti ti-crown crown onhead" title="แชมป์เกมงูสัปดาห์ที่แล้ว"></i>` : ""; }
 function avatarHtml(name, size, id) { return `<span class="initials${champCls(id)}" style="width:${size}px;height:${size}px;font-size:${Math.round(size*.44)}px">${avatarInner(name, id)}${champDeco(id)}</span>`; }
 let avatarsReady = null, avatarsAt = 0, avatarsSnap = "";
+/* บันทึกการเข้าระบบรายวัน (ตาราง login_days) — นับรายเดือน รีเซ็ตวันที่ 1 ของทุกเดือน */
+let loginsAt = 0, loginsSnap = "", loginMarked = "";
+function monthStart() { return todayStr().slice(0, 8) + "01"; }
+async function pullLogins(force) {
+  if (!db || !currentUser || (!force && Date.now() - loginsAt < 60000)) return;
+  loginsAt = Date.now();
+  const today = todayStr();
+  if (loginMarked !== today) {
+    const w = await db.from("login_days").upsert({ id: currentUser.id + "_" + today, member_id: currentUser.id, day: today }).then(x => x, () => ({ error:true }));
+    if (!w.error) loginMarked = today;
+  }
+  const r = await db.from("login_days").select("member_id,day").gte("day", monthStart()).then(x => x, () => ({ error:true }));
+  if (r.error) return;
+  const map = {}; (r.data || []).forEach(x => { (map[x.member_id] = map[x.member_id] || []).push(x.day); });
+  const snap = JSON.stringify(map);
+  if (snap === loginsSnap) return;
+  loginsSnap = snap; state.loginDays = map; scheduleRender();
+}
+/* จำนวนวันที่ไม่เข้าระบบติดต่อกัน (นับวันนี้ด้วยถ้ายังไม่เข้า) */
+function missedDays(m) {
+  const today = todayStr();
+  if (m.lastLoginDate === today) return 0;
+  if (!m.lastLoginDate) return 99;
+  return Math.max(0, Math.floor((new Date(today) - new Date(m.lastLoginDate)) / 86400000));
+}
+function missLevel(d) { return d >= 3 ? "red" : d === 2 ? "orange" : d === 1 ? "yellow" : ""; }
+const MISS_COLOR = { yellow:"#D4A017", orange:"#E07B24", red:"#D2382B" };
+function monthLoginCount(m) { return (state.loginDays && state.loginDays[m.id]) ? state.loginDays[m.id].length : (m.lastLoginDate >= monthStart() ? 1 : 0); }
+function isCheckinRank(m) { return (m.rank === "employee" || m.rank === "intern") && m.status !== "inactive"; }
 async function pullAvatars(force) {
   if (!db || !currentUser || (!force && Date.now() - avatarsAt < 60000)) return;
   avatarsAt = Date.now();
@@ -1479,6 +1513,7 @@ async function pull(force) {
   }
   pullGames();
   pullAvatars(force);
+  pullLogins(force);
 }
 
 /* Realtime: มีการเปลี่ยนแปลงในฐานข้อมูล → ดึงข้อมูลใหม่ทันที (RLS กรองให้เห็นเฉพาะที่มีสิทธิ์) */
@@ -2185,6 +2220,12 @@ function renderStats() {
   renderAttention();
 }
 /* Dashboard: งานของวันนี้ (ย่อ) + คะแนนทีม */
+function missBanner() {
+  const reds = state.members.filter(m => isCheckinRank(m) && missLevel(missedDays(m)) === "red");
+  if (!reds.length) return "";
+  const list = reds.map(m => { const d = missedDays(m); return `<span class="miss-name">${esc(m.name)} <small>${d >= 99 ? "ยังไม่เคยเข้า" : d + " วัน"}</small></span>`; }).join("");
+  return `<div class="miss-banner"><div class="mb-head"><i class="ti ti-alert-octagon"></i> ไม่เข้าระบบติดต่อกัน 3 วันขึ้นไป</div><div class="mb-list">${list}</div></div>`;
+}
 function renderAttention() {
   const el = document.getElementById("attention");
   if (!el) return;
@@ -2202,7 +2243,7 @@ function renderAttention() {
   const members = state.members.filter(m=>m.status!=="pending").map(m=>({m, s:memberScore(m)})).sort((a,b)=>(b.s.hasTask-a.s.hasTask)||(b.s.score-a.s.score));
   const scores = members.slice(0,6).map(({m,s}) => { const md = moodFor(s);
     return `<div class="score-row2">${avatarHtml(m.name,26,m.id)}<span class="n">${esc(m.name)} ${crownHtml(m.id)}</span><span class="score-pill ${md.cls}">${esc(md.lbl)}${s.hasTask?" "+s.score+"%":""}</span></div>`; }).join("");
-  el.innerHTML = `<div class="dash-card"><div class="dc-head"><h3>งานของวันนี้</h3><button class="dc-link" onclick="openTasks('today')">ดูทั้งหมด →</button></div>
+  el.innerHTML = missBanner() + `<div class="dash-card"><div class="dc-head"><h3>งานของวันนี้</h3><button class="dc-link" onclick="openTasks('today')">ดูทั้งหมด →</button></div>
       ${rows || `<div style="padding:18px 6px;color:var(--txt-3);font-size:13px">ไม่มีงานเร่งด่วนวันนี้</div>`}</div>
     <div class="dash-card"><div class="dc-head"><h3>คะแนนทีม</h3><span style="font-size:11.5px;color:var(--txt-3)">ส่งตรงเวลา</span></div>${scores || `<div style="padding:18px 6px;color:var(--txt-3);font-size:13px">ยังไม่มีสมาชิก</div>`}</div>`;
 }
@@ -2210,14 +2251,14 @@ function openTasks(filter) { state.filter = filter; navigateTo("today-tasks"); }
 
 /* เช็คอินรายวัน: พนักงาน/เด็กฝึกงานต้องเข้าระบบอย่างน้อยวันละ 1 ครั้ง */
 function loginStatusChip(m) {
-  const inToday = m.lastLoginDate === todayStr();
-  const color = inToday ? "var(--success)" : "var(--danger)";
-  const label = inToday ? '<i class="ti ti-check"></i> เข้าระบบวันนี้แล้ว' : '<i class="ti ti-x"></i> ยังไม่เข้าระบบวันนี้';
-  const daysAgo = (!inToday && m.lastLoginDate) ? (() => {
-    const d = Math.floor((new Date(todayStr()) - new Date(m.lastLoginDate)) / 86400000);
-    return d > 0 ? ` (ล่าสุด ${d} วันก่อน)` : "";
-  })() : (!m.lastLoginDate ? " (ยังไม่เคยเข้าระบบ)" : "");
-  return `<div class="chip-link" style="border-color:${color}"><span style="color:${color};font-weight:600">${label}${esc(daysAgo)}</span><span style="color:var(--txt-2);font-size:11px"><i class="ti ti-login"></i> เข้าระบบ ${m.loginCount||0}/7 วันล่าสุด</span></div>`;
+  const d = missedDays(m), lv = missLevel(d);
+  const color = lv ? MISS_COLOR[lv] : "var(--success)";
+  const label = !lv ? '<i class="ti ti-check"></i> เข้าระบบวันนี้แล้ว'
+    : !m.lastLoginDate ? '<i class="ti ti-alert-triangle"></i> ยังไม่เคยเข้าระบบ'
+    : `<i class="ti ti-alert-triangle"></i> ไม่เข้าระบบ ${d} วัน`;
+  const bg = lv === "red" ? "background:rgba(210,56,43,.12);" : "";
+  const days = new Date(todayStr()).getDate();
+  return `<div class="chip-link" style="border-color:${color};border-width:${lv==="red"?2:1}px;${bg}"><span style="color:${color};font-weight:700">${label}</span><span style="color:var(--txt-2);font-size:11px"><i class="ti ti-login"></i> เดือนนี้เข้าระบบ ${monthLoginCount(m)}/${days} วัน</span></div>`;
 }
 function renderTeam() {
   const g = document.getElementById("teamGrid");

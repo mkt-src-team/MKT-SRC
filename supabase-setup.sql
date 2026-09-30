@@ -190,3 +190,17 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON game_scores, wheel_spins TO anon, authen
 ALTER TABLE members ADD COLUMN IF NOT EXISTS avatar TEXT DEFAULT '';
 
 -- ✅ เสร็จสิ้น! ตารางครบแล้ว
+
+-- ============================================
+-- 15. บันทึกการเข้าระบบรายวัน (1 แถวต่อคนต่อวัน) — เว็บนับเฉพาะเดือนปัจจุบัน (รีเซ็ตทุกต้นเดือน)
+-- ============================================
+CREATE TABLE IF NOT EXISTS login_days (
+  id TEXT PRIMARY KEY,
+  member_id TEXT NOT NULL,
+  day TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS login_days_day ON login_days(day);
+ALTER TABLE login_days ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "anon all login_days" ON login_days;
+CREATE POLICY "anon all login_days" ON login_days FOR ALL USING (TRUE) WITH CHECK (TRUE);
+GRANT SELECT, INSERT, UPDATE, DELETE ON login_days TO anon, authenticated;
