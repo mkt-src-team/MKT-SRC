@@ -3765,14 +3765,15 @@ const IDEA_SEED = {
     { t:"สูตรโครงคลิปสั้น", b:"0–3 วิ: Hook\n3–15 วิ: ปัญหา/ประโยชน์\n15–40 วิ: เนื้อหา/โชว์รถ/โปร\n5 วิท้าย: CTA (ทักแชท / โทร / มาโชว์รูม)" }
   ],
   tools: [
-    { t:"เขียนสคริปต์ / แคปชั่น / ไอเดีย", b:"ChatGPT, Claude, Gemini — ระดมไอเดีย เขียนสคริปต์คลิป แคปชั่น โพสต์ ตอบแชทลูกค้า\nเคล็ดลับ: ให้ข้อมูลรุ่นรถ/โปรจริงก่อนทุกครั้ง" },
-    { t:"สร้างภาพ", b:"Midjourney, ChatGPT (สร้างภาพ), Gemini (Imagen), Adobe Firefly, Ideogram (ภาพมีตัวอักษร)\nใช้ทำภาพประกอบ/พื้นหลัง/คอนเซ็ปต์ — ห้ามสร้างรูปรถรุ่นจริงแบบหลอกว่าเป็นของจริง" },
-    { t:"สร้าง / ตัดต่อวิดีโอ", b:"CapCut (มี AI ตัดต่อ ซับอัตโนมัติ ลบพื้นหลัง), Runway, Kling, Google Veo, Pika — ทำ B-roll หรือฉากเปิดคลิป\nVideo จาก AI ใช้เสริม ไม่ใช่แทนภาพรถจริง" },
-    { t:"เสียงพากย์ / เพลง", b:"ElevenLabs (พากย์เสียง), CapCut Text-to-Speech, Suno (เพลงประกอบ)\nเช็คสิทธิ์การใช้งานเชิงพาณิชย์ก่อนลงโฆษณา" },
-    { t:"ซับไตเติล / ถอดเสียง", b:"CapCut Auto Caption, Whisper — ถอดเสียงไทยแล้วตรวจคำผิดทุกครั้ง (ชื่อรุ่น ตัวเลขราคา)" },
-    { t:"ออกแบบกราฟิก", b:"Canva (Magic Design / Magic Write), Adobe Express — ทำโพสต์ แบนเนอร์ สตอรี่ ตามแบรนด์" },
-    { t:"Remove background / แต่งรูป", b:"Photoroom, remove.bg, Photoshop Generative Fill — ตัดรถออกจากพื้นหลัง ทำภาพสินค้าให้สะอาด" },
-    { t:"วิเคราะห์ / สรุป", b:"ใช้ AI สรุปคอมเมนต์ลูกค้า สรุปผลโฆษณา วิเคราะห์คู่แข่ง จากข้อมูลที่เราใส่ให้" }
+    { t:"แชท AI ผู้ช่วยหลัก (สคริปต์ / แคปชั่น / วางแผน)", b:"ChatGPT, Claude, Gemini, Grok — ระดมไอเดีย เขียนสคริปต์คลิป แคปชั่น ตอบแชท สรุปข้อมูล\nGemini เชื่อมกับ Google Drive/Docs/Sheets ของทีมได้, Claude เด่นงานเขียนยาวและเอกสาร\nเคล็ดลับ: ใส่ข้อมูลรุ่นรถ/โปรจริงก่อนทุกครั้ง" },
+    { t:"สร้าง / แก้ภาพ (ฮิตตอนนี้)", b:"Nano Banana (Gemini) — แก้ภาพด้วยคำสั่งภาษาพูด เปลี่ยนฉากหลัง/สีรถ/ใส่คน ได้เนียนมาก\nChatGPT Images — สร้างภาพ + ตัวอักษรไทยในภาพดีขึ้น\nMidjourney v7 — ภาพสวยเชิงศิลป์ ทำ key visual\nFLUX, Ideogram (ภาพที่มีตัวหนังสือ), Recraft (โลโก้/เวกเตอร์), Adobe Firefly (ปลอดภัยเชิงพาณิชย์)" },
+    { t:"สร้างวิดีโอจาก AI (ฮิตตอนนี้)", b:"Google Veo 3.1 — คุณภาพสูงสุด มีเสียงในตัว เหมาะคลิปโฆษณาสมจริง (ใช้ผ่าน Gemini / Flow)\nKling 3.0 — คุ้มสุด ภาพเคลื่อนไหวเยอะ ตัวละครคงที่\nSeedance 2.0 (ByteDance) — สมจริง ทำหลายช็อตเร็ว\nRunway — คุมมุมกล้อง แก้วิดีโอด้วย AI\nHailuo (MiniMax), Pika, Luma — ทางเลือกเพิ่ม\nหมายเหตุ: Sora ของ OpenAI ปิดให้บริการแล้วในปี 2026" },
+    { t:"ตัดต่อ / ซับ / คลิปสั้น", b:"CapCut — AI ตัดต่อ ซับไทยอัตโนมัติ ลบพื้นหลัง เทมเพลตเทรนด์ TikTok\nOpusClip — ตัดคลิปยาวเป็นคลิปสั้นหลายตัวอัตโนมัติ\nDescript — ตัดต่อวิดีโอด้วยการแก้ข้อความ\nตรวจคำผิดในซับทุกครั้ง (ชื่อรุ่น ราคา)" },
+    { t:"เสียงพากย์ / เพลง", b:"ElevenLabs — พากย์เสียงไทยเป็นธรรมชาติ, Suno / Udio — แต่งเพลงประกอบ\nเช็คสิทธิ์ใช้เชิงพาณิชย์ก่อนลงโฆษณา ห้ามโคลนเสียงคนจริงโดยไม่ได้รับอนุญาต" },
+    { t:"Avatar / พรีเซนเตอร์ AI", b:"HeyGen, Synthesia, Captions — ทำคลิปพรีเซนเตอร์พูด หรือแปลคลิปเป็นภาษาอื่นพร้อมขยับปาก\nต้องระบุว่าเป็น AI ถ้าคนดูอาจเข้าใจผิดว่าเป็นคนจริง" },
+    { t:"ออกแบบกราฟิก", b:"Canva (Magic Studio) — โพสต์ แบนเนอร์ สตอรี่ ตาม CI แบรนด์, Adobe Express — งานด่วน\nPhotoroom — ตัดรถออกจากพื้นหลัง ทำภาพสินค้า" },
+    { t:"ค้นหา / วิจัยตลาด", b:"Perplexity, Gemini Deep Research, ChatGPT Search — หาเทรนด์ ข้อมูลคู่แข่ง สถิติ พร้อมแหล่งอ้างอิง\nNotebookLM — โยนเอกสารโปร/สเปกรถเข้าไป แล้วถามตอบหรือทำสรุปเสียง (podcast) ได้" },
+    { t:"อัปเดตล่าสุด", b:"รายชื่อนี้อัปเดต ต.ค. 2026 — เครื่องมือ AI เปลี่ยนเร็วมาก ใครเจอตัวใหม่ที่ดี กด \"+ เพิ่ม\" แชร์ทีมได้เลย" }
   ],
   prompt: [
     { t:"สคริปต์คลิปสั้น 30–45 วิ", b:"คุณคือครีเอเตอร์สายรถยนต์ เขียนสคริปต์คลิป TikTok ความยาว 40 วินาที เพื่อขาย [รุ่นรถ] \nกลุ่มเป้าหมาย: [เช่น คนทำงานอายุ 25–35 ซื้อรถคันแรก]\nโปรโมชัน: [รายละเอียดโปรจริง]\nขอ: Hook 3 แบบให้เลือก, บทพูดแยกเป็นช่วงเวลา, ภาพที่ต้องถ่ายแต่ละช่วง, CTA ตอนท้าย\nภาษา: ไทย เป็นกันเอง ไม่โอเวอร์" },
@@ -3822,7 +3823,8 @@ function renderIdeasView() {
   pullIdeas();
   const cat = IDEA_CATS.find(c => c.id === ideaCat) || IDEA_CATS[0];
   const team = (state.ideas || []).filter(x => x.cat === cat.id);
-  const card = (t, b, extra) => `<div class="idea-card"><div class="idea-top"><h4>${esc(t)}</h4><button class="btn-ghost btn-sm" onclick="copyIdea(this)" title="คัดลอก"><i class="ti ti-copy"></i></button></div><div class="idea-body">${esc(b)}</div>${extra || ""}</div>`;
+  const canCopy = ["hook", "prompt"].includes(cat.id);
+  const card = (t, b, extra) => `<div class="idea-card"><div class="idea-top"><h4>${esc(t)}</h4>${canCopy ? `<button class="btn-ghost btn-sm" onclick="copyIdea(this)" title="คัดลอก"><i class="ti ti-copy"></i> คัดลอก</button>` : ""}</div><div class="idea-body">${esc(b)}</div>${extra || ""}</div>`;
   const teamHtml = team.map(x => card(x.title, x.body, `<div class="idea-meta"><span><i class="ti ti-user"></i> ${esc(x.author_name || "")}</span>${(isAdmin() || x.author_id === currentUser.id) ? `<button class="btn-ghost btn-sm" onclick="deleteIdea('${esc(x.id)}')"><i class="ti ti-trash"></i></button>` : ""}</div>`)).join("");
   vr.innerHTML = `<section class="idea-view">
     <div class="sec-head"><h2><i class="ti ti-bulb"></i> ไอเดีย & AI</h2><button class="btn-primary btn-sm" onclick="openIdeaForm()"><i class="ti ti-plus"></i> เพิ่ม</button></div>
