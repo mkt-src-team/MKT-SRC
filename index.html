@@ -3851,7 +3851,7 @@ function renderIdeasView() {
   const team = (state.ideas || []).filter(x => x.cat === cat.id);
   const canCopy = cat.id === "hook";
   const card = (t, b, extra) => `<div class="idea-card"><div class="idea-top"><h4>${esc(t)}</h4>${canCopy ? `<button class="btn-ghost btn-sm" onclick="copyIdea(this)" title="คัดลอก"><i class="ti ti-copy"></i> คัดลอก</button>` : ""}</div><div class="idea-body">${esc(b)}</div>${extra || ""}</div>`;
-  const teamHtml = team.map(x => card(x.title, x.body, `<div class="idea-meta"><span><i class="ti ti-user"></i> ${esc(x.author_name || "")}</span>${(isAdmin() || x.author_id === currentUser.id) ? `<button class="btn-ghost btn-sm" onclick="deleteIdea('${esc(x.id)}')"><i class="ti ti-trash"></i></button>` : ""}</div>`)).join("");
+  const teamHtml = team.map(x => card(x.title, x.body, `<div class="idea-meta"><span><i class="ti ti-user"></i> ${esc(x.author_name || "")}</span>${(isAdmin() || x.author_id === currentUser.id) ? `<span style="display:flex;gap:6px"><button class="btn-ghost btn-sm" onclick="openIdeaForm('${esc(x.id)}')" title="แก้ไข"><i class="ti ti-pencil"></i></button><button class="btn-ghost btn-sm" onclick="deleteIdea('${esc(x.id)}')" title="ลบ"><i class="ti ti-trash"></i></button></span>` : ""}</div>`)).join("");
   vr.innerHTML = `<section class="idea-view">
     <div class="sec-head"><h2><i class="ti ti-bulb"></i> ไอเดีย & AI</h2><button class="btn-primary btn-sm" onclick="openIdeaForm()"><i class="ti ti-plus"></i> เพิ่ม</button></div>
     <div class="idea-tabs">${IDEA_CATS.map(c => `<button class="idea-tab ${c.id === cat.id ? "active" : ""}" onclick="setIdeaCat('${c.id}')"><i class="ti ${c.icon}"></i> ${c.label}</button>`).join("")}</div>
@@ -3860,7 +3860,8 @@ function renderIdeasView() {
     <div class="idea-grid">${(IDEA_SEED[cat.id] || []).map(x => card(x.t, x.b)).join("")}</div>
   </section>`;
 }
-function openIdeaForm() {
+function openIdeaForm(editId) {
+  const ed = editId ? (state.ideas || []).find(i => i.id === editId) : null;
   if (ideasReady === false) { toast("ต้องรัน SQL ข้อ 18 (ตาราง ideas) ใน Supabase ก่อน", "⚠️"); return; }
   const el = document.getElementById("ideaForm"); if (!el) return;
   const cat = IDEA_CATS.find(c => c.id === ideaCat) || IDEA_CATS[0];
@@ -3871,15 +3872,23 @@ function openIdeaForm() {
     idea:  ["ชื่อไอเดีย เช่น วันส่งมอบรถ", "ทำยังไง / ถ่ายอะไร / ลิงก์ตัวอย่างหรือยอดวิว (ถ้ามี)"]
   }[cat.id] || ["หัวข้อ", "รายละเอียด"];
   el.innerHTML = `<div class="idea-card idea-form">
-    <div style="font-weight:600;font-family:Kanit,sans-serif"><i class="ti ${cat.icon}"></i> เพิ่มใน "${cat.label}"</div>
-    <input id="ideaTitleIn" placeholder="${ph[0]}">
-    <textarea id="ideaBodyIn" rows="5" placeholder="${ph[1]}"></textarea>
-    <div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn-ghost btn-sm" onclick="document.getElementById('ideaForm').innerHTML=''">ยกเลิก</button><button class="btn-primary btn-sm" onclick="saveIdea()"><i class="ti ti-check"></i> บันทึก</button></div></div>`;
+    <div style="font-weight:600;font-family:Kanit,sans-serif"><i class="ti ${cat.icon}"></i> ${ed ? "แก้ไขใน" : "เพิ่มใน"} "${cat.label}"</div>
+    <input id="ideaTitleIn" placeholder="${ph[0]}" value="${ed ? esc(ed.title) : ""}">
+    <textarea id="ideaBodyIn" rows="5" placeholder="${ph[1]}">${ed ? esc(ed.body) : ""}</textarea>
+    <div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn-ghost btn-sm" onclick="document.getElementById('ideaForm').innerHTML=''">ยกเลิก</button><button class="btn-primary btn-sm" onclick="saveIdea(${ed ? `'${esc(ed.id)}'` : ""})"><i class="ti ti-check"></i> บันทึก</button></div></div>`;
+  el.scrollIntoView({ block:"center", behavior:"smooth" });
   document.getElementById("ideaTitleIn").focus();
 }
-async function saveIdea() {
+async function saveIdea(editId) {
   const cat = ideaCat, title = document.getElementById("ideaTitleIn").value.trim(), body = document.getElementById("ideaBodyIn").value.trim();
   if (!title || !body) { toast("ใส่หัวข้อและรายละเอียดก่อน", "⚠️"); return; }
+  if (editId) {
+    const x = (state.ideas || []).find(i => i.id === editId);
+    if (!x || !(isAdmin() || x.author_id === currentUser.id)) return;
+    const r = await dbw(db.from("ideas").update({ title, body }).eq("id", editId), "แก้ไขไม่สำเร็จ");
+    if (r && r.error) return;
+    Object.assign(x, { title, body }); renderIdeasView(); toast("แก้ไขแล้ว", "ti-pencil"); return;
+  }
   const row = { id:uid(), cat, title, body, author_id:currentUser.id, author_name:currentUser.name };
   const r = await dbw(db.from("ideas").insert(row), "บันทึกไม่สำเร็จ");
   if (r && r.error) return;
