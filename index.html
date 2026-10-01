@@ -656,6 +656,11 @@ button{border-radius:99px;font-weight:500}
 .idea-sub{font-size:12px;color:var(--txt-3);margin:4px 0 8px;text-transform:uppercase;letter-spacing:.04em}
 .idea-form{margin-bottom:14px}
 .idea-form input,.idea-form select,.idea-form textarea{font:inherit;font-size:14px;padding:9px 11px;border:1px solid var(--stroke-2);border-radius:10px;background:var(--control);color:var(--txt);width:100%;box-sizing:border-box}
+/* การ์ดทีม: ดันกล่องเช็คอิน + แถบสิทธิ์ลงล่างสุด ทุกใบแนวตรงกัน ไม่ว่าจะมีงานหรือไม่ */
+.team-grid .member{display:flex;flex-direction:column}
+.team-grid .member .login-chip{margin-top:auto}
+.team-grid .member .perm-bar{margin-top:auto}
+.team-grid .member .login-chip ~ .perm-bar{margin-top:10px}
 .ctext-input{flex:1;min-width:0;font:inherit;font-size:14px;color:var(--txt);background:transparent;border:1px solid transparent;border-radius:8px;padding:5px 8px;outline:none}
 .ctext-input:hover{border-color:var(--stroke-2)}
 .ctext-input:focus,.ctext-input.editing{border-color:var(--txt);background:var(--control)}
@@ -2415,7 +2420,7 @@ function loginStatusChip(m) {
     : `<i class="ti ti-alert-triangle"></i> ไม่เข้าระบบ ${d} วัน`;
   const bg = lv === "red" ? "background:rgba(210,56,43,.12);" : "";
   const td = new Date(todayStr()), days = new Date(td.getFullYear(), td.getMonth() + 1, 0).getDate(); // จำนวนวันทั้งเดือน (ต.ค. = 31)
-  return `<div class="chip-link" style="border-color:${color};border-width:${lv==="red"?2:1}px;${bg}"><span style="color:${color};font-weight:700">${label}</span><span style="color:var(--txt-2);font-size:11px"><i class="ti ti-login"></i> เดือนนี้เข้าระบบ ${monthLoginCount(m)}/${days} วัน</span></div>`;
+  return `<div class="chip-link login-chip" style="border-color:${color};border-width:${lv==="red"?2:1}px;${bg}"><span style="color:${color};font-weight:700">${label}</span><span style="color:var(--txt-2);font-size:11px"><i class="ti ti-login"></i> เดือนนี้เข้าระบบ ${monthLoginCount(m)}/${days} วัน</span></div>`;
 }
 function renderTeam() {
   renderResetBar();
