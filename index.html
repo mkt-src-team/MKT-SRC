@@ -1448,6 +1448,49 @@ async function doReset(key) {
   state.appSettings = Object.assign({}, state.appSettings, { [key]: today });
   render(); toast("รีเซ็ตแล้ว เริ่มนับใหม่ตั้งแต่วันนี้", "ti-refresh");
 }
+/* KPI รายคน → ไฟล์ CSV ดาวน์โหลดลงเครื่อง (Boss/Dev) — เปิดด้วย Excel / Google Sheets ได้ */
+async function downloadKpi() {
+  if (!isAdmin()) return;
+  const ym = (document.getElementById("kpiMonth") || {}).value || todayStr().slice(0, 7);
+  const [y, mo] = ym.split("-").map(Number);
+  const start = ym + "-01", last = `${ym}-${String(new Date(y, mo, 0).getDate()).padStart(2, "0")}`;
+  const end = last < todayStr() ? last : todayStr();
+  if (start > todayStr()) { toast("เดือนนี้ยังมาไม่ถึง", "⚠️"); return; }
+  const tr = resetDate("task_reset");
+  let logins = null;
+  const r = await db.from("login_days").select("member_id,day").gte("day", start).lte("day", end).then(x => x, () => ({ error:true }));
+  if (!r.error) logins = r.data || [];
+  const RANK = { boss:"Boss", dev:"Dev", employee:"พนักงาน", intern:"เด็กฝึกงาน" };
+  const rows = state.members.filter(m => m.status !== "inactive").map(m => {
+    const inp = state.tasks.filter(t => t.who === m.id).filter(t => { const k = t.due || localDay(t.createdAt); return k >= start && k <= end; });
+    const done = inp.filter(t => t.status === "done");
+    let onTime = 0, late = 0; const lateDays = [];
+    done.forEach(t => {
+      if (t.due && t.due < tr) return;
+      const d = localDay(t.completedAt) || end;
+      if (t.due && d > t.due) { late++; lateDays.push(Math.round((new Date(d) - new Date(t.due)) / 86400000)); } else onTime++;
+    });
+    const overdue = inp.filter(t => isOverdue(t));
+    const doing = inp.length - done.length - overdue.length;
+    const checks = inp.flatMap(t => t.checks || []), on = checks.filter(c => c.on).length;
+    const graded = onTime + late + overdue.length;
+    const ld = logins ? new Set(logins.filter(x => x.member_id === m.id).map(x => x.day)).size : "";
+    return { "ชื่อ":m.name, "ตำแหน่ง":m.position||"", "ระดับ":RANK[m.rank]||m.rank, "งานทั้งหมด":inp.length, "เสร็จ":done.length,
+      "เสร็จตรงเวลา":onTime, "เสร็จช้า":late, "เลยกำหนด(ยังไม่เสร็จ)":overdue.length, "กำลังทำ":doing,
+      "% ส่งตรงเวลา":graded ? Math.round(onTime / graded * 100) : "", "% งานเสร็จ":inp.length ? Math.round(done.length / inp.length * 100) : "",
+      "ช้าเฉลี่ย(วัน)":lateDays.length ? (lateDays.reduce((a, b) => a + b, 0) / lateDays.length).toFixed(1) : "",
+      "หัวข้อย่อยเสร็จ":checks.length ? `${on}/${checks.length}` : "", "% หัวข้อย่อย":checks.length ? Math.round(on / checks.length * 100) : "",
+      "วันที่เข้าระบบ(เดือนนี้)":ld, "เข้าระบบล่าสุด":m.lastLoginDate || "ยังไม่เคย" };
+  }).sort((a, b) => (a["% ส่งตรงเวลา"] === "") - (b["% ส่งตรงเวลา"] === "") || (b["% ส่งตรงเวลา"] || 0) - (a["% ส่งตรงเวลา"] || 0));
+  if (!rows.length) { toast("ไม่มีข้อมูลสมาชิก", "⚠️"); return; }
+  const cols = Object.keys(rows[0]), q = v => `"${String(v).replace(/"/g, '""')}"`;
+  const csv = "\uFEFF" + [cols.map(q).join(","), ...rows.map(r => cols.map(c => q(r[c])).join(","))].join("\r\n");
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([csv], { type:"text/csv;charset=utf-8" }));
+  a.download = `KPI-${ym}-ดึงเมื่อ-${todayStr()}.csv`;
+  document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  toast(`ดาวน์โหลด KPI เดือน ${ym} แล้ว`, "ti-download");
+}
 function renderResetBar() {
   const el = document.getElementById("resetBar"); if (!el) return;
   if (!isAdmin()) { el.innerHTML = ""; return; }
@@ -1455,6 +1498,8 @@ function renderResetBar() {
   el.innerHTML = `<div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:0 0 12px">
     <button class="btn-ghost btn-sm" onclick="doReset('login_reset')"><i class="ti ti-refresh"></i> รีเซ็ตสถานะคนไม่เข้าระบบ</button>
     <button class="btn-ghost btn-sm" onclick="doReset('task_reset')"><i class="ti ti-refresh"></i> รีเซ็ตงานเลยกำหนด</button>
+    <span style="display:inline-flex;gap:6px;align-items:center"><input type="month" id="kpiMonth" value="${todayStr().slice(0,7)}" style="font:inherit;font-size:13px;padding:5px 8px;border:1px solid var(--stroke-2);border-radius:8px;background:var(--control);color:var(--txt)">
+    <button class="btn-primary btn-sm" onclick="downloadKpi()"><i class="ti ti-download"></i> ดาวน์โหลด KPI</button></span>
     <span style="font-size:11.5px;color:var(--txt-3)">${lr ? "เข้าระบบนับตั้งแต่ " + esc(lr) : ""}${lr && tr ? " · " : ""}${tr ? "งานนับตั้งแต่ " + esc(tr) : ""}</span></div>`;
 }
 function taskStatus(t) {
