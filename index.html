@@ -661,6 +661,21 @@ button{border-radius:99px;font-weight:500}
 .team-grid .member .login-chip{margin-top:auto}
 .team-grid .member .perm-bar{margin-top:auto}
 .team-grid .member .login-chip ~ .perm-bar{margin-top:10px}
+.idea-group{background:var(--layer);border:1px solid var(--stroke);border-radius:14px;margin-bottom:14px;overflow:hidden;max-width:860px}
+.ig-head{display:flex;align-items:center;gap:8px;padding:12px 16px;font-family:Kanit,sans-serif;font-weight:600;font-size:15px;border-bottom:1px solid var(--stroke)}
+.ig-head span{margin-left:auto;font-family:inherit;font-size:12px;font-weight:500;color:var(--txt-3);background:var(--layer-2);border-radius:999px;padding:2px 9px}
+.idea-row{border-bottom:1px solid var(--stroke)}
+.idea-row:last-child{border-bottom:0}
+.idea-row summary{list-style:none;display:flex;align-items:center;gap:10px;padding:13px 16px;cursor:pointer;font-size:14.5px;font-weight:500}
+.idea-row summary::-webkit-details-marker{display:none}
+.idea-row summary:hover{background:var(--layer-2)}
+.ir-t{flex:1;min-width:0}
+.ir-chev{color:var(--txt-3);transition:transform .15s}
+.idea-row[open] .ir-chev{transform:rotate(180deg)}
+.idea-row[open] summary{font-weight:600}
+.ir-body{padding:0 16px 14px}
+.ir-foot{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:10px}
+.ir-foot .idea-meta{flex:1}
 .ctext-input{flex:1;min-width:0;font:inherit;font-size:14px;color:var(--txt);background:transparent;border:1px solid transparent;border-radius:8px;padding:5px 8px;outline:none}
 .ctext-input:hover{border-color:var(--stroke-2)}
 .ctext-input:focus,.ctext-input.editing{border-color:var(--txt);background:var(--control)}
@@ -3841,23 +3856,50 @@ async function pullIdeas(force) {
 }
 function setIdeaCat(c) { ideaCat = c; renderIdeasView(); }
 function copyIdea(btn) {
-  const txt = btn.closest(".idea-card").querySelector(".idea-body").innerText;
+  const txt = btn.closest(".idea-row, .idea-card").querySelector(".idea-body").innerText;
   (navigator.clipboard ? navigator.clipboard.writeText(txt) : Promise.reject()).then(() => toast("คัดลอกแล้ว", "ti-copy"), () => toast("คัดลอกไม่สำเร็จ", "⚠️"));
 }
+/* แบ่งกลุ่มย่อยในแต่ละหมวด (เลขลำดับ index ของ IDEA_SEED) — ที่ไม่อยู่ในกลุ่มไหนจะไปรวมท้ายสุด */
+const IDEA_GROUPS = {
+  hook: [
+    { label:"ใช้คำพูด", icon:"ti-message-2", idx:[1,2,3,4,5,11,17] },
+    { label:"ใช้ภาพและเสียง", icon:"ti-video", idx:[0,6,7,8,12] },
+    { label:"ชวนคนดูโต้ตอบ", icon:"ti-messages", idx:[9,10,18] },
+    { label:"ให้ความรู้ & เล่าเรื่อง", icon:"ti-book", idx:[13,14,15,16,19] },
+    { label:"สูตรเวลา", icon:"ti-clock", idx:[20] }
+  ],
+  howto: [
+    { label:"หลักการใช้ AI", icon:"ti-bulb", idx:[0,1,5,6,7] },
+    { label:"ข้อห้าม & กฎหมาย", icon:"ti-scale", idx:[2,3,4,8,9,10] }
+  ],
+  idea: [
+    { label:"พิสูจน์แล้ว แสน-ล้านวิว", icon:"ti-trophy", idx:[0,1,2,3,4,5,6,7,8,9] },
+    { label:"ไอเดียเพิ่มเติม", icon:"ti-bulb", idx:[10,11,12,13,14,15,16,17,18,19,20,21] }
+  ]
+};
 function renderIdeasView() {
   const vr = document.getElementById("viewRoot");
   pullIdeas();
   const cat = IDEA_CATS.find(c => c.id === ideaCat) || IDEA_CATS[0];
   const team = (state.ideas || []).filter(x => x.cat === cat.id);
   const canCopy = cat.id === "hook";
-  const card = (t, b, extra) => `<div class="idea-card"><div class="idea-top"><h4>${esc(t)}</h4>${canCopy ? `<button class="btn-ghost btn-sm" onclick="copyIdea(this)" title="คัดลอก"><i class="ti ti-copy"></i> คัดลอก</button>` : ""}</div><div class="idea-body">${esc(b)}</div>${extra || ""}</div>`;
-  const teamHtml = team.map(x => card(x.title, x.body, `<div class="idea-meta"><span><i class="ti ti-user"></i> ${esc(x.author_name || "")}</span>${(isAdmin() || x.author_id === currentUser.id) ? `<span style="display:flex;gap:6px"><button class="btn-ghost btn-sm" onclick="openIdeaForm('${esc(x.id)}')" title="แก้ไข"><i class="ti ti-pencil"></i></button><button class="btn-ghost btn-sm" onclick="deleteIdea('${esc(x.id)}')" title="ลบ"><i class="ti ti-trash"></i></button></span>` : ""}</div>`)).join("");
+  const seed = IDEA_SEED[cat.id] || [];
+  const row = (t, b, extra) => `<details class="idea-row"><summary><span class="ir-t">${esc(String(t).replace(/^\d+\.\s*/, ""))}</span><i class="ti ti-chevron-down ir-chev"></i></summary>
+      <div class="ir-body"><div class="idea-body">${esc(b)}</div>
+      <div class="ir-foot">${extra || "<span></span>"}${canCopy ? `<button class="btn-ghost btn-sm" onclick="copyIdea(this)" title="คัดลอก"><i class="ti ti-copy"></i> คัดลอก</button>` : ""}</div></div></details>`;
+  const group = (label, icon, items) => items.length ? `<div class="idea-group"><div class="ig-head"><i class="ti ${icon}"></i> ${label} <span>${items.length}</span></div>${items.join("")}</div>` : "";
+  const teamRows = team.map(x => row(x.title, x.body, `<span class="idea-meta"><span><i class="ti ti-user"></i> ${esc(x.author_name || "")}</span>${(isAdmin() || x.author_id === currentUser.id) ? `<span style="display:flex;gap:6px"><button class="btn-ghost btn-sm" onclick="openIdeaForm('${esc(x.id)}')" title="แก้ไข"><i class="ti ti-pencil"></i></button><button class="btn-ghost btn-sm" onclick="deleteIdea('${esc(x.id)}')" title="ลบ"><i class="ti ti-trash"></i></button></span>` : ""}</span>`));
+  const groups = IDEA_GROUPS[cat.id] || [{ label:cat.label, icon:cat.icon, idx:seed.map((_, i) => i) }];
+  const used = new Set(groups.flatMap(g => g.idx));
+  const rest = seed.map((x, i) => i).filter(i => !used.has(i));
+  const seedHtml = groups.map(g => group(g.label, g.icon, g.idx.filter(i => seed[i]).map(i => row(seed[i].t, seed[i].b)))).join("")
+    + group("อื่น ๆ", "ti-dots", rest.map(i => row(seed[i].t, seed[i].b)));
   vr.innerHTML = `<section class="idea-view">
     <div class="sec-head"><h2><i class="ti ti-bulb"></i> ไอเดีย & AI</h2><button class="btn-primary btn-sm" onclick="openIdeaForm()"><i class="ti ti-plus"></i> เพิ่ม</button></div>
     <div class="idea-tabs">${IDEA_CATS.map(c => `<button class="idea-tab ${c.id === cat.id ? "active" : ""}" onclick="setIdeaCat('${c.id}')"><i class="ti ${c.icon}"></i> ${c.label}</button>`).join("")}</div>
     <div id="ideaForm"></div>
-    ${team.length ? `<div class="idea-sub">จากทีม (${team.length})</div><div class="idea-grid">${teamHtml}</div><div class="idea-sub">พื้นฐาน</div>` : ""}
-    <div class="idea-grid">${(IDEA_SEED[cat.id] || []).map(x => card(x.t, x.b)).join("")}</div>
+    ${group("จากทีม", "ti-users", teamRows)}
+    ${seedHtml}
   </section>`;
 }
 function openIdeaForm(editId) {
