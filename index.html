@@ -3877,23 +3877,35 @@ const IDEA_GROUPS = {
     { label:"ไอเดียเพิ่มเติม", icon:"ti-bulb", idx:[10,11,12,13,14,15,16,17,18,19,20,21] }
   ]
 };
+function seedItems(catId) {
+  const ov = {}; (state.ideas || []).forEach(x => { if (String(x.id).startsWith(`seed:${catId}:`)) ov[x.id] = x; });
+  return (IDEA_SEED[catId] || []).map((x, i) => { const o = ov[`seed:${catId}:${i}`];
+    return o ? (o.title === "__hidden__" ? { t:x.t, b:x.b, hidden:true } : { t:o.title, b:o.body }) : x; });
+}
+function ideaById(id) {
+  const m = String(id).match(/^seed:([^:]+):(\d+)$/);
+  if (m) { const it = seedItems(m[1])[+m[2]]; return it ? { id, cat:m[1], title:it.t, body:it.b, seed:true } : null; }
+  return (state.ideas || []).find(i => i.id === id) || null;
+}
 function renderIdeasView() {
   const vr = document.getElementById("viewRoot");
   pullIdeas();
   const cat = IDEA_CATS.find(c => c.id === ideaCat) || IDEA_CATS[0];
-  const team = (state.ideas || []).filter(x => x.cat === cat.id);
+  const team = (state.ideas || []).filter(x => x.cat === cat.id && !String(x.id).startsWith("seed:"));
   const canCopy = cat.id === "hook";
-  const seed = IDEA_SEED[cat.id] || [];
+  const seed = seedItems(cat.id);
   const row = (t, b, extra) => `<details class="idea-row"><summary><span class="ir-t">${esc(String(t).replace(/^\d+\.\s*/, ""))}</span><i class="ti ti-chevron-down ir-chev"></i></summary>
       <div class="ir-body"><div class="idea-body">${esc(b)}</div>
       <div class="ir-foot">${extra || "<span></span>"}${canCopy ? `<button class="btn-ghost btn-sm" onclick="copyIdea(this)" title="คัดลอก"><i class="ti ti-copy"></i> คัดลอก</button>` : ""}</div></div></details>`;
   const group = (label, icon, items) => items.length ? `<div class="idea-group"><div class="ig-head"><i class="ti ${icon}"></i> ${label} <span>${items.length}</span></div>${items.join("")}</div>` : "";
   const teamRows = team.map(x => row(x.title, x.body, `<span class="idea-meta"><span><i class="ti ti-user"></i> ${esc(x.author_name || "")}</span>${(isAdmin() || x.author_id === currentUser.id) ? `<span style="display:flex;gap:6px"><button class="btn-ghost btn-sm" onclick="openIdeaForm('${esc(x.id)}')" title="แก้ไข"><i class="ti ti-pencil"></i></button><button class="btn-ghost btn-sm" onclick="deleteIdea('${esc(x.id)}')" title="ลบ"><i class="ti ti-trash"></i></button></span>` : ""}</span>`));
   const groups = IDEA_GROUPS[cat.id] || [{ label:cat.label, icon:cat.icon, idx:seed.map((_, i) => i) }];
+  const adminBtns = id => isAdmin() ? `<span style="display:flex;gap:6px"><button class="btn-ghost btn-sm" onclick="openIdeaForm('${id}')" title="แก้ไข"><i class="ti ti-pencil"></i></button><button class="btn-ghost btn-sm" onclick="deleteIdea('${id}')" title="ลบ"><i class="ti ti-trash"></i></button></span>` : "";
+  const seedRow = i => row(seed[i].t, seed[i].b, adminBtns(`seed:${cat.id}:${i}`));
   const used = new Set(groups.flatMap(g => g.idx));
   const rest = seed.map((x, i) => i).filter(i => !used.has(i));
-  const seedHtml = groups.map(g => group(g.label, g.icon, g.idx.filter(i => seed[i]).map(i => row(seed[i].t, seed[i].b)))).join("")
-    + group("อื่น ๆ", "ti-dots", rest.map(i => row(seed[i].t, seed[i].b)));
+  const seedHtml = groups.map(g => group(g.label, g.icon, g.idx.filter(i => seed[i] && !seed[i].hidden).map(seedRow))).join("")
+    + group("อื่น ๆ", "ti-dots", rest.filter(i => !seed[i].hidden).map(seedRow));
   vr.innerHTML = `<section class="idea-view">
     <div class="sec-head"><h2><i class="ti ti-bulb"></i> ไอเดีย & AI</h2><button class="btn-primary btn-sm" onclick="openIdeaForm()"><i class="ti ti-plus"></i> เพิ่ม</button></div>
     <div class="idea-tabs">${IDEA_CATS.map(c => `<button class="idea-tab ${c.id === cat.id ? "active" : ""}" onclick="setIdeaCat('${c.id}')"><i class="ti ${c.icon}"></i> ${c.label}</button>`).join("")}</div>
@@ -3903,7 +3915,7 @@ function renderIdeasView() {
   </section>`;
 }
 function openIdeaForm(editId) {
-  const ed = editId ? (state.ideas || []).find(i => i.id === editId) : null;
+  const ed = editId ? ideaById(editId) : null;
   if (ideasReady === false) { toast("ต้องรัน SQL ข้อ 18 (ตาราง ideas) ใน Supabase ก่อน", "⚠️"); return; }
   const el = document.getElementById("ideaForm"); if (!el) return;
   const cat = IDEA_CATS.find(c => c.id === ideaCat) || IDEA_CATS[0];
@@ -3924,6 +3936,13 @@ function openIdeaForm(editId) {
 async function saveIdea(editId) {
   const cat = ideaCat, title = document.getElementById("ideaTitleIn").value.trim(), body = document.getElementById("ideaBodyIn").value.trim();
   if (!title || !body) { toast("ใส่หัวข้อและรายละเอียดก่อน", "⚠️"); return; }
+  if (editId && String(editId).startsWith("seed:")) {
+    if (!isAdmin()) return;
+    const row = { id:editId, cat, title, body, author_id:currentUser.id, author_name:currentUser.name };
+    const r = await dbw(db.from("ideas").upsert(row), "แก้ไขไม่สำเร็จ");
+    if (r && r.error) return;
+    state.ideas = [...(state.ideas || []).filter(i => i.id !== editId), row]; renderIdeasView(); toast("แก้ไขแล้ว", "ti-pencil"); return;
+  }
   if (editId) {
     const x = (state.ideas || []).find(i => i.id === editId);
     if (!x || !(isAdmin() || x.author_id === currentUser.id)) return;
@@ -3938,6 +3957,15 @@ async function saveIdea(editId) {
   ideaCat = cat; renderIdeasView(); toast("เพิ่มแล้ว ขอบคุณที่แชร์", "ti-bulb");
 }
 async function deleteIdea(id) {
+  if (String(id).startsWith("seed:")) {
+    if (!isAdmin()) return;
+    const it = ideaById(id); if (!it || !confirm(`ลบ "${it.title}"?`)) return;
+    if (ideasReady === false) { toast("ต้องรัน SQL ข้อ 18 (ตาราง ideas) ใน Supabase ก่อน", "⚠️"); return; }
+    const row = { id, cat:it.cat, title:"__hidden__", body:"-", author_id:currentUser.id, author_name:currentUser.name };
+    const r = await dbw(db.from("ideas").upsert(row), "ลบไม่สำเร็จ");
+    if (r && r.error) return;
+    state.ideas = [...(state.ideas || []).filter(i => i.id !== id), row]; renderIdeasView(); return;
+  }
   const x = (state.ideas || []).find(i => i.id === id); if (!x) return;
   if (!(isAdmin() || x.author_id === currentUser.id)) return;
   if (!confirm(`ลบ "${x.title}"?`)) return;
