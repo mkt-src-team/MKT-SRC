@@ -2365,7 +2365,7 @@ function loginStatusChip(m) {
     : !m.lastLoginDate ? '<i class="ti ti-alert-triangle"></i> ยังไม่เคยเข้าระบบ'
     : `<i class="ti ti-alert-triangle"></i> ไม่เข้าระบบ ${d} วัน`;
   const bg = lv === "red" ? "background:rgba(210,56,43,.12);" : "";
-  const days = new Date(todayStr()).getDate();
+  const td = new Date(todayStr()), days = new Date(td.getFullYear(), td.getMonth() + 1, 0).getDate(); // จำนวนวันทั้งเดือน (ต.ค. = 31)
   return `<div class="chip-link" style="border-color:${color};border-width:${lv==="red"?2:1}px;${bg}"><span style="color:${color};font-weight:700">${label}</span><span style="color:var(--txt-2);font-size:11px"><i class="ti ti-login"></i> เดือนนี้เข้าระบบ ${monthLoginCount(m)}/${days} วัน</span></div>`;
 }
 function renderTeam() {
