@@ -1475,7 +1475,7 @@ async function downloadKpi() {
     const checks = inp.flatMap(t => t.checks || []), on = checks.filter(c => c.on).length;
     const graded = onTime + late + overdue.length;
     const ld = logins ? new Set(logins.filter(x => x.member_id === m.id).map(x => x.day)).size : "";
-    return { "ชื่อ":m.name, "ตำแหน่ง":m.position||"", "ระดับ":RANK[m.rank]||m.rank, "งานทั้งหมด":inp.length, "เสร็จ":done.length,
+    return { "ชื่อ":m.name, "ตำแหน่ง":m.position||RANK[m.rank]||m.rank||"", "งานทั้งหมด":inp.length, "เสร็จ":done.length,
       "เสร็จตรงเวลา":onTime, "เสร็จช้า":late, "เลยกำหนด(ยังไม่เสร็จ)":overdue.length, "กำลังทำ":doing,
       "% ส่งตรงเวลา":graded ? Math.round(onTime / graded * 100) : "", "% งานเสร็จ":inp.length ? Math.round(done.length / inp.length * 100) : "",
       "ช้าเฉลี่ย(วัน)":lateDays.length ? (lateDays.reduce((a, b) => a + b, 0) / lateDays.length).toFixed(1) : "",
