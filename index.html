@@ -639,6 +639,11 @@ button{border-radius:99px;font-weight:500}
 @keyframes missCardGlow{0%,100%{box-shadow:0 0 0 0 transparent}50%{box-shadow:0 0 14px 1px var(--mc)}}
 .member.miss-run .name{color:var(--mc)}
 
+.co-pick{display:flex;flex-wrap:wrap;gap:6px}
+.field .co-chip{display:inline-flex;align-items:center;gap:6px;margin:0;padding:6px 10px;border:1px solid var(--stroke-2);border-radius:999px;font-size:13px;font-weight:500;color:var(--txt);cursor:pointer;background:var(--control)}
+.field .co-chip input{width:15px;height:15px;padding:0;margin:0;flex:none;accent-color:var(--accent)}
+.field .co-chip:has(input:checked){border-color:var(--txt);background:var(--layer-2);font-weight:600}
+.field .co-chip.is-main{opacity:.4;cursor:default}
 .ctext-input{flex:1;min-width:0;font:inherit;font-size:14px;color:var(--txt);background:transparent;border:1px solid transparent;border-radius:8px;padding:5px 8px;outline:none}
 .ctext-input:hover{border-color:var(--stroke-2)}
 .ctext-input:focus,.ctext-input.editing{border-color:var(--txt);background:var(--control)}
@@ -899,7 +904,8 @@ button{border-radius:99px;font-weight:500}
     <p class="desc">มอบหมายงานให้ทีม พร้อมกำหนดส่งและเชคลิสต์</p>
     <div class="field"><label>ชื่องาน *</label><input id="tTitle" placeholder="เช่น ทำแคมเปญเฟสบุ๊คเดือนนี้"></div>
     <div class="field"><label>รายละเอียด</label><textarea id="tDesc" placeholder="อธิบายงานเพิ่มเติม..."></textarea></div>
-    <div class="field"><label>มอบหมายให้ *</label><select id="tWho"></select></div>
+    <div class="field"><label>มอบหมายให้ * (คนหลัก)</label><select id="tWho" onchange="refreshCoPick('tCo','tWho',false)"></select></div>
+    <div class="field"><label>ผู้ร่วมงาน (เลือกเพิ่มได้หลายคน)</label><div class="co-pick" id="tCo"></div></div>
     <div class="field">
       <label>ประเภทงาน *</label>
       <select id="tFreq">
@@ -934,7 +940,8 @@ button{border-radius:99px;font-weight:500}
     <input type="hidden" id="editTaskId">
     <div class="field"><label>ชื่องาน *</label><input id="editTitle"></div>
     <div class="field"><label>รายละเอียด</label><textarea id="editDesc"></textarea></div>
-    <div class="field"><label>มอบหมายให้ *</label><select id="editWho"></select></div>
+    <div class="field"><label>มอบหมายให้ * (คนหลัก)</label><select id="editWho" onchange="refreshCoPick('editCo','editWho',!canManageTasks())"></select></div>
+    <div class="field"><label>ผู้ร่วมงาน (เลือกเพิ่มได้หลายคน)</label><div class="co-pick" id="editCo"></div></div>
     <div class="field">
       <label>ประเภทงาน *</label>
       <select id="editFreq">
@@ -1388,7 +1395,32 @@ function memberCan(m, key) {
 }
 function can(key) { return memberCan(currentUser, key); }
 function canCreateTask() { return !!currentUser && (can("create_task") || can("request_task")); }
-function canDeleteTaskDirect(t) { return canManageTasks() || (!!t && !!currentUser && t.who === currentUser.id && can("delete_task")); }
+/* ผู้รับผิดชอบหลายคน: who = คนหลัก, coWho = ผู้ร่วมงาน (คอลัมน์ tasks.co_who — SQL ข้อ 17) */
+let coWhoReady = false;
+async function checkCoWho() {
+  if (!db || coWhoReady) return;
+  const r = await db.from("tasks").select("co_who").limit(1).then(x => x, () => ({ error:true }));
+  coWhoReady = !r.error;
+}
+function isMine(t, id) { return !!t && !!id && (t.who === id || (t.coWho || []).includes(id)); }
+function taskPeople(t) { return [t.who, ...(t.coWho || [])].filter((x, i, a) => x && a.indexOf(x) === i); }
+function whoLabel(t) {
+  const n = taskPeople(t).map(id => memberById(id)).filter(Boolean).map(m => esc(m.name));
+  return n.length ? n.join(", ") : "ไม่ระบุ";
+}
+function coPickHtml(boxId, mainId, selected, disabled) {
+  const opts = state.members.filter(m => m.status !== "pending");
+  return opts.map(m => `<label class="co-chip${m.id === mainId ? " is-main" : ""}"><input type="checkbox" value="${esc(m.id)}" ${selected.includes(m.id) ? "checked" : ""} ${disabled || m.id === mainId ? "disabled" : ""}><span>${esc(m.name)}</span></label>`).join("");
+}
+function readCoPick(boxId, mainId) {
+  return [...document.querySelectorAll(`#${boxId} input:checked`)].map(i => i.value).filter(id => id && id !== mainId);
+}
+function refreshCoPick(boxId, selId, disabled) {
+  const box = document.getElementById(boxId), main = document.getElementById(selId).value;
+  const cur = [...box.querySelectorAll("input:checked")].map(i => i.value);
+  box.innerHTML = coPickHtml(boxId, main, cur, disabled);
+}
+function canDeleteTaskDirect(t) { return canManageTasks() || (!!t && !!currentUser && isMine(t, currentUser.id) && can("delete_task")); }
 function canApprove() { return isAdmin() || can("approve_requests"); }
 function canApproveReq(r) { return !!r && (isAdmin() || (can("approve_requests") && r.type !== "delete_member")); }
 function canInviteDirect() { return isAdmin(); }
@@ -1462,7 +1494,7 @@ async function downloadKpi() {
   if (!r.error) logins = r.data || [];
   const RANK = { boss:"Boss", dev:"Dev", employee:"พนักงาน", intern:"เด็กฝึกงาน" };
   const rows = state.members.filter(m => m.status !== "inactive").map(m => {
-    const inp = state.tasks.filter(t => t.who === m.id).filter(t => { const k = t.due || localDay(t.createdAt); return k >= start && k <= end; });
+    const inp = state.tasks.filter(t => isMine(t, m.id)).filter(t => { const k = t.due || localDay(t.createdAt); return k >= start && k <= end; });
     const done = inp.filter(t => t.status === "done");
     let onTime = 0, late = 0; const lateDays = [];
     done.forEach(t => {
@@ -1539,14 +1571,14 @@ function memberById(id) { return state.members.find(m => m.id === id); }
 
 /* ============ DB MAPPERS ============ */
 function mapMember(r){ return { id:r.id, name:r.name||"", position:r.position||"", emoji:r.emoji||"🧑‍💻", email:r.email||"", phone:r.phone||"", rank:r.rank||"employee", status:r.status||"active", authUid:r.auth_uid||null, perms:(r.perms && typeof r.perms==="object" && !Array.isArray(r.perms)) ? r.perms : {}, loginCount:r.login_count||0, lastLoginDate:r.last_login_date||null }; }
-function mapTask(r){ return { id:r.id, title:r.title||"", desc:r.description||"", who:r.who||"", startDate:r.start_date||"", due:r.due||"", freq:r.freq||"daily", emoji:r.emoji||"ti-car", status:r.status||"doing", checks:Array.isArray(r.checks)?r.checks:[], attachments:Array.isArray(r.attachments)?r.attachments:[], createdAt:r.created_at||new Date().toISOString(), completedAt:r.completed_at||null, createdBy:r.created_by||"" }; }
+function mapTask(r){ return { id:r.id, title:r.title||"", desc:r.description||"", who:r.who||"", startDate:r.start_date||"", due:r.due||"", freq:r.freq||"daily", emoji:r.emoji||"ti-car", status:r.status||"doing", checks:Array.isArray(r.checks)?r.checks:[], attachments:Array.isArray(r.attachments)?r.attachments:[], createdAt:r.created_at||new Date().toISOString(), completedAt:r.completed_at||null, createdBy:r.created_by||"", coWho:Array.isArray(r.co_who)?r.co_who:[] }; }
 function mapRequest(r){ return { id:r.id, fromId:r.from_id||"", fromName:r.from_name||"", type:r.type||"create", title:r.title||"", description:r.description||"", who:r.who||"", startDate:r.start_date||"", due:r.due||"", freq:r.freq||"daily", emoji:r.emoji||"", checks:Array.isArray(r.checks)?r.checks:[], taskId:r.task_id||"", status:r.status||"pending", note:r.note||"", createdAt:r.created_at||new Date().toISOString() }; }
 function mapNotif(r){ return { id:r.id, fromId:r.from_id||"", fromName:r.from_name||"", toRank:r.to_rank||"", toId:r.to_id||"", type:r.type||"", title:r.title||"", message:r.message||"", linkId:r.link_id||"", isRead:!!r.is_read, createdAt:r.created_at||new Date().toISOString() }; }
 function mapInvite(r){ return { id:r.id, email:r.email||"", rank:r.rank||"employee", createdBy:r.created_by||"", createdAt:r.created_at||new Date().toISOString() }; }
 function mapAnn(r){ return { id:r.id, title:r.title||"", content:r.content||"", authorName:r.author_name||"", authorId:r.author_id||"", isPinned:!!r.is_pinned, ackedBy:Array.isArray(r.acked_by)?r.acked_by:[], createdAt:r.created_at||new Date().toISOString() }; }
 function mapEvent(r){ return { id:r.id, title:r.title||"", date:r.event_date||"", time:r.time||"", type:r.type||"event", desc:r.description||"", by:r.created_by||"", createdAt:r.created_at||new Date().toISOString() }; }
 
-function taskRow(t){ return { title:t.title, description:t.desc||"", who:t.who||"", start_date:t.startDate||"", due:t.due||"", freq:t.freq||"daily", emoji:t.emoji||"ti-car", status:t.status||"doing", checks:t.checks||[], attachments:t.attachments||[], completed_at:t.completedAt||null }; }
+function taskRow(t){ return { title:t.title, description:t.desc||"", who:t.who||"", start_date:t.startDate||"", due:t.due||"", freq:t.freq||"daily", emoji:t.emoji||"ti-car", status:t.status||"doing", checks:t.checks||[], attachments:t.attachments||[], completed_at:t.completedAt||null, ...(coWhoReady ? { co_who:t.coWho||[] } : {}) }; }
 function requestRow(r){ return { id:r.id, from_id:r.fromId, from_name:r.fromName, type:r.type, title:r.title, description:r.description||"", who:r.who||"", start_date:r.startDate||"", due:r.due||"", freq:r.freq||"daily", emoji:r.emoji||"", checks:r.checks||[], task_id:r.taskId||"", status:r.status, note:r.note||"" }; }
 function eventRow(e){ return { title:e.title, event_date:e.date||"", time:e.time||"", type:e.type||"event", description:e.desc||"" }; }
 function annRow(a){ return { title:a.title, content:a.content||"", author_name:a.authorName||"", author_id:a.authorId||"", is_pinned:!!a.isPinned }; }
@@ -2057,7 +2089,7 @@ function submitDeleteRequest(taskId) {
   const t = state.tasks.find(x=>x.id===taskId);
   if (!t) return;
   if (canDeleteTaskDirect(t)) return delTaskDirect(taskId);
-  if (!currentUser || !can("request_task") || t.who !== currentUser.id) { toast("ไม่มีสิทธิ์ลบงาน","🔒"); return; }
+  if (!currentUser || !can("request_task") || !isMine(t, currentUser.id)) { toast("ไม่มีสิทธิ์ลบงาน","🔒"); return; }
   addRequest(newRequest({ type:"delete", title:`ขอลบงาน "${t.title}"`, taskId }), "คำขอลบงาน", `${currentUser.name} ขอลบงาน "${t.title}"`);
 }
 function submitDeleteMemberRequest(memberId) {
@@ -2113,7 +2145,7 @@ function rejectRequest(reqId) {
 
 /* ============ SCORING ============ */
 function memberScore(m) {
-  const tasks = state.tasks.filter(t=>t.who===m.id);
+  const tasks = state.tasks.filter(t=>isMine(t, m.id));
   if (tasks.length===0) return {score:0,total:0,onTime:0,late:0,pending:0,hasTask:false};
   let onTime=0, late=0, pending=0;
   tasks.forEach(t=>{
@@ -2344,7 +2376,7 @@ function renderAttention() {
     const who = memberById(t.who), over = isOverdue(t);
     const c = t.checks||[], pc = c.length ? Math.round(c.filter(x=>x.on).length/c.length*100) : 0;
     return `<div class="dash-row" onclick="openTasks('today')"><div class="ic"><i class="ti ${taskIco(t.emoji)}"></i></div>
-      <div style="flex:1;min-width:0"><div class="t">${esc(t.title)}</div><div class="s ${over?'late':''}">${who?esc(who.name):"ไม่ระบุ"} · ${over?"เลยกำหนด "+fmtDate(t.due):"ส่ง "+fmtDate(t.due)}</div></div>
+      <div style="flex:1;min-width:0"><div class="t">${esc(t.title)}</div><div class="s ${over?'late':''}">${whoLabel(t)} · ${over?"เลยกำหนด "+fmtDate(t.due):"ส่ง "+fmtDate(t.due)}</div></div>
       <div class="mbar ${over?'late':''}"><i style="width:${pc}%"></i></div></div>`;
   }).join("");
   const members = state.members.filter(m=>m.status!=="pending").map(m=>({m, s:memberScore(m)})).sort((a,b)=>(b.s.hasTask-a.s.hasTask)||(b.s.score-a.s.score));
@@ -2426,7 +2458,7 @@ function renderTeam() {
 /* การ์ดงาน — ใช้ร่วมกันทั้งหน้า Dashboard และงานวันนี้ (สิทธิ์ตรงกันทุกหน้า) */
 function renderTaskCard(t) {
   const admin = isAdmin();
-  const mine = !!currentUser && t.who === currentUser.id;
+  const mine = !!currentUser && isMine(t, currentUser.id);
   const canTick = admin || mine;
   const canChecklist = canEditChecklist(t);
   const id = sid(t.id);
@@ -2459,7 +2491,7 @@ function renderTaskCard(t) {
       <div class="task-main">
         <div class="task-title">${esc(t.title)} ${tag}</div>
         <div class="task-meta">
-          <span><i class="ti ti-user"></i> ${who?esc(who.name):"ไม่ระบุ"}</span>
+          <span><i class="ti ti-user"></i> ${whoLabel(t)}</span>
           <span><i class="ti ti-calendar"></i> เริ่ม: ${fmtDate(t.startDate)} → กำหนดส่ง: ${fmtDate(t.due)}</span>
           <span class="tag ${freqCls(t.freq)}" style="font-size:10px">${FREQ_MAP[freqCls(t.freq)]}</span>
           <span><i class="ti ti-list-check"></i> ${doneC}/${checks.length} ข้อ</span>
@@ -2488,7 +2520,7 @@ function renderTaskCard(t) {
 }
 function visibleTasks() {
   let tasks = [...state.tasks];
-  if (currentUser && !can("view_all_tasks")) tasks = tasks.filter(t => t.who === currentUser.id);
+  if (currentUser && !can("view_all_tasks")) tasks = tasks.filter(t => isMine(t, currentUser.id));
   return tasks;
 }
 
@@ -2546,7 +2578,7 @@ function renderTasksView() {
   const tasks = visibleTasks();
   const isToday = t => !isOverdue(t) && taskStatus(t) !== "done" && (t.due === today || t.startDate === today);
   const isDoing = t => taskStatus(t) !== "done" && !isOverdue(t) && !isToday(t);
-  const myAll = currentUser ? tasks.filter(t => t.who === currentUser.id) : [];
+  const myAll = currentUser ? tasks.filter(t => isMine(t, currentUser.id)) : [];
   const myOver = myAll.filter(t => isOverdue(t)).sort(byDue);
   const myToday = myAll.filter(isToday).sort(byDue);
   const myDoing = myAll.filter(isDoing).sort(byDue);
@@ -2669,7 +2701,7 @@ function openDayDetail(ds) {
   const tasks = visibleTasks().filter(t=>t.due===ds && taskStatus(t)!=="done");
   const rows = [
     ...evs.map(e=>`<div class="ev-chip t-${evType(e.type)}" style="white-space:normal;margin-bottom:6px;padding:8px 10px"><i class="ti ${EV_ICON[evType(e.type)]}"></i> ${esc(e.title)}${e.time?" · "+esc(e.time):""}${e.desc?`<div style="font-size:11px;font-weight:400;color:var(--txt-2);margin-top:3px">${esc(e.desc)}</div>`:""}</div>`),
-    ...tasks.map(t=>{ const who = memberById(t.who); return `<div class="ev-chip t-task ${isOverdue(t)?'overdue':''}" style="white-space:normal;margin-bottom:6px;padding:8px 10px"><i class="ti ${isOverdue(t)?'ti-alert-triangle':'ti-clipboard-check'}"></i> ${esc(t.title)}${who?" · "+esc(who.name):""}</div>`; })
+    ...tasks.map(t=>{ const who = memberById(t.who); return `<div class="ev-chip t-task ${isOverdue(t)?'overdue':''}" style="white-space:normal;margin-bottom:6px;padding:8px 10px"><i class="ti ${isOverdue(t)?'ti-alert-triangle':'ti-clipboard-check'}"></i> ${esc(t.title)}${" · "+whoLabel(t)}</div>`; })
   ];
   document.getElementById("dayDetailList").innerHTML = rows.length ? rows.join("") : `<div class="empty"><div class="e-emoji"><i class="ti ti-calendar"></i></div><b>ไม่มีรายการในวันนี้</b></div>`;
   document.getElementById("dayDetailOverlay").classList.add("show");
@@ -2816,7 +2848,7 @@ function tlRowHtml(t) {
     <div class="task-icon" style="width:36px;height:36px;font-size:17px"><i class="ti ${taskIco(t.emoji)}"></i></div>
     <div class="tl-info">
       <div class="tl-title">${esc(t.title)} ${over?'<span class="tag overdue" style="font-size:10px"><i class="ti ti-alert-triangle"></i> เลยกำหนด</span>':(st==="done"?'<span class="tag done" style="font-size:10px"><i class="ti ti-check"></i></span>':"")}</div>
-      <div class="tl-meta"><i class="ti ti-user"></i> ${who?esc(who.name):"ไม่ระบุ"} • <i class="ti ti-calendar"></i> ${fmtDate(t.startDate)} → ${fmtDate(t.due)}</div>
+      <div class="tl-meta"><i class="ti ti-user"></i> ${whoLabel(t)} • <i class="ti ti-calendar"></i> ${fmtDate(t.startDate)} → ${fmtDate(t.due)}</div>
     </div>
     <div class="tl-bar"><i style="width:${pct}%;background:${color}"></i></div>
     <div class="tl-pct" style="color:${color}">${pct}%</div>
@@ -2847,6 +2879,8 @@ function syncWhoSelect() {
   sel.innerHTML = opts.length
     ? opts.map(m=>`<option value="${esc(m.id)}" ${currentUser && m.id===currentUser.id?"selected":""}>${esc(m.name)} — ${RANKS[rankCls(m.rank)]}</option>`).join("")
     : `<option value="">— ยังไม่มีสมาชิก —</option>`;
+  const co = document.getElementById("tCo"); if (co) co.innerHTML = coPickHtml("tCo", sel.value, [], false);
+  checkCoWho();
 }
 function addTmpCheck() {
   const inp = document.getElementById("tCheck");
@@ -2865,6 +2899,7 @@ function readTaskForm() {
     title: document.getElementById("tTitle").value.trim(),
     desc: document.getElementById("tDesc").value.trim(),
     who: document.getElementById("tWho").value,
+    coWho: readCoPick("tCo", document.getElementById("tWho").value),
     startDate: document.getElementById("tStartDate").value,
     due: document.getElementById("tDue").value,
     freq: document.getElementById("tFreq").value
@@ -2885,17 +2920,18 @@ function saveTask() {
 function saveTaskDirect() {
   if (!can("create_task")) { toast("ไม่มีสิทธิ์สร้างงาน","🔒"); return; }
   const f = readTaskForm(); if (!f) return;
-  const t = { id:uid(), title:f.title, desc:f.desc, who:f.who, startDate:f.startDate, due:f.due, freq:f.freq, emoji:state.tEmoji, status:"doing", checks:state.tmpChecks.map(c=>({text:c.text,on:false})), createdAt:new Date().toISOString(), completedAt:null, createdBy:currentUser.id };
+  const t = { id:uid(), title:f.title, desc:f.desc, who:f.who, coWho:f.coWho||[], startDate:f.startDate, due:f.due, freq:f.freq, emoji:state.tEmoji, status:"doing", checks:state.tmpChecks.map(c=>({text:c.text,on:false})), createdAt:new Date().toISOString(), completedAt:null, createdBy:currentUser.id };
   state.tasks.unshift(t);
   dbw(db.from("tasks").insert(Object.assign({ id:t.id, created_by:t.createdBy }, taskRow(t))), "เพิ่มงานไม่สำเร็จ");
   closeModal("taskOverlay");
   render();
   toast("เพิ่มงานเรียบร้อยแล้ว","✅");
   if (f.who !== currentUser.id) notify({ toId:f.who, type:"task", title:"งานใหม่ได้รับมอบหมาย", message:`คุณได้รับมอบหมายงาน "${f.title}"` });
+  (f.coWho||[]).filter(id => id !== currentUser.id).forEach(id => notify({ toId:id, type:"task", title:"งานใหม่ได้รับมอบหมาย", message:`คุณเป็นผู้ร่วมงาน "${f.title}"` }));
 }
 
 let editChecks = [];
-function canEditTask(t) { return canManageTasks() || (!!currentUser && t.who === currentUser.id && can("edit_own_task")); }
+function canEditTask(t) { return canManageTasks() || (!!currentUser && isMine(t, currentUser.id) && can("edit_own_task")); }
 function openEditTaskModal(tid) {
   const t = state.tasks.find(x=>x.id===tid);
   if (!t) return;
@@ -2911,6 +2947,8 @@ function openEditTaskModal(tid) {
   sel.innerHTML = state.members.map(m=>`<option value="${esc(m.id)}" ${m.id===t.who?"selected":""}>${esc(m.name)} — ${RANKS[rankCls(m.rank)]}</option>`).join("");
   sel.disabled = !canManageTasks();
   sel.title = canManageTasks() ? "" : "ไม่มีสิทธิ์มอบหมายให้คนอื่น";
+  document.getElementById("editCo").innerHTML = coPickHtml("editCo", t.who, t.coWho || [], !canManageTasks());
+  checkCoWho();
   state.editEmoji = taskIco(t.emoji);   // (แก้บั๊ก) ตั้งก่อนวาด ให้ไฮไลต์ถูกตัว
   renderEmojiPick("editEmojiPick","edit",TASK_ICONS);
   renderEditChecks();
@@ -2985,8 +3023,9 @@ function updateTask() {
   if (!who) { toast("กรุณาเลือกคนรับผิดชอบ","⚠️"); return; }
   if (!canManageTasks() && who !== t.who) { toast("ไม่มีสิทธิ์มอบหมายให้คนอื่น","🔒"); return; }
   if (startDate && due && due < startDate) { toast("วันกำหนดส่งต้องไม่ก่อนวันเริ่มงาน","⚠️"); return; }
-  const prevWho = t.who;
-  Object.assign(t, { title, desc:document.getElementById("editDesc").value.trim(), who, freq:document.getElementById("editFreq").value, startDate, due, emoji:state.editEmoji || t.emoji, checks:editChecks.filter(c=>String(c.text).trim()).map(c=>({text:String(c.text).trim(), on:c.on})), attachments:state.editAttachments||[] });
+  const prevWho = t.who, prevCo = t.coWho || [];
+  const coWho = canManageTasks() ? readCoPick("editCo", who) : prevCo.filter(id => id !== who);
+  Object.assign(t, { coWho, title, desc:document.getElementById("editDesc").value.trim(), who, freq:document.getElementById("editFreq").value, startDate, due, emoji:state.editEmoji || t.emoji, checks:editChecks.filter(c=>String(c.text).trim()).map(c=>({text:String(c.text).trim(), on:c.on})), attachments:state.editAttachments||[] });
   const total = t.checks.length, done = t.checks.filter(c=>c.on).length;
   if (total > 0 && done === total) { t.status = "done"; if (!t.completedAt) t.completedAt = new Date().toISOString(); }
   else if (t.status === "done") { t.status = "doing"; t.completedAt = null; }
@@ -2994,6 +3033,7 @@ function updateTask() {
   if (who !== prevWho && who !== currentUser.id) notify({ toId:who, type:"task", title:"งานใหม่ได้รับมอบหมาย", message:`คุณได้รับมอบหมายงาน "${title}"` });
   if (prevWho && prevWho !== currentUser.id && prevWho !== who) notify({ toId:prevWho, type:"task", title:"งานของคุณถูกโอน", message:`${currentUser.name} โอนงาน "${title}" ให้คนอื่นแล้ว` });
   else if (prevWho && prevWho === who && who !== currentUser.id) notify({ toId:who, type:"task", title:"งานของคุณถูกแก้ไข", message:`${currentUser.name} แก้ไขงาน "${title}"` });
+  coWho.filter(id => !prevCo.includes(id) && id !== currentUser.id && id !== prevWho).forEach(id => notify({ toId:id, type:"task", title:"งานใหม่ได้รับมอบหมาย", message:`คุณเป็นผู้ร่วมงาน "${title}"` }));
   closeModal("editTaskOverlay");
   render();
   toast("แก้ไขงานเรียบร้อย","✏️");
@@ -3012,12 +3052,12 @@ async function checkOp(tid, op, o={}) {
 }
 function toggleCheck(tid, i, el) {
   const t = state.tasks.find(x=>x.id===tid); if (!t || !t.checks[i]) return;
-  if (!canManageTasks() && t.who !== currentUser?.id) { toast("ไม่มีสิทธิ์ติ๊กงานนี้","🔒"); if (el) el.checked = !!t.checks[i].on; return; }
+  if (!canManageTasks() && !isMine(t, currentUser?.id)) { toast("ไม่มีสิทธิ์ติ๊กงานนี้","🔒"); if (el) el.checked = !!t.checks[i].on; return; }
   const on = el ? el.checked : !t.checks[i].on;
   t.checks[i].on = on;   // แสดงผลทันที
   checkOp(tid, "toggle", { idx:i, on });
 }
-function canEditChecklist(t) { return canManageTasks() || (!!t && !!currentUser && t.who === currentUser.id && can("edit_own_task")); }
+function canEditChecklist(t) { return canManageTasks() || (!!t && !!currentUser && isMine(t, currentUser.id) && can("edit_own_task")); }
 function addCheck(tid, inp) {
   const t = state.tasks.find(x=>x.id===tid);
   if (!canEditChecklist(t)) { toast("ไม่มีสิทธิ์","🔒"); return; }
@@ -3062,13 +3102,13 @@ function delCheck(tid, i) {
 }
 async function completeTask(tid) {
   const t = state.tasks.find(x=>x.id===tid); if (!t) return;
-  if (!canManageTasks() && t.who !== currentUser?.id) { toast("ไม่มีสิทธิ์ปิดงานนี้","🔒"); return; }
+  if (!canManageTasks() && !isMine(t, currentUser?.id)) { toast("ไม่มีสิทธิ์ปิดงานนี้","🔒"); return; }
   if (await checkOp(tid, "all", { on:true })) {
     const who = memberById(t.who);
     toast(who ? `เยี่ยม ${who.name}! งานเสร็จแล้ว` : "ทำเสร็จแล้ว", "🎉");
   }
 }
-function canReopenTask(t) { return canManageTasks() || (!!t && !!currentUser && t.who === currentUser.id && can("reopen_task")); }
+function canReopenTask(t) { return canManageTasks() || (!!t && !!currentUser && isMine(t, currentUser.id) && can("reopen_task")); }
 async function reopenTask(tid) {
   if (!canReopenTask(state.tasks.find(x=>x.id===tid))) { toast("ไม่มีสิทธิ์เปิดงานนี้","🔒"); return; }
   if (await checkOp(tid, "all", { on:false })) toast("เปิดงานใหม่แล้ว (รีเซ็ตเชคลิสต์)","↩︎");

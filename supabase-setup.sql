@@ -214,3 +214,8 @@ DROP POLICY IF EXISTS "anon all app_settings" ON app_settings;
 CREATE POLICY "anon all app_settings" ON app_settings FOR ALL USING (TRUE) WITH CHECK (TRUE);
 GRANT SELECT, INSERT, UPDATE, DELETE ON app_settings TO anon, authenticated;
 INSERT INTO app_settings (key, value) VALUES ('login_reset', to_char(now() AT TIME ZONE 'Asia/Bangkok','YYYY-MM-DD')), ('task_reset', to_char(now() AT TIME ZONE 'Asia/Bangkok','YYYY-MM-DD')) ON CONFLICT (key) DO NOTHING;
+
+-- ============================================
+-- 17. ผู้ร่วมงาน (มอบหมายงานได้หลายคน) — who = คนหลัก, co_who = รายชื่อ id ผู้ร่วมงาน
+-- ============================================
+ALTER TABLE tasks ADD COLUMN IF NOT EXISTS co_who JSONB DEFAULT '[]'::JSONB;
