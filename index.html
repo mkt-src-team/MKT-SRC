@@ -793,6 +793,7 @@ button{border-radius:99px;font-weight:500}
       <h2><i class="ti ti-users"></i> ทีมงาน & คะแนนความพึงพอใจ</h2>
       <span class="hint">คะแนน = สัดส่วนงานที่ส่งตรงเวลา · ดีเยี่ยม ≥80% · ดี ≥75% · ปานกลาง ≥50%</span>
     </div>
+    <div id="resetBar"></div>
     <div class="team-grid" id="teamGrid"></div>
   </section>
 
@@ -1304,8 +1305,10 @@ async function pullLogins(force) {
 function missedDays(m) {
   const today = todayStr();
   if (m.lastLoginDate === today) return 0;
-  if (!m.lastLoginDate) return 99;
-  return Math.max(0, Math.floor((new Date(today) - new Date(m.lastLoginDate)) / 86400000));
+  const lr = resetDate("login_reset");
+  const base = (m.lastLoginDate || "") > lr ? m.lastLoginDate : lr;
+  if (!base) return 99;
+  return Math.max(0, Math.floor((new Date(today) - new Date(base)) / 86400000));
 }
 function missLevel(d) { return d >= 3 ? "red" : d === 2 ? "orange" : d === 1 ? "yellow" : ""; }
 const MISS_COLOR = { yellow:"#D4A017", orange:"#E07B24", red:"#D2382B" };
@@ -1419,7 +1422,41 @@ function fmtISO(d){ return `${d.getFullYear()}-${String(d.getMonth()+1).padStart
 function todayStr() { return fmtISO(new Date()); }
 function localDay(ts) { if (!ts) return ""; const d = new Date(ts); return isNaN(d) ? "" : fmtISO(d); }
 function fmtDate(s) { if(!s) return "ไม่กำหนด"; const d = new Date(s+"T00:00:00"); return isNaN(d) ? esc(s) : d.toLocaleDateString("th-TH",{day:"numeric",month:"short",year:"numeric"}); }
-function isOverdue(t) { return t.status!=="done" && !!t.due && t.due < todayStr(); }
+function isOverdue(t) { return t.status!=="done" && !!t.due && t.due < todayStr() && t.due >= resetDate("task_reset"); }
+/* ปุ่มรีเซ็ตสถานะ (Admin) — เก็บวันที่เริ่มนับใหม่ในตาราง app_settings (ใช้ร่วมกันทุกคน) */
+let appSettingsReady = null, appSettingsAt = 0;
+function resetDate(key) { return (state.appSettings && state.appSettings[key]) || ""; }
+async function pullAppSettings(force) {
+  if (!db || !currentUser || (!force && Date.now() - appSettingsAt < 60000)) return;
+  appSettingsAt = Date.now();
+  const r = await db.from("app_settings").select("key,value").then(x => x, () => ({ error:true }));
+  appSettingsReady = !r.error;
+  if (r.error) return;
+  const map = {}; (r.data || []).forEach(x => map[x.key] = x.value);
+  if (JSON.stringify(map) === JSON.stringify(state.appSettings || {})) return;
+  state.appSettings = map; scheduleRender();
+}
+async function doReset(key) {
+  if (!isAdmin()) return;
+  if (appSettingsReady === false) { toast("ต้องรัน SQL ข้อ 16 (app_settings) ใน Supabase ก่อน", "⚠️"); return; }
+  const what = key === "login_reset" ? "สถานะคนไม่เข้าระบบ" : "งานที่เลยกำหนด (ไม่เสร็จตามวันที่กำหนด)";
+  if (!confirm(`รีเซ็ต${what}?
+เริ่มนับใหม่ตั้งแต่วันนี้ (${todayStr()}) เป็นต้นไป`)) return;
+  const today = todayStr();
+  const r = await dbw(db.from("app_settings").upsert({ key, value: today }), "รีเซ็ตไม่สำเร็จ");
+  if (r && r.error) return;
+  state.appSettings = Object.assign({}, state.appSettings, { [key]: today });
+  render(); toast("รีเซ็ตแล้ว เริ่มนับใหม่ตั้งแต่วันนี้", "ti-refresh");
+}
+function renderResetBar() {
+  const el = document.getElementById("resetBar"); if (!el) return;
+  if (!isAdmin()) { el.innerHTML = ""; return; }
+  const lr = resetDate("login_reset"), tr = resetDate("task_reset");
+  el.innerHTML = `<div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:0 0 12px">
+    <button class="btn-ghost btn-sm" onclick="doReset('login_reset')"><i class="ti ti-refresh"></i> รีเซ็ตสถานะคนไม่เข้าระบบ</button>
+    <button class="btn-ghost btn-sm" onclick="doReset('task_reset')"><i class="ti ti-refresh"></i> รีเซ็ตงานเลยกำหนด</button>
+    <span style="font-size:11.5px;color:var(--txt-3)">${lr ? "เข้าระบบนับตั้งแต่ " + esc(lr) : ""}${lr && tr ? " · " : ""}${tr ? "งานนับตั้งแต่ " + esc(tr) : ""}</span></div>`;
+}
 function taskStatus(t) {
   if (t.status==="done") return "done";
   if (isOverdue(t)) return "overdue";
@@ -1531,6 +1568,7 @@ async function pull(force) {
   pullGames();
   pullAvatars(force);
   pullLogins(force);
+  pullAppSettings(force);
 }
 
 /* Realtime: มีการเปลี่ยนแปลงในฐานข้อมูล → ดึงข้อมูลใหม่ทันที (RLS กรองให้เห็นเฉพาะที่มีสิทธิ์) */
@@ -2036,6 +2074,7 @@ function memberScore(m) {
   tasks.forEach(t=>{
     if (taskStatus(t)==="done") {
       const doneDate = localDay(t.completedAt) || todayStr();
+      if (t.due && t.due < resetDate("task_reset")) return;
       if (t.due && doneDate>t.due) late++; else onTime++;
     } else { if (isOverdue(t)) late++; else pending++; }
   });
@@ -2275,8 +2314,9 @@ function openTasks(filter) { state.filter = filter; navigateTo("today-tasks"); }
 /* เช็คอินรายวัน: พนักงาน/เด็กฝึกงานต้องเข้าระบบอย่างน้อยวันละ 1 ครั้ง */
 function loginStatusChip(m) {
   const d = missedDays(m), lv = missLevel(d);
-  const color = lv ? MISS_COLOR[lv] : "var(--success)";
-  const label = !lv ? '<i class="ti ti-check"></i> เข้าระบบวันนี้แล้ว'
+  const color = lv ? MISS_COLOR[lv] : (m.lastLoginDate === todayStr() ? "var(--success)" : "var(--txt-2)");
+  const label = (!lv && m.lastLoginDate !== todayStr()) ? '<i class="ti ti-clock"></i> ยังไม่เข้าระบบวันนี้'
+    : !lv ? '<i class="ti ti-check"></i> เข้าระบบวันนี้แล้ว'
     : !m.lastLoginDate ? '<i class="ti ti-alert-triangle"></i> ยังไม่เคยเข้าระบบ'
     : `<i class="ti ti-alert-triangle"></i> ไม่เข้าระบบ ${d} วัน`;
   const bg = lv === "red" ? "background:rgba(210,56,43,.12);" : "";
@@ -2284,6 +2324,7 @@ function loginStatusChip(m) {
   return `<div class="chip-link" style="border-color:${color};border-width:${lv==="red"?2:1}px;${bg}"><span style="color:${color};font-weight:700">${label}</span><span style="color:var(--txt-2);font-size:11px"><i class="ti ti-login"></i> เดือนนี้เข้าระบบ ${monthLoginCount(m)}/${days} วัน</span></div>`;
 }
 function renderTeam() {
+  renderResetBar();
   const g = document.getElementById("teamGrid");
   if (state.members.length === 0) {
     g.innerHTML = `<div class="empty" style="grid-column:1/-1"><div class="e-emoji"><i class="ti ti-users"></i></div><b>ยังไม่มีสมาชิก</b><br><br>${isAdmin()?'กดปุ่ม "เพิ่มคน" เพื่อเริ่มต้น':"รอ Admin เพิ่มสมาชิก"}</div>`;

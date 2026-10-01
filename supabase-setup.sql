@@ -204,3 +204,13 @@ ALTER TABLE login_days ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "anon all login_days" ON login_days;
 CREATE POLICY "anon all login_days" ON login_days FOR ALL USING (TRUE) WITH CHECK (TRUE);
 GRANT SELECT, INSERT, UPDATE, DELETE ON login_days TO anon, authenticated;
+
+-- ============================================
+-- 16. ค่าตั้งระบบ (ปุ่มรีเซ็ตสถานะ) — key: login_reset / task_reset, value = วันที่เริ่มนับใหม่
+-- ============================================
+CREATE TABLE IF NOT EXISTS app_settings (key TEXT PRIMARY KEY, value TEXT DEFAULT '');
+ALTER TABLE app_settings ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "anon all app_settings" ON app_settings;
+CREATE POLICY "anon all app_settings" ON app_settings FOR ALL USING (TRUE) WITH CHECK (TRUE);
+GRANT SELECT, INSERT, UPDATE, DELETE ON app_settings TO anon, authenticated;
+INSERT INTO app_settings (key, value) VALUES ('login_reset', to_char(now() AT TIME ZONE 'Asia/Bangkok','YYYY-MM-DD')), ('task_reset', to_char(now() AT TIME ZONE 'Asia/Bangkok','YYYY-MM-DD')) ON CONFLICT (key) DO NOTHING;
