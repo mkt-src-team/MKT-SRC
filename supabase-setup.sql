@@ -219,3 +219,15 @@ INSERT INTO app_settings (key, value) VALUES ('login_reset', to_char(now() AT TI
 -- 17. ผู้ร่วมงาน (มอบหมายงานได้หลายคน) — who = คนหลัก, co_who = รายชื่อ id ผู้ร่วมงาน
 -- ============================================
 ALTER TABLE tasks ADD COLUMN IF NOT EXISTS co_who JSONB DEFAULT '[]'::JSONB;
+
+-- ============================================
+-- 18. คลังความรู้ "ไอเดีย & AI" — ที่ทีมเพิ่มเอง (เนื้อหาพื้นฐานฝังในเว็บอยู่แล้ว)
+-- ============================================
+CREATE TABLE IF NOT EXISTS ideas (
+  id TEXT PRIMARY KEY, cat TEXT NOT NULL, title TEXT NOT NULL, body TEXT DEFAULT '',
+  author_id TEXT DEFAULT '', author_name TEXT DEFAULT '', created_at TIMESTAMPTZ DEFAULT NOW()
+);
+ALTER TABLE ideas ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "anon all ideas" ON ideas;
+CREATE POLICY "anon all ideas" ON ideas FOR ALL USING (TRUE) WITH CHECK (TRUE);
+GRANT SELECT, INSERT, UPDATE, DELETE ON ideas TO anon, authenticated;

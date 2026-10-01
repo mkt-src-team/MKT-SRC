@@ -644,6 +644,18 @@ button{border-radius:99px;font-weight:500}
 .field .co-chip input{width:15px;height:15px;padding:0;margin:0;flex:none;accent-color:var(--accent)}
 .field .co-chip:has(input:checked){border-color:var(--txt);background:var(--layer-2);font-weight:600}
 .field .co-chip.is-main{opacity:.4;cursor:default}
+.idea-tabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:14px;scrollbar-width:none}
+.idea-tab{flex:none;display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:999px;border:1px solid var(--stroke-2);background:var(--layer);color:var(--txt-2);font:inherit;font-size:13.5px;cursor:pointer;white-space:nowrap}
+.idea-tab.active{background:var(--accent);color:var(--bg);border-color:var(--accent);font-weight:600}
+.idea-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px;margin-bottom:16px}
+.idea-card{background:var(--layer);border:1px solid var(--stroke);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.idea-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.idea-top h4{margin:0;font-family:Kanit,sans-serif;font-size:15px;font-weight:600}
+.idea-body{white-space:pre-wrap;font-size:13.5px;line-height:1.6;color:var(--txt-2);word-break:break-word}
+.idea-meta{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--txt-3)}
+.idea-sub{font-size:12px;color:var(--txt-3);margin:4px 0 8px;text-transform:uppercase;letter-spacing:.04em}
+.idea-form{margin-bottom:14px}
+.idea-form input,.idea-form select,.idea-form textarea{font:inherit;font-size:14px;padding:9px 11px;border:1px solid var(--stroke-2);border-radius:10px;background:var(--control);color:var(--txt);width:100%;box-sizing:border-box}
 .ctext-input{flex:1;min-width:0;font:inherit;font-size:14px;color:var(--txt);background:transparent;border:1px solid transparent;border-radius:8px;padding:5px 8px;outline:none}
 .ctext-input:hover{border-color:var(--stroke-2)}
 .ctext-input:focus,.ctext-input.editing{border-color:var(--txt);background:var(--control)}
@@ -1180,6 +1192,7 @@ let tlCollapsed = {}; // ไทม์ไลน์งาน: เก็บว่�
 let sidebarState = { activeGroup:'overview', activeItem:'dashboard', collapsed:false, collapsedGroups:[], mobileOpen:false };
 
 const SB_ICON = {
+  bulb:'<svg viewBox="0 0 24 24"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.6 10.8c.6.5 1 1.2 1 2V16h5.2v-.2c0-.8.4-1.5 1-2A6 6 0 0 0 12 3z"/></svg>',
   dashboard:'<svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>',
   today:'<svg viewBox="0 0 24 24"><path d="m3 7 2 2 4-4"/><path d="m3 17 2 2 4-4"/><path d="M13 6h8M13 12h8M13 18h8"/></svg>',
   calendar:'<svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/><path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01"/></svg>',
@@ -1196,6 +1209,9 @@ const SIDEBAR_MENU = [
   { group:'plan', label:'วางแผน', items:[
     { id:'event-cal', label:'ปฏิทิน', icon:'calendar' },
     { id:'campaign-timeline', label:'ไทม์ไลน์งาน', icon:'timeline', perm:'view_all_tasks' }
+  ]},
+  { group:'knowledge', label:'คลังความรู้', items:[
+    { id:'idea-hub', label:'ไอเดีย & AI', icon:'bulb' }
   ]},
   { group:'break', label:'พักสมอง', items:[
     { id:'game-snake', label:'เกมงู', icon:'snake' },
@@ -1320,7 +1336,7 @@ function missedDays(m) {
 function missLevel(d) { return d >= 3 ? "red" : d === 2 ? "orange" : d === 1 ? "yellow" : ""; }
 const MISS_COLOR = { yellow:"#D4A017", orange:"#E07B24", red:"#D2382B" };
 function monthLoginCount(m) { return (state.loginDays && state.loginDays[m.id]) ? state.loginDays[m.id].length : (m.lastLoginDate >= monthStart() ? 1 : 0); }
-function isCheckinRank(m) { return (m.rank === "employee" || m.rank === "intern") && m.status !== "inactive"; }
+function isCheckinRank(m) { return ["employee","intern","dev"].includes(m.rank) && m.status !== "inactive"; }
 async function pullAvatars(force) {
   if (!db || !currentUser || (!force && Date.now() - avatarsAt < 60000)) return;
   avatarsAt = Date.now();
@@ -2230,6 +2246,7 @@ function renderMobileActions() {
     <div class="more-games">
       <button class="btn-ghost" onclick="closeSidebarMobile();bottomNavGo('game-snake')"><i class="ti ti-device-gamepad-2"></i>เกมงู</button>
       <button class="btn-ghost" onclick="closeSidebarMobile();bottomNavGo('game-wheel')"><i class="ti ti-chart-pie"></i>วงล้อสุ่ม</button>
+      <button class="btn-ghost" onclick="closeSidebarMobile();bottomNavGo('idea-hub')"><i class="ti ti-bulb"></i>ไอเดีย & AI</button>
     </div>
     <div class="more-label">ธีม</div>
     <div style="display:flex;gap:6px">
@@ -2433,7 +2450,7 @@ function renderTeam() {
       </div>`;
     }
     const notMigrated = isAdmin() && !m.authUid;
-    return `<div class="member${((rk==="employee"||rk==="intern") && ["orange","red"].includes(missLevel(missedDays(m)))) ? " miss-run miss-" + missLevel(missedDays(m)) : ""}">
+    return `<div class="member${((rk==="employee"||rk==="intern"||rk==="dev") && ["orange","red"].includes(missLevel(missedDays(m)))) ? " miss-run miss-" + missLevel(missedDays(m)) : ""}">
       ${removeBtn}
       <div class="top">
         <div class="avatar${champCls(m.id)}">${avatarInner(m.name, m.id)}${champDeco(m.id)}</div>
@@ -2448,7 +2465,7 @@ function renderTeam() {
         <span class="chip" style="color:var(--danger)"><i class="ti ti-alert-triangle"></i> <b>${s.late}</b> เลยกำหนด</span>
         <span class="chip"><i class="ti ti-hourglass"></i> <b>${s.pending}</b> ค้าง</span>
       </div>
-      ${(rk==="employee"||rk==="intern")?loginStatusChip(m):""}
+      ${(rk==="employee"||rk==="intern"||rk==="dev")?loginStatusChip(m):""}
       ${isAdmin()?`<div class="perm-bar"><span>${(m.rank==="boss"||m.rank==="dev")?"สิทธิ์เต็ม":(Object.keys(m.perms||{}).length?'<i class="ti ti-settings"></i> ปรับสิทธิ์เฉพาะคน '+Object.keys(m.perms).length+" รายการ":"สิทธิ์ตามตำแหน่ง")}</span><button class="btn-ghost btn-sm" onclick="openPermModal('${id}')"><i class="ti ti-settings"></i> ตำแหน่ง/สิทธิ์</button></div>`:""}
       ${notMigrated?`<div class="chip-link" title="สมาชิกคนนี้ยังไม่เคยเข้าระบบเวอร์ชันใหม่ — เข้าได้ด้วยรหัสเดิม หรือส่งลิงก์เชิญใหม่ให้"><span><i class="ti ti-alert-triangle"></i> ยังไม่ย้ายเข้าระบบใหม่</span><button class="btn-ghost btn-sm" onclick="resendInvite('${id}')"><i class="ti ti-link"></i> ส่งลิงก์</button></div>`:""}
     </div>`;
@@ -2553,6 +2570,7 @@ function routeView() {
   else if (v === "campaign-timeline") { showDefaultSections(false); renderCampaignTimeline(); }
   else if (v === "game-snake") { showDefaultSections(false); renderSnakeView(); }
   else if (v === "game-wheel") { showDefaultSections(false); renderWheelView(); }
+  else if (v === "idea-hub") { showDefaultSections(false); renderIdeasView(); }
   else { vr.innerHTML = ""; showDefaultSections(true); renderStats(); renderBoard(); renderRequests(); renderTeam(); }
   // ปุ่มลอย ➕ เพิ่มงาน ทับแถวสุดท้ายของตารางปฏิทินพอดี (มือถือ) แตะช่องปฏิทินแล้วดันไปโดนปุ่มนี้แทน ซ่อนตอนอยู่หน้าปฏิทิน (มีปุ่ม "เพิ่มอีเวนต์" ของตัวเองอยู่แล้ว)
   const fab = document.getElementById("mobileFab");
@@ -3722,6 +3740,123 @@ function spinWheel() {
     }
     pullGames();
   }, 4100);
+}
+
+/* ============ คลังความรู้: ไอเดีย & AI ============ */
+/* เนื้อหาตั้งต้น (ฝังในเว็บ) + ที่ทีมเพิ่มเอง (ตาราง ideas — SQL ข้อ 18) */
+const IDEA_CATS = [
+  { id:"hook",   label:"Hook คลิป",        icon:"ti-bolt" },
+  { id:"tools",  label:"เครื่องมือ AI",     icon:"ti-tool" },
+  { id:"prompt", label:"Prompt สำคัญ",      icon:"ti-message-chatbot" },
+  { id:"howto",  label:"ใช้ AI ให้ถูกวิธี",  icon:"ti-shield-check" },
+  { id:"idea",   label:"ไอเดียคอนเทนต์",    icon:"ti-bulb" }
+];
+const IDEA_SEED = {
+  hook: [
+    { t:"ตั้งคำถามโดนใจ", b:"\"รู้ไหม…ผ่อนรถเดือนละเท่านี้ ได้รถป้ายแดงแล้ว?\"\n\"ทำไมคนซื้อรถ 9 ใน 10 พลาดเรื่องนี้?\"\nใช้ 1–2 วินาทีแรก คนต้องอยากรู้คำตอบ" },
+    { t:"ตัวเลขชัด ๆ", b:"\"ดาวน์ 0 บาท ผ่อน 5,xxx\" / \"ประหยัดน้ำมัน 1 ปี ได้เงินคืน 20,000\"\nตัวเลขขึ้นจอใหญ่ตั้งแต่เฟรมแรก" },
+    { t:"Before / After", b:"รถก่อนเคลือบ vs หลังเคลือบ, ห้องโดยสารก่อน-หลังทำความสะอาด, ลูกค้าก่อน-หลังรับรถ\nตัดสลับเร็วภายใน 3 วินาที" },
+    { t:"ความลับ / เบื้องหลัง", b:"\"เซลส์ไม่ค่อยบอกเรื่องนี้…\" / \"เบื้องหลังวันส่งมอบรถ\" / \"ห้องซ่อมที่ลูกค้าไม่เคยเห็น\"" },
+    { t:"ผิดคาด (Pattern break)", b:"เริ่มด้วยภาพแปลกตา เสียงดัง หรือคำพูดสวนทาง เช่น \"อย่าเพิ่งซื้อรถ ถ้ายังไม่ดูคลิปนี้\"" },
+    { t:"เรียกกลุ่มเป้าหมายตรง ๆ", b:"\"มนุษย์เงินเดือน 15,000 อยากมีรถ ดูคลิปนี้\" / \"คุณแม่ที่หารถครอบครัว 7 ที่นั่ง\"" },
+    { t:"เรื่องเล่าลูกค้าจริง", b:"\"ลุงคนนี้เก็บเงิน 3 ปี เพื่อซื้อรถคันแรกให้ลูก…\" — เปิดด้วยอารมณ์ ปิดด้วยวันรับรถ" },
+    { t:"รีวิว / เทียบรุ่น", b:"\"รุ่น A vs รุ่น B ต่างกันตรงไหน จบในคลิปเดียว\" / \"3 ข้อที่ต้องเช็คก่อนเซ็นสัญญา\"" },
+    { t:"เทรนด์ + เสียงฮิต", b:"ใช้เสียง/มีมที่กำลังฮิตใน TikTok/Reels แล้วเล่าเรื่องรถให้เข้ากับมุกนั้น — เช็คเทรนด์ทุกสัปดาห์" },
+    { t:"สูตรโครงคลิปสั้น", b:"0–3 วิ: Hook\n3–15 วิ: ปัญหา/ประโยชน์\n15–40 วิ: เนื้อหา/โชว์รถ/โปร\n5 วิท้าย: CTA (ทักแชท / โทร / มาโชว์รูม)" }
+  ],
+  tools: [
+    { t:"เขียนสคริปต์ / แคปชั่น / ไอเดีย", b:"ChatGPT, Claude, Gemini — ระดมไอเดีย เขียนสคริปต์คลิป แคปชั่น โพสต์ ตอบแชทลูกค้า\nเคล็ดลับ: ให้ข้อมูลรุ่นรถ/โปรจริงก่อนทุกครั้ง" },
+    { t:"สร้างภาพ", b:"Midjourney, ChatGPT (สร้างภาพ), Gemini (Imagen), Adobe Firefly, Ideogram (ภาพมีตัวอักษร)\nใช้ทำภาพประกอบ/พื้นหลัง/คอนเซ็ปต์ — ห้ามสร้างรูปรถรุ่นจริงแบบหลอกว่าเป็นของจริง" },
+    { t:"สร้าง / ตัดต่อวิดีโอ", b:"CapCut (มี AI ตัดต่อ ซับอัตโนมัติ ลบพื้นหลัง), Runway, Kling, Google Veo, Pika — ทำ B-roll หรือฉากเปิดคลิป\nVideo จาก AI ใช้เสริม ไม่ใช่แทนภาพรถจริง" },
+    { t:"เสียงพากย์ / เพลง", b:"ElevenLabs (พากย์เสียง), CapCut Text-to-Speech, Suno (เพลงประกอบ)\nเช็คสิทธิ์การใช้งานเชิงพาณิชย์ก่อนลงโฆษณา" },
+    { t:"ซับไตเติล / ถอดเสียง", b:"CapCut Auto Caption, Whisper — ถอดเสียงไทยแล้วตรวจคำผิดทุกครั้ง (ชื่อรุ่น ตัวเลขราคา)" },
+    { t:"ออกแบบกราฟิก", b:"Canva (Magic Design / Magic Write), Adobe Express — ทำโพสต์ แบนเนอร์ สตอรี่ ตามแบรนด์" },
+    { t:"Remove background / แต่งรูป", b:"Photoroom, remove.bg, Photoshop Generative Fill — ตัดรถออกจากพื้นหลัง ทำภาพสินค้าให้สะอาด" },
+    { t:"วิเคราะห์ / สรุป", b:"ใช้ AI สรุปคอมเมนต์ลูกค้า สรุปผลโฆษณา วิเคราะห์คู่แข่ง จากข้อมูลที่เราใส่ให้" }
+  ],
+  prompt: [
+    { t:"สคริปต์คลิปสั้น 30–45 วิ", b:"คุณคือครีเอเตอร์สายรถยนต์ เขียนสคริปต์คลิป TikTok ความยาว 40 วินาที เพื่อขาย [รุ่นรถ] \nกลุ่มเป้าหมาย: [เช่น คนทำงานอายุ 25–35 ซื้อรถคันแรก]\nโปรโมชัน: [รายละเอียดโปรจริง]\nขอ: Hook 3 แบบให้เลือก, บทพูดแยกเป็นช่วงเวลา, ภาพที่ต้องถ่ายแต่ละช่วง, CTA ตอนท้าย\nภาษา: ไทย เป็นกันเอง ไม่โอเวอร์" },
+    { t:"แคปชั่นโพสต์ขายรถ", b:"เขียนแคปชั่น Facebook 3 เวอร์ชัน (สั้น / กลาง / ยาว) สำหรับ [รุ่นรถ] จุดเด่น: [ระบุ]\nโปร: [ระบุ] ปิดท้ายด้วยช่องทางติดต่อ ใส่อีโมจิพอดี ใส่แฮชแท็ก 5 อัน" },
+    { t:"ไอเดียคอนเทนต์ทั้งเดือน", b:"วางแผนคอนเทนต์ 1 เดือน สำหรับโชว์รูมรถยนต์ [แบรนด์] ใน [จังหวัด]\nสัดส่วน: ขายของ 30% / ให้ความรู้ 40% / เบื้องหลัง-ลูกค้า 30%\nทำเป็นตาราง: วันที่, หัวข้อ, รูปแบบ (คลิป/รูป/สตอรี่), Hook, ช่องทาง" },
+    { t:"สร้างภาพ (Image prompt)", b:"Photo of a modern showroom at golden hour, a [color] [car type] parked in front, clean reflection floor, cinematic lighting, wide angle, 4:5 ratio, no text, no logo\n(ใส่ข้อความ/โลโก้ภายหลังใน Canva จะคมกว่า)" },
+    { t:"ตอบแชท / คอมเมนต์ลูกค้า", b:"ลูกค้าถามว่า: \"[คำถาม]\" ช่วยร่างคำตอบสุภาพ เป็นกันเอง ไม่เกิน 3 บรรทัด ชวนให้ทักแชทหรือนัดดูรถ ห้ามให้ข้อมูลราคาที่ไม่ได้ระบุ" },
+    { t:"สรุปคู่แข่ง", b:"จากข้อมูลโพสต์คู่แข่งต่อไปนี้ [วางข้อมูล] สรุป: เขาทำคอนเทนต์แบบไหน, โปรอะไร, จุดที่เราทำได้ดีกว่า, ไอเดียที่เราควรลอง 5 ข้อ" },
+    { t:"รีไรท์ให้ปัง", b:"ปรับข้อความนี้ให้ดึงดูดขึ้น สั้นลง 30% เหมาะกับคนอ่านบนมือถือ คงข้อมูลสำคัญทุกตัวเลขไว้: [วางข้อความ]" },
+    { t:"Prompt ที่ดี = 5 ส่วน", b:"1) บทบาท (คุณคือ…)\n2) งาน (ทำอะไร)\n3) ข้อมูลจริง (รุ่น ราคา โปร กลุ่มเป้าหมาย)\n4) รูปแบบผลลัพธ์ (ตาราง / 3 เวอร์ชัน / ยาวกี่คำ)\n5) ข้อห้าม (ห้ามแต่งตัวเลข ห้ามใช้คำเกินจริง)" }
+  ],
+  howto: [
+    { t:"AI ช่วยร่าง คนตัดสิน", b:"ใช้ AI ทำร่างแรกให้เร็ว แต่คนต้องอ่าน แก้ และรับผิดชอบงานก่อนโพสต์ทุกครั้ง" },
+    { t:"ตรวจข้อเท็จจริงทุกตัวเลข", b:"ราคา ดอกเบี้ย สเปกรถ เงื่อนไขโปร — AI แต่งตัวเลขเองได้ ต้องเทียบกับเอกสารจริงจากบริษัททุกครั้ง" },
+    { t:"ห้ามใส่ข้อมูลลับ / ข้อมูลลูกค้า", b:"ไม่วางชื่อ เบอร์โทร เลขบัตร ข้อมูลสินเชื่อของลูกค้า หรือเอกสารภายใน ลงในเครื่องมือ AI สาธารณะ" },
+    { t:"ไม่หลอกลวง", b:"ไม่สร้างภาพ/คลิปที่ทำให้ลูกค้าเข้าใจผิด เช่น รถสีหรือออปชันที่ไม่มีจริง รีวิวปลอม หรือคนจริงที่ไม่ได้ยินยอม" },
+    { t:"ลิขสิทธิ์ & แบรนด์", b:"ใช้โลโก้ ฟอนต์ เพลง ตามสิทธิ์ที่ได้รับ เช็คเงื่อนไขเชิงพาณิชย์ของเครื่องมือ AI และ CI ของแบรนด์รถ" },
+    { t:"ให้บริบทเยอะ ได้ผลดีขึ้น", b:"ยิ่งบอกกลุ่มเป้าหมาย โทนเสียง ตัวอย่างงานที่ชอบ ผลยิ่งตรง — ถ้ายังไม่ถูกใจ ให้สั่งแก้ต่อในแชทเดิม" },
+    { t:"เก็บ Prompt ที่ใช้ได้ผล", b:"Prompt ไหนได้งานดี เพิ่มเข้าหน้านี้ (ปุ่ม \"เพิ่ม\") ให้ทีมใช้ต่อ — ทีมเก่งขึ้นพร้อมกัน" },
+    { t:"วัดผลจริง", b:"ลองหลายเวอร์ชัน (A/B) ดูยอดวิว คนทัก ยอดจอง — ไม่ใช่แค่ AI บอกว่าดี" }
+  ],
+  idea: [
+    { t:"วันส่งมอบรถ", b:"ถ่ายลูกค้ารับรถ + คำพูดสั้น ๆ (ขออนุญาตก่อน) — คอนเทนต์ที่สร้างความเชื่อใจดีที่สุด" },
+    { t:"ถาม-ตอบ 1 นาที", b:"รวมคำถามที่ลูกค้าถามบ่อยในแชท แล้วตอบเป็นคลิปสั้นทีละข้อ" },
+    { t:"เซลส์พาทัวร์รถ", b:"เดินรอบคัน โชว์ฟีเจอร์ 3 อย่างที่คนไม่รู้ ภายใน 30 วินาที" },
+    { t:"Day in the life ทีมโชว์รูม", b:"เบื้องหลังวันทำงาน เตรียมรถ ล้างรถ จัดโชว์รูม — ทำให้แบรนด์ดูเป็นคน" }
+  ]
+};
+let ideaCat = "hook", ideasReady = null, ideasAt = 0;
+async function pullIdeas(force) {
+  if (!db || !currentUser || (!force && Date.now() - ideasAt < 60000)) return;
+  ideasAt = Date.now();
+  const r = await db.from("ideas").select("*").order("created_at", { ascending:false }).then(x => x, () => ({ error:true }));
+  ideasReady = !r.error;
+  if (r.error) return;
+  const snap = JSON.stringify(r.data || []);
+  if (snap === JSON.stringify(state.ideas || [])) return;
+  state.ideas = r.data || []; if (sidebarState.activeItem === "idea-hub") scheduleRender();
+}
+function setIdeaCat(c) { ideaCat = c; renderIdeasView(); }
+function copyIdea(btn) {
+  const txt = btn.closest(".idea-card").querySelector(".idea-body").innerText;
+  (navigator.clipboard ? navigator.clipboard.writeText(txt) : Promise.reject()).then(() => toast("คัดลอกแล้ว", "ti-copy"), () => toast("คัดลอกไม่สำเร็จ", "⚠️"));
+}
+function renderIdeasView() {
+  const vr = document.getElementById("viewRoot");
+  pullIdeas();
+  const cat = IDEA_CATS.find(c => c.id === ideaCat) || IDEA_CATS[0];
+  const team = (state.ideas || []).filter(x => x.cat === cat.id);
+  const card = (t, b, extra) => `<div class="idea-card"><div class="idea-top"><h4>${esc(t)}</h4><button class="btn-ghost btn-sm" onclick="copyIdea(this)" title="คัดลอก"><i class="ti ti-copy"></i></button></div><div class="idea-body">${esc(b)}</div>${extra || ""}</div>`;
+  const teamHtml = team.map(x => card(x.title, x.body, `<div class="idea-meta"><span><i class="ti ti-user"></i> ${esc(x.author_name || "")}</span>${(isAdmin() || x.author_id === currentUser.id) ? `<button class="btn-ghost btn-sm" onclick="deleteIdea('${esc(x.id)}')"><i class="ti ti-trash"></i></button>` : ""}</div>`)).join("");
+  vr.innerHTML = `<section class="idea-view">
+    <div class="sec-head"><h2><i class="ti ti-bulb"></i> ไอเดีย & AI</h2><button class="btn-primary btn-sm" onclick="openIdeaForm()"><i class="ti ti-plus"></i> เพิ่ม</button></div>
+    <div class="idea-tabs">${IDEA_CATS.map(c => `<button class="idea-tab ${c.id === cat.id ? "active" : ""}" onclick="setIdeaCat('${c.id}')"><i class="ti ${c.icon}"></i> ${c.label}</button>`).join("")}</div>
+    <div id="ideaForm"></div>
+    ${team.length ? `<div class="idea-sub">จากทีม (${team.length})</div><div class="idea-grid">${teamHtml}</div><div class="idea-sub">พื้นฐาน</div>` : ""}
+    <div class="idea-grid">${(IDEA_SEED[cat.id] || []).map(x => card(x.t, x.b)).join("")}</div>
+  </section>`;
+}
+function openIdeaForm() {
+  if (ideasReady === false) { toast("ต้องรัน SQL ข้อ 18 (ตาราง ideas) ใน Supabase ก่อน", "⚠️"); return; }
+  const el = document.getElementById("ideaForm"); if (!el) return;
+  el.innerHTML = `<div class="idea-card idea-form">
+    <select id="ideaCatIn">${IDEA_CATS.map(c => `<option value="${c.id}" ${c.id === ideaCat ? "selected" : ""}>${c.label}</option>`).join("")}</select>
+    <input id="ideaTitleIn" placeholder="หัวข้อ เช่น Hook ที่ได้ยอดวิวสูง">
+    <textarea id="ideaBodyIn" rows="5" placeholder="รายละเอียด / prompt / ตัวอย่าง"></textarea>
+    <div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn-ghost btn-sm" onclick="document.getElementById('ideaForm').innerHTML=''">ยกเลิก</button><button class="btn-primary btn-sm" onclick="saveIdea()"><i class="ti ti-check"></i> บันทึก</button></div></div>`;
+  document.getElementById("ideaTitleIn").focus();
+}
+async function saveIdea() {
+  const cat = document.getElementById("ideaCatIn").value, title = document.getElementById("ideaTitleIn").value.trim(), body = document.getElementById("ideaBodyIn").value.trim();
+  if (!title || !body) { toast("ใส่หัวข้อและรายละเอียดก่อน", "⚠️"); return; }
+  const row = { id:uid(), cat, title, body, author_id:currentUser.id, author_name:currentUser.name };
+  const r = await dbw(db.from("ideas").insert(row), "บันทึกไม่สำเร็จ");
+  if (r && r.error) return;
+  state.ideas = [Object.assign({ created_at:new Date().toISOString() }, row), ...(state.ideas || [])];
+  ideaCat = cat; renderIdeasView(); toast("เพิ่มแล้ว ขอบคุณที่แชร์", "ti-bulb");
+}
+async function deleteIdea(id) {
+  const x = (state.ideas || []).find(i => i.id === id); if (!x) return;
+  if (!(isAdmin() || x.author_id === currentUser.id)) return;
+  if (!confirm(`ลบ "${x.title}"?`)) return;
+  state.ideas = state.ideas.filter(i => i.id !== id); renderIdeasView();
+  dbw(db.from("ideas").delete().eq("id", id), "ลบไม่สำเร็จ");
 }
 
 /* ============ PROFILE ============ */
