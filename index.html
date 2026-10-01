@@ -3858,15 +3858,22 @@ function renderIdeasView() {
 function openIdeaForm() {
   if (ideasReady === false) { toast("ต้องรัน SQL ข้อ 18 (ตาราง ideas) ใน Supabase ก่อน", "⚠️"); return; }
   const el = document.getElementById("ideaForm"); if (!el) return;
+  const cat = IDEA_CATS.find(c => c.id === ideaCat) || IDEA_CATS[0];
+  const ph = {
+    hook:  ["ชื่อ Hook เช่น ถามคำถามให้ทาย", "ประโยค/ภาพเปิดคลิป 3 วินาทีแรก + ตัวอย่างการใช้"],
+    tools: ["ชื่อเครื่องมือ AI เช่น CapCut", "ใช้ทำอะไร / เด่นตรงไหน / ฟรีหรือเสียเงิน"],
+    howto: ["หัวข้อ เช่น ตรวจตัวเลขก่อนโพสต์", "ข้อควรทำ / ข้อห้าม และเหตุผล"],
+    idea:  ["ชื่อไอเดีย เช่น วันส่งมอบรถ", "ทำยังไง / ถ่ายอะไร / ลิงก์ตัวอย่างหรือยอดวิว (ถ้ามี)"]
+  }[cat.id] || ["หัวข้อ", "รายละเอียด"];
   el.innerHTML = `<div class="idea-card idea-form">
-    <select id="ideaCatIn">${IDEA_CATS.map(c => `<option value="${c.id}" ${c.id === ideaCat ? "selected" : ""}>${c.label}</option>`).join("")}</select>
-    <input id="ideaTitleIn" placeholder="หัวข้อ เช่น Hook ที่ได้ยอดวิวสูง">
-    <textarea id="ideaBodyIn" rows="5" placeholder="รายละเอียด / prompt / ตัวอย่าง"></textarea>
+    <div style="font-weight:600;font-family:Kanit,sans-serif"><i class="ti ${cat.icon}"></i> เพิ่มใน "${cat.label}"</div>
+    <input id="ideaTitleIn" placeholder="${ph[0]}">
+    <textarea id="ideaBodyIn" rows="5" placeholder="${ph[1]}"></textarea>
     <div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn-ghost btn-sm" onclick="document.getElementById('ideaForm').innerHTML=''">ยกเลิก</button><button class="btn-primary btn-sm" onclick="saveIdea()"><i class="ti ti-check"></i> บันทึก</button></div></div>`;
   document.getElementById("ideaTitleIn").focus();
 }
 async function saveIdea() {
-  const cat = document.getElementById("ideaCatIn").value, title = document.getElementById("ideaTitleIn").value.trim(), body = document.getElementById("ideaBodyIn").value.trim();
+  const cat = ideaCat, title = document.getElementById("ideaTitleIn").value.trim(), body = document.getElementById("ideaBodyIn").value.trim();
   if (!title || !body) { toast("ใส่หัวข้อและรายละเอียดก่อน", "⚠️"); return; }
   const row = { id:uid(), cat, title, body, author_id:currentUser.id, author_name:currentUser.name };
   const r = await dbw(db.from("ideas").insert(row), "บันทึกไม่สำเร็จ");
