@@ -1361,7 +1361,12 @@ function missedDays(m) {
 }
 function missLevel(d) { return d >= 3 ? "red" : d === 2 ? "orange" : d === 1 ? "yellow" : ""; }
 const MISS_COLOR = { yellow:"#D4A017", orange:"#E07B24", red:"#D2382B" };
-function monthLoginCount(m) { return (state.loginDays && state.loginDays[m.id]) ? state.loginDays[m.id].length : (m.lastLoginDate >= monthStart() ? 1 : 0); }
+function monthLoginCount(m) {
+  // รวมวันจาก login_days + วันเข้าระบบล่าสุดของสมาชิก (กันกรณีบันทึกวันนั้นลงตารางไม่ทัน)
+  const days = new Set((state.loginDays && state.loginDays[m.id]) || []);
+  if (m.lastLoginDate && m.lastLoginDate >= monthStart()) days.add(m.lastLoginDate);
+  return days.size;
+}
 function isCheckinRank(m) { return ["employee","intern","dev"].includes(m.rank) && m.status !== "inactive"; }
 async function pullAvatars(force) {
   if (!db || !currentUser || (!force && Date.now() - avatarsAt < 60000)) return;
