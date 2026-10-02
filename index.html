@@ -3,6 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" id="viewportMeta" content="width=device-width, initial-scale=1.0">
+<link rel="icon" type="image/png" href="assets/favicon.png">
+<link rel="apple-touch-icon" href="assets/logo-256.png">
 <title>MKT-SRC | ทีมงานและการมอบหมายงาน</title>
 
 <script>
@@ -676,6 +678,10 @@ button{border-radius:99px;font-weight:500}
 .ir-body{padding:0 16px 14px}
 .ir-foot{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:10px}
 .ir-foot .idea-meta{flex:1}
+/* โลโก้ Sirichai: กล่องขาวเสมอ (ทั้งธีมสว่าง/มืด) */
+.logo .badge.brand-img,.sidebar-brand .badge.brand-img,.auth-logo.brand-img{background:#fff!important;padding:3px;overflow:hidden;border:1px solid var(--stroke)}
+.brand-img img{width:100%;height:100%;object-fit:contain;display:block}
+.auth-logo.brand-img{width:96px;height:96px;padding:6px}
 .ctext-input{flex:1;min-width:0;font:inherit;font-size:14px;color:var(--txt);background:transparent;border:1px solid transparent;border-radius:8px;padding:5px 8px;outline:none}
 .ctext-input:hover{border-color:var(--stroke-2)}
 .ctext-input:focus,.ctext-input.editing{border-color:var(--txt);background:var(--control)}
@@ -747,7 +753,7 @@ button{border-radius:99px;font-weight:500}
 <aside id="sidebar">
   <div class="sidebar-header">
     <div class="sidebar-brand">
-      <div class="badge"><i class="ti ti-steering-wheel"></i></div>
+      <div class="badge brand-img"><img src="assets/logo-256.png" alt="Sirichai Motorsales"></div>
       <div class="text"><b>MKT-<span class="src">SRC</span></b><small>Marketing Workspace</small></div>
     </div>
     <button class="sidebar-collapse-btn" onclick="toggleSidebarCollapse()" title="ย่อ/ขยายเมนู" aria-label="ย่อ/ขยายเมนู">
@@ -774,7 +780,7 @@ button{border-radius:99px;font-weight:500}
 
 <header>
   <div class="logo">
-    <div class="badge"><i class="ti ti-steering-wheel"></i></div>
+    <div class="badge brand-img"><img src="assets/logo-256.png" alt="Sirichai Motorsales"></div>
     <div>
       <h1>MKT-<span class="src">SRC</span></h1>
       <small>ระบบติดตามงานทีม • เชคลิสต์ • คะแนนความพึงพอใจ</small>
@@ -840,7 +846,7 @@ button{border-radius:99px;font-weight:500}
 <!-- AUTH MODAL -->
 <div class="overlay auth-overlay" id="authOverlay">
   <div class="modal auth-modal">
-    <div class="auth-logo"><i class="ti ti-steering-wheel"></i></div>
+    <div class="auth-logo brand-img"><img src="assets/logo-256.png" alt="Sirichai Motorsales"></div>
     <h3>MKT-<span class="src">SRC</span></h3>
     <p class="desc" id="authDesc">ระบบติดตามงานทีม • เข้าสู่ระบบ</p>
     <div class="auth-tabs" id="authTabs">
