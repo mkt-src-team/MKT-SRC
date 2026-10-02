@@ -682,6 +682,10 @@ button{border-radius:99px;font-weight:500}
 .logo .badge.brand-img,.sidebar-brand .badge.brand-img,.auth-logo.brand-img{background:#fff!important;padding:3px;overflow:hidden;border:1px solid var(--stroke)}
 .brand-img img{width:100%;height:100%;object-fit:contain;display:block}
 .auth-logo.brand-img{width:96px;height:96px;padding:6px}
+.dd-row{display:flex;align-items:flex-start;gap:8px}
+.dd-main{flex:1;min-width:0}
+.dd-acts{display:flex;gap:4px;flex:none}
+.dd-acts .btn-sm{padding:4px 8px}
 .ctext-input{flex:1;min-width:0;font:inherit;font-size:14px;color:var(--txt);background:transparent;border:1px solid transparent;border-radius:8px;padding:5px 8px;outline:none}
 .ctext-input:hover{border-color:var(--stroke-2)}
 .ctext-input:focus,.ctext-input.editing{border-color:var(--txt);background:var(--control)}
@@ -2749,8 +2753,8 @@ function openDayDetail(ds) {
   const evs = state.events.filter(e=>e.date===ds);
   const tasks = visibleTasks().filter(t=>t.due===ds && taskStatus(t)!=="done");
   const rows = [
-    ...evs.map(e=>`<div class="ev-chip t-${evType(e.type)}" style="white-space:normal;margin-bottom:6px;padding:8px 10px"><i class="ti ${EV_ICON[evType(e.type)]}"></i> ${esc(e.title)}${e.time?" · "+esc(e.time):""}${e.desc?`<div style="font-size:11px;font-weight:400;color:var(--txt-2);margin-top:3px">${esc(e.desc)}</div>`:""}</div>`),
-    ...tasks.map(t=>{ const who = memberById(t.who); return `<div class="ev-chip t-task ${isOverdue(t)?'overdue':''}" style="white-space:normal;margin-bottom:6px;padding:8px 10px"><i class="ti ${isOverdue(t)?'ti-alert-triangle':'ti-clipboard-check'}"></i> ${esc(t.title)}${" · "+whoLabel(t)}</div>`; })
+    ...evs.map(e=>`<div class="ev-chip t-${evType(e.type)} dd-row" style="white-space:normal;margin-bottom:6px;padding:8px 10px"><div class="dd-main"><i class="ti ${EV_ICON[evType(e.type)]}"></i> ${esc(e.title)}${e.time?" · "+esc(e.time):""}${e.desc?`<div style="font-size:11px;font-weight:400;color:var(--txt-2);margin-top:3px">${esc(e.desc)}</div>`:""}</div>${canEditEvent(e)?`<span class="dd-acts"><button class="btn-ghost btn-sm" title="แก้ไข" onclick="closeModal('dayDetailOverlay');openEventModal('${ds}','${esc(e.id)}')"><i class="ti ti-pencil"></i></button><button class="btn-ghost btn-sm" title="ลบ" onclick="quickDeleteEvent('${esc(e.id)}')"><i class="ti ti-trash"></i></button></span>`:""}</div>`),
+    ...tasks.map(t=>{ return `<div class="ev-chip t-task ${isOverdue(t)?'overdue':''} dd-row" style="white-space:normal;margin-bottom:6px;padding:8px 10px"><div class="dd-main"><i class="ti ${isOverdue(t)?'ti-alert-triangle':'ti-clipboard-check'}"></i> ${esc(t.title)}${" · "+whoLabel(t)}</div>${canEditTask(t)?`<span class="dd-acts"><button class="btn-ghost btn-sm" title="แก้ไขงาน" onclick="closeModal('dayDetailOverlay');openEditTaskModal('${esc(t.id)}')"><i class="ti ti-pencil"></i></button></span>`:""}</div>`; })
   ];
   document.getElementById("dayDetailList").innerHTML = rows.length ? rows.join("") : `<div class="empty"><div class="e-emoji"><i class="ti ti-calendar"></i></div><b>ไม่มีรายการในวันนี้</b></div>`;
   document.getElementById("dayDetailOverlay").classList.add("show");
@@ -2797,6 +2801,12 @@ function saveEventItem() {
     toast("เพิ่มอีเวนต์แล้ว","🗓️");
   }
   closeModal("eventOverlay"); routeView();
+}
+function quickDeleteEvent(id) {
+  const e = state.events.find(x => x.id === id);
+  if (!e || !canEditEvent(e)) return;
+  editingEventId = id; deleteEventItem();
+  if (dayDetailDate) openDayDetail(dayDetailDate);
 }
 function deleteEventItem() {
   if (!editingEventId) return;
