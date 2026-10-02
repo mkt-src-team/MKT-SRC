@@ -231,3 +231,8 @@ ALTER TABLE ideas ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "anon all ideas" ON ideas;
 CREATE POLICY "anon all ideas" ON ideas FOR ALL USING (TRUE) WITH CHECK (TRUE);
 GRANT SELECT, INSERT, UPDATE, DELETE ON ideas TO anon, authenticated;
+
+-- ============================================
+-- 19. อีเวนต์หลายวัน — วันที่สิ้นสุด (ว่าง = วันเดียว)
+-- ============================================
+ALTER TABLE events ADD COLUMN IF NOT EXISTS end_date TEXT DEFAULT '';

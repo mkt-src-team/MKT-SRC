@@ -1148,7 +1148,8 @@ button{border-radius:99px;font-weight:500}
       </select>
     </div>
     <div style="display:flex;gap:10px">
-      <div class="field" style="flex:1"><label>วันที่ *</label><input type="date" id="evDate"></div>
+      <div class="field" style="flex:1"><label>วันที่เริ่ม *</label><input type="date" id="evDate"></div>
+      <div class="field" style="flex:1"><label>วันที่สิ้นสุด</label><input type="date" id="evEndDate"></div>
       <div class="field" style="flex:1"><label>เวลา (ถ้ามี)</label><input type="time" id="evTime"></div>
     </div>
     <div class="field"><label>รายละเอียด</label><textarea id="evDesc" style="min-height:70px" placeholder="รายละเอียดอีเวนต์..."></textarea></div>
@@ -1627,11 +1628,14 @@ function mapRequest(r){ return { id:r.id, fromId:r.from_id||"", fromName:r.from_
 function mapNotif(r){ return { id:r.id, fromId:r.from_id||"", fromName:r.from_name||"", toRank:r.to_rank||"", toId:r.to_id||"", type:r.type||"", title:r.title||"", message:r.message||"", linkId:r.link_id||"", isRead:!!r.is_read, createdAt:r.created_at||new Date().toISOString() }; }
 function mapInvite(r){ return { id:r.id, email:r.email||"", rank:r.rank||"employee", createdBy:r.created_by||"", createdAt:r.created_at||new Date().toISOString() }; }
 function mapAnn(r){ return { id:r.id, title:r.title||"", content:r.content||"", authorName:r.author_name||"", authorId:r.author_id||"", isPinned:!!r.is_pinned, ackedBy:Array.isArray(r.acked_by)?r.acked_by:[], createdAt:r.created_at||new Date().toISOString() }; }
-function mapEvent(r){ return { id:r.id, title:r.title||"", date:r.event_date||"", time:r.time||"", type:r.type||"event", desc:r.description||"", by:r.created_by||"", createdAt:r.created_at||new Date().toISOString() }; }
+function mapEvent(r){ if (r.end_date !== undefined) evEndReady = true; return { id:r.id, title:r.title||"", date:r.event_date||"", endDate:r.end_date||"", time:r.time||"", type:r.type||"event", desc:r.description||"", by:r.created_by||"", createdAt:r.created_at||new Date().toISOString() }; }
 
 function taskRow(t){ return { title:t.title, description:t.desc||"", who:t.who||"", start_date:t.startDate||"", due:t.due||"", freq:t.freq||"daily", emoji:t.emoji||"ti-car", status:t.status||"doing", checks:t.checks||[], attachments:t.attachments||[], completed_at:t.completedAt||null, ...(coWhoReady ? { co_who:t.coWho||[] } : {}) }; }
 function requestRow(r){ return { id:r.id, from_id:r.fromId, from_name:r.fromName, type:r.type, title:r.title, description:r.description||"", who:r.who||"", start_date:r.startDate||"", due:r.due||"", freq:r.freq||"daily", emoji:r.emoji||"", checks:r.checks||[], task_id:r.taskId||"", status:r.status, note:r.note||"" }; }
-function eventRow(e){ return { title:e.title, event_date:e.date||"", time:e.time||"", type:e.type||"event", description:e.desc||"" }; }
+/* อีเวนต์หลายวัน: end_date (SQL ข้อ 19) — ถ้ายังไม่มีคอลัมน์ จะไม่ส่งไป (อีเวนต์เป็นวันเดียว) */
+let evEndReady = false;
+function evOn(e, ds) { const end = (e.endDate && e.endDate > e.date) ? e.endDate : e.date; return ds >= e.date && ds <= end; }
+function eventRow(e){ return { title:e.title, event_date:e.date||"", time:e.time||"", type:e.type||"event", description:e.desc||"", ...(evEndReady ? { end_date:e.endDate||"" } : {}) }; }
 function annRow(a){ return { title:a.title, content:a.content||"", author_name:a.authorName||"", author_id:a.authorId||"", is_pinned:!!a.isPinned }; }
 
 /* ============ DB WRITE (รายงานข้อผิดพลาด + ดึงข้อมูลจริงกลับมาเมื่อพลาด) ============ */
@@ -2704,7 +2708,7 @@ function renderEventCalendar() {
   for (let i=0;i<total;i++) {
     const d = new Date(y, m, i - startDow + 1);
     const ds = fmtISO(d), out = d.getMonth() !== m;
-    const evs = calFilter === "task" ? [] : state.events.filter(e => e.date === ds && (calFilter === "all" || evType(e.type) === calFilter));
+    const evs = calFilter === "task" ? [] : state.events.filter(e => evOn(e, ds) && (calFilter === "all" || evType(e.type) === calFilter));
     const taskDue = (out || (calFilter !== "all" && calFilter !== "task")) ? [] : visibleTasks().filter(t => t.due === ds && taskStatus(t) !== "done");
     const maxT = calFilter === "task" ? 4 : 2;
     const hasOverdue = !out && taskDue.some(isOverdue);
@@ -2750,10 +2754,10 @@ function openDayDetail(ds) {
   dayDetailDate = ds;
   const d = new Date(ds+"T00:00:00");
   document.getElementById("dayDetailTitle").innerHTML = '<i class="ti ti-calendar"></i> ' + d.toLocaleDateString("th-TH",{day:"numeric",month:"long",year:"numeric"});
-  const evs = state.events.filter(e=>e.date===ds);
+  const evs = state.events.filter(e=>evOn(e, ds));
   const tasks = visibleTasks().filter(t=>t.due===ds && taskStatus(t)!=="done");
   const rows = [
-    ...evs.map(e=>`<div class="ev-chip t-${evType(e.type)} dd-row" style="white-space:normal;margin-bottom:6px;padding:8px 10px"><div class="dd-main"><i class="ti ${EV_ICON[evType(e.type)]}"></i> ${esc(e.title)}${e.time?" · "+esc(e.time):""}${e.desc?`<div style="font-size:11px;font-weight:400;color:var(--txt-2);margin-top:3px">${esc(e.desc)}</div>`:""}</div>${canEditEvent(e)?`<span class="dd-acts"><button class="btn-ghost btn-sm" title="แก้ไข" onclick="closeModal('dayDetailOverlay');openEventModal('${ds}','${esc(e.id)}')"><i class="ti ti-pencil"></i></button><button class="btn-ghost btn-sm" title="ลบ" onclick="quickDeleteEvent('${esc(e.id)}')"><i class="ti ti-trash"></i></button></span>`:""}</div>`),
+    ...evs.map(e=>`<div class="ev-chip t-${evType(e.type)} dd-row" style="white-space:normal;margin-bottom:6px;padding:8px 10px"><div class="dd-main"><i class="ti ${EV_ICON[evType(e.type)]}"></i> ${esc(e.title)}${e.time?" · "+esc(e.time):""}${e.endDate&&e.endDate>e.date?`<div style="font-size:11px;font-weight:400;color:var(--txt-2);margin-top:3px"><i class="ti ti-calendar-event"></i> ${fmtDate(e.date)} – ${fmtDate(e.endDate)}</div>`:""}${e.desc?`<div style="font-size:11px;font-weight:400;color:var(--txt-2);margin-top:3px">${esc(e.desc)}</div>`:""}</div>${canEditEvent(e)?`<span class="dd-acts"><button class="btn-ghost btn-sm" title="แก้ไข" onclick="closeModal('dayDetailOverlay');openEventModal('${ds}','${esc(e.id)}')"><i class="ti ti-pencil"></i></button><button class="btn-ghost btn-sm" title="ลบ" onclick="quickDeleteEvent('${esc(e.id)}')"><i class="ti ti-trash"></i></button></span>`:""}</div>`),
     ...tasks.map(t=>{ return `<div class="ev-chip t-task ${isOverdue(t)?'overdue':''} dd-row" style="white-space:normal;margin-bottom:6px;padding:8px 10px"><div class="dd-main"><i class="ti ${isOverdue(t)?'ti-alert-triangle':'ti-clipboard-check'}"></i> ${esc(t.title)}${" · "+whoLabel(t)}</div>${canEditTask(t)?`<span class="dd-acts"><button class="btn-ghost btn-sm" title="แก้ไขงาน" onclick="closeModal('dayDetailOverlay');openEditTaskModal('${esc(t.id)}')"><i class="ti ti-pencil"></i></button></span>`:""}</div>`; })
   ];
   document.getElementById("dayDetailList").innerHTML = rows.length ? rows.join("") : `<div class="empty"><div class="e-emoji"><i class="ti ti-calendar"></i></div><b>ไม่มีรายการในวันนี้</b></div>`;
@@ -2772,9 +2776,11 @@ function openEventModal(dateStr, evId) {
   document.getElementById("evTitle").value = e ? e.title : "";
   document.getElementById("evType").value = e ? evType(e.type) : "event";
   document.getElementById("evDate").value = e ? e.date : (dateStr||todayStr());
+  document.getElementById("evEndDate").value = e ? (e.endDate||"") : "";
+  if (!evEndReady && db) db.from("events").select("end_date").limit(1).then(r => { if (!r.error) evEndReady = true; }, () => {});
   document.getElementById("evTime").value = e ? (e.time||"") : "";
   document.getElementById("evDesc").value = e ? (e.desc||"") : "";
-  ["evTitle","evType","evDate","evTime","evDesc"].forEach(id => document.getElementById(id).disabled = !editable);
+  ["evTitle","evType","evDate","evEndDate","evTime","evDesc"].forEach(id => document.getElementById(id).disabled = !editable);
   document.getElementById("evDelBtn").style.display = (e && editable) ? "" : "none";
   document.querySelector("#eventOverlay .btn-primary").style.display = editable ? "" : "none";
   document.getElementById("evModalTitle").innerHTML = !e ? '<i class="ti ti-plus"></i> เพิ่มอีเวนต์' : (editable ? '<i class="ti ti-pencil"></i> แก้ไขอีเวนต์' : '<i class="ti ti-calendar"></i> รายละเอียดอีเวนต์');
@@ -2786,7 +2792,10 @@ function saveEventItem() {
   const date = document.getElementById("evDate").value;
   if (!title) { toast("ใส่ชื่ออีเวนต์ก่อน","⚠️"); return; }
   if (!date) { toast("เลือกวันที่ก่อน","⚠️"); return; }
-  const data = { title, date, type:document.getElementById("evType").value, time:document.getElementById("evTime").value, desc:document.getElementById("evDesc").value.trim() };
+  const endDate = document.getElementById("evEndDate").value;
+  if (endDate && endDate < date) { toast("วันที่สิ้นสุดต้องไม่ก่อนวันที่เริ่ม","⚠️"); return; }
+  if (endDate && endDate !== date && !evEndReady) { toast("ต้องรัน SQL ข้อ 19 (end_date) ก่อน จึงจะบันทึกวันที่สิ้นสุดได้","⚠️"); return; }
+  const data = { title, date, endDate: endDate === date ? "" : endDate, type:document.getElementById("evType").value, time:document.getElementById("evTime").value, desc:document.getElementById("evDesc").value.trim() };
   if (editingEventId) {
     const e = state.events.find(x=>x.id===editingEventId);
     if (!e || !canEditEvent(e)) { toast("ไม่มีสิทธิ์แก้ไข","🔒"); return; }
