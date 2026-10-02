@@ -1150,7 +1150,10 @@ button{border-radius:99px;font-weight:500}
     <div style="display:flex;gap:10px">
       <div class="field" style="flex:1"><label>วันที่เริ่ม *</label><input type="date" id="evDate"></div>
       <div class="field" style="flex:1"><label>วันที่สิ้นสุด</label><input type="date" id="evEndDate"></div>
-      <div class="field" style="flex:1"><label>เวลา (ถ้ามี)</label><input type="time" id="evTime"></div>
+    </div>
+    <div style="display:flex;gap:10px">
+      <div class="field" style="flex:1"><label>เวลาเริ่ม (ถ้ามี)</label><input type="time" id="evTime"></div>
+      <div class="field" style="flex:1"><label>เวลาสิ้นสุด</label><input type="time" id="evEndTime"></div>
     </div>
     <div class="field"><label>รายละเอียด</label><textarea id="evDesc" style="min-height:70px" placeholder="รายละเอียดอีเวนต์..."></textarea></div>
     <div class="modal-foot">
@@ -2721,7 +2724,7 @@ function renderEventCalendar() {
     const dotsHtml = dotsList.slice(0,4).join("") + (dayItemCount>4?`<span class="cal-dot-more">+${dayItemCount-4}</span>`:"");
     cells += `<div class="cal-cell ${out?"out":""} ${ds===today?"today":""} ${hasOverdue?"has-overdue":""}" ${cellClickAttr}>
       <div class="cal-num"><span>${d.getDate()}</span></div>
-      ${evs.map(e=>`<div class="ev-chip t-${evType(e.type)}" title="${esc(e.desc)}"><i class="ti ${EV_ICON[evType(e.type)]}"></i> ${esc(e.title)}${e.time?" "+esc(e.time):""}</div>`).join("")}
+      ${evs.map(e=>`<div class="ev-chip t-${evType(e.type)}" title="${esc(e.desc)}"><i class="ti ${EV_ICON[evType(e.type)]}"></i> ${esc(e.title)}${e.time?" "+esc(String(e.time).replace("-"," – ")):""}</div>`).join("")}
       ${taskDue.slice(0,maxT).map(t=>`<div class="ev-chip t-task ${isOverdue(t)?'overdue':''}"><i class="ti ${isOverdue(t)?'ti-alert-triangle':'ti-clipboard-check'}"></i> ${esc(t.title)}</div>`).join("")}
       ${taskDue.length>maxT?`<div class="cal-overflow-text" style="font-size:10px;color:var(--txt-3)">+${taskDue.length-maxT} งาน</div>`:""}
       ${dotsList.length?`<div class="cal-dots">${dotsHtml}</div>`:""}
@@ -2757,7 +2760,7 @@ function openDayDetail(ds) {
   const evs = state.events.filter(e=>evOn(e, ds));
   const tasks = visibleTasks().filter(t=>t.due===ds && taskStatus(t)!=="done");
   const rows = [
-    ...evs.map(e=>`<div class="ev-chip t-${evType(e.type)} dd-row" style="white-space:normal;margin-bottom:6px;padding:8px 10px"><div class="dd-main"><i class="ti ${EV_ICON[evType(e.type)]}"></i> ${esc(e.title)}${e.time?" · "+esc(e.time):""}${e.endDate&&e.endDate>e.date?`<div style="font-size:11px;font-weight:400;color:var(--txt-2);margin-top:3px"><i class="ti ti-calendar-event"></i> ${fmtDate(e.date)} – ${fmtDate(e.endDate)}</div>`:""}${e.desc?`<div style="font-size:11px;font-weight:400;color:var(--txt-2);margin-top:3px">${esc(e.desc)}</div>`:""}</div>${canEditEvent(e)?`<span class="dd-acts"><button class="btn-ghost btn-sm" title="แก้ไข" onclick="closeModal('dayDetailOverlay');openEventModal('${ds}','${esc(e.id)}')"><i class="ti ti-pencil"></i></button><button class="btn-ghost btn-sm" title="ลบ" onclick="quickDeleteEvent('${esc(e.id)}')"><i class="ti ti-trash"></i></button></span>`:""}</div>`),
+    ...evs.map(e=>`<div class="ev-chip t-${evType(e.type)} dd-row" style="white-space:normal;margin-bottom:6px;padding:8px 10px"><div class="dd-main"><i class="ti ${EV_ICON[evType(e.type)]}"></i> ${esc(e.title)}${e.time?" · "+esc(String(e.time).replace("-"," – ")):""}${e.endDate&&e.endDate>e.date?`<div style="font-size:11px;font-weight:400;color:var(--txt-2);margin-top:3px"><i class="ti ti-calendar-event"></i> ${fmtDate(e.date)} – ${fmtDate(e.endDate)}</div>`:""}${e.desc?`<div style="font-size:11px;font-weight:400;color:var(--txt-2);margin-top:3px">${esc(e.desc)}</div>`:""}</div>${canEditEvent(e)?`<span class="dd-acts"><button class="btn-ghost btn-sm" title="แก้ไข" onclick="closeModal('dayDetailOverlay');openEventModal('${ds}','${esc(e.id)}')"><i class="ti ti-pencil"></i></button><button class="btn-ghost btn-sm" title="ลบ" onclick="quickDeleteEvent('${esc(e.id)}')"><i class="ti ti-trash"></i></button></span>`:""}</div>`),
     ...tasks.map(t=>{ return `<div class="ev-chip t-task ${isOverdue(t)?'overdue':''} dd-row" style="white-space:normal;margin-bottom:6px;padding:8px 10px"><div class="dd-main"><i class="ti ${isOverdue(t)?'ti-alert-triangle':'ti-clipboard-check'}"></i> ${esc(t.title)}${" · "+whoLabel(t)}</div>${canEditTask(t)?`<span class="dd-acts"><button class="btn-ghost btn-sm" title="แก้ไขงาน" onclick="closeModal('dayDetailOverlay');openEditTaskModal('${esc(t.id)}')"><i class="ti ti-pencil"></i></button></span>`:""}</div>`; })
   ];
   document.getElementById("dayDetailList").innerHTML = rows.length ? rows.join("") : `<div class="empty"><div class="e-emoji"><i class="ti ti-calendar"></i></div><b>ไม่มีรายการในวันนี้</b></div>`;
@@ -2778,14 +2781,20 @@ function openEventModal(dateStr, evId) {
   document.getElementById("evDate").value = e ? e.date : (dateStr||todayStr());
   document.getElementById("evEndDate").value = e ? (e.endDate||"") : "";
   if (!evEndReady && db) db.from("events").select("end_date").limit(1).then(r => { if (!r.error) evEndReady = true; }, () => {});
-  document.getElementById("evTime").value = e ? (e.time||"") : "";
+  const [tStart, tEnd] = String(e ? (e.time||"") : "").split("-");
+  document.getElementById("evTime").value = tStart || "";
+  document.getElementById("evEndTime").value = tEnd || "";
   document.getElementById("evDesc").value = e ? (e.desc||"") : "";
-  ["evTitle","evType","evDate","evEndDate","evTime","evDesc"].forEach(id => document.getElementById(id).disabled = !editable);
+  ["evTitle","evType","evDate","evEndDate","evTime","evEndTime","evDesc"].forEach(id => document.getElementById(id).disabled = !editable);
   document.getElementById("evDelBtn").style.display = (e && editable) ? "" : "none";
   document.querySelector("#eventOverlay .btn-primary").style.display = editable ? "" : "none";
   document.getElementById("evModalTitle").innerHTML = !e ? '<i class="ti ti-plus"></i> เพิ่มอีเวนต์' : (editable ? '<i class="ti ti-pencil"></i> แก้ไขอีเวนต์' : '<i class="ti ti-calendar"></i> รายละเอียดอีเวนต์');
   document.getElementById("eventOverlay").classList.add("show");
   if (editable) setTimeout(()=>document.getElementById("evTitle").focus(),100);
+}
+function evTimeVal() {
+  const a = document.getElementById("evTime").value, b = document.getElementById("evEndTime").value;
+  return a && b ? `${a}-${b}` : (a || "");
 }
 function saveEventItem() {
   const title = document.getElementById("evTitle").value.trim();
@@ -2794,8 +2803,11 @@ function saveEventItem() {
   if (!date) { toast("เลือกวันที่ก่อน","⚠️"); return; }
   const endDate = document.getElementById("evEndDate").value;
   if (endDate && endDate < date) { toast("วันที่สิ้นสุดต้องไม่ก่อนวันที่เริ่ม","⚠️"); return; }
+  const tA = document.getElementById("evTime").value, tB = document.getElementById("evEndTime").value;
+  if (tB && !tA) { toast("ใส่เวลาเริ่มก่อน","⚠️"); return; }
+  if (tA && tB && tB <= tA && !(endDate && endDate > date)) { toast("เวลาสิ้นสุดต้องหลังเวลาเริ่ม","⚠️"); return; }
   if (endDate && endDate !== date && !evEndReady) { toast("ต้องรัน SQL ข้อ 19 (end_date) ก่อน จึงจะบันทึกวันที่สิ้นสุดได้","⚠️"); return; }
-  const data = { title, date, endDate: endDate === date ? "" : endDate, type:document.getElementById("evType").value, time:document.getElementById("evTime").value, desc:document.getElementById("evDesc").value.trim() };
+  const data = { title, date, endDate: endDate === date ? "" : endDate, type:document.getElementById("evType").value, time:evTimeVal(), desc:document.getElementById("evDesc").value.trim() };
   if (editingEventId) {
     const e = state.events.find(x=>x.id===editingEventId);
     if (!e || !canEditEvent(e)) { toast("ไม่มีสิทธิ์แก้ไข","🔒"); return; }
