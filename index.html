@@ -693,6 +693,15 @@ button{border-radius:99px;font-weight:500}
 .dd-main{flex:1;min-width:0}
 .dd-acts{display:flex;gap:4px;flex:none}
 .dd-acts .btn-sm{padding:4px 8px}
+#appSplash{display:none}
+#appSplash.show{display:grid;place-items:center;position:fixed;inset:0;z-index:99999;background:#0E0E0E;transition:opacity .35s}
+#appSplash.hide{opacity:0;pointer-events:none}
+#appSplash .as-box{display:flex;flex-direction:column;align-items:center;gap:14px;animation:asIn .5s ease-out}
+#appSplash img{width:112px;height:112px;border-radius:26px;background:#fff;padding:6px;box-shadow:0 10px 30px rgba(0,0,0,.5)}
+#appSplash b{font-family:Kanit,sans-serif;font-size:30px;font-weight:600;color:#EDEDEA;letter-spacing:.02em}
+#appSplash b span{color:#8a8a85}
+#appSplash small{color:#8a8a85;font-size:13px;margin-top:-8px}
+@keyframes asIn{from{opacity:0;transform:scale(.92)}to{opacity:1;transform:none}}
 .ctext-input{flex:1;min-width:0;font:inherit;font-size:14px;color:var(--txt);background:transparent;border:1px solid transparent;border-radius:8px;padding:5px 8px;outline:none}
 .ctext-input:hover{border-color:var(--stroke-2)}
 .ctext-input:focus,.ctext-input.editing{border-color:var(--txt);background:var(--control)}
@@ -759,6 +768,13 @@ button{border-radius:99px;font-weight:500}
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
 </head>
 <body>
+<!-- หน้าเปิดแอป (เฉพาะตอนเปิดจากไอคอนบนหน้าจอหลัก): โลโก้ + MKT-SRC -->
+<div id="appSplash" aria-hidden="true"><div class="as-box"><img src="assets/icon-192.png" alt=""><b>MKT-<span>SRC</span></b><small>Sirichai Motorsales</small></div></div>
+<script>
+(function(){ var sa = (window.matchMedia && matchMedia("(display-mode: standalone)").matches) || navigator.standalone;
+  var el = document.getElementById("appSplash"); if (!sa) { el.remove(); return; }
+  el.classList.add("show"); setTimeout(function(){ el.classList.add("hide"); setTimeout(function(){ el.remove(); }, 400); }, 1100); })();
+</script>
 
 <!-- SIDEBAR -->
 <aside id="sidebar">
