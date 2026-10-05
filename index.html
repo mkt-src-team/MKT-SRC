@@ -4,7 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" id="viewportMeta" content="width=device-width, initial-scale=1.0">
 <link rel="icon" type="image/png" href="assets/favicon.png">
-<link rel="apple-touch-icon" href="assets/logo-256.png">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#141414">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="MKT-SRC">
 <title>MKT-SRC | ทีมงานและการมอบหมายงาน</title>
 
 <script>
@@ -4159,6 +4165,10 @@ async function boot() {
 }
 boot();
 
+</script>
+<script>
+/* แอปบนมือถือ (PWA): ลงทะเบียน service worker — ทำให้กด "เพิ่มลงหน้าจอหลัก/ติดตั้งแอป" ได้ */
+if ("serviceWorker" in navigator) window.addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
 </script>
 </body>
 </html>
