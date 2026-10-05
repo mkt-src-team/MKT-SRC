@@ -6,7 +6,7 @@
 <link rel="icon" type="image/png" href="assets/favicon.png">
 <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
 <link rel="manifest" href="manifest.webmanifest">
-<meta name="theme-color" content="#141414">
+<meta name="theme-color" content="#0E0E0E">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
@@ -52,19 +52,20 @@
   --flyout:0 12px 32px rgba(0,0,0,.14);--mica:rgba(255,255,255,.85);--overlay:rgba(0,0,0,.35);
 }
 /* ============ MONOCHROME — DARK (ดำนุ่ม ไม่ใช่ดำสนิท สบายตา) ============ */
+/* แยกชั้นให้ชัด: พื้นหลังเข้มสุด → การ์ด → ชิป/ช่องในการ์ด สว่างขึ้นทีละขั้น + เส้นขอบเห็นชัด */
 [data-theme="dark"]{
-  --bg:#141414;--layer:#1B1B1B;--layer-2:#212121;
-  --stroke:#262626;--stroke-2:#333333;
-  --txt:#EDEDEA;--txt-2:#9A9A95;--txt-3:#6E6E6A;
+  --bg:#0E0E0E;--layer:#1E1E1E;--layer-2:#2B2B2B;
+  --stroke:#333333;--stroke-2:#454545;
+  --txt:#EDEDEA;--txt-2:#ADADA8;--txt-3:#83837E;
   --accent:#EDEDEA;--accent-hover:#FFFFFF;--accent-tint:rgba(237,237,234,.08);--accent-contrast:#141414;
-  --control:#1F1F1F;--control-hover:#2A2A2A;
+  --control:#262626;--control-hover:#323232;
   --success:#8FBF95;--success-tint:rgba(143,191,149,.12);
   --caution:#D6B56A;--caution-tint:rgba(214,181,106,.12);
   --danger:#E5847A;--danger-tint:rgba(229,132,122,.12);
   --burgundy:#D98A84;--burgundy-tint:rgba(217,138,132,.12);
   --track:#333333;
   --shadow:0 1px 2px rgba(0,0,0,.3);--shadow-2:0 6px 20px rgba(0,0,0,.45);
-  --flyout:0 12px 32px rgba(0,0,0,.6);--mica:rgba(27,27,27,.85);--overlay:rgba(0,0,0,.6);
+  --flyout:0 12px 32px rgba(0,0,0,.6);--mica:rgba(30,30,30,.88);--overlay:rgba(0,0,0,.6);
 }
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:"IBM Plex Sans Thai",system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--txt);min-height:100vh;min-height:100dvh;padding-bottom:60px;-webkit-font-smoothing:antialiased;transition:background .2s,color .2s}
