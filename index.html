@@ -1127,6 +1127,7 @@ button{border-radius:99px;font-weight:500}
     <div id="dayDetailList"></div>
     <div class="modal-foot">
       <button class="btn-ghost" onclick="closeModal('dayDetailOverlay')">ปิด</button>
+      <button class="btn-primary" id="dayDetailAdd" onclick="closeModal('dayDetailOverlay');openEventModal(dayDetailDate)"><i class="ti ti-plus"></i> เพิ่มอีเวนต์วันนี้</button>
     </div>
   </div>
 </div>
@@ -2764,6 +2765,7 @@ function openDayDetail(ds) {
     ...tasks.map(t=>{ return `<div class="ev-chip t-task ${isOverdue(t)?'overdue':''} dd-row" style="white-space:normal;margin-bottom:6px;padding:8px 10px"><div class="dd-main"><i class="ti ${isOverdue(t)?'ti-alert-triangle':'ti-clipboard-check'}"></i> ${esc(t.title)}${" · "+whoLabel(t)}</div>${canEditTask(t)?`<span class="dd-acts"><button class="btn-ghost btn-sm" title="แก้ไขงาน" onclick="closeModal('dayDetailOverlay');openEditTaskModal('${esc(t.id)}')"><i class="ti ti-pencil"></i></button></span>`:""}</div>`; })
   ];
   document.getElementById("dayDetailList").innerHTML = rows.length ? rows.join("") : `<div class="empty"><div class="e-emoji"><i class="ti ti-calendar"></i></div><b>ไม่มีรายการในวันนี้</b></div>`;
+  document.getElementById("dayDetailAdd").style.display = (currentUser && can("add_event")) ? "" : "none";
   document.getElementById("dayDetailOverlay").classList.add("show");
 }
 
