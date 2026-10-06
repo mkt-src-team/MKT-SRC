@@ -702,6 +702,17 @@ button{border-radius:99px;font-weight:500}
 #appSplash b span{color:#8a8a85}
 #appSplash small{color:#8a8a85;font-size:13px;margin-top:-8px}
 @keyframes asIn{from{opacity:0;transform:scale(.92)}to{opacity:1;transform:none}}
+.install-bar{display:flex;align-items:center;gap:10px;background:var(--layer);border:1px solid var(--stroke-2);border-radius:14px;padding:10px 12px;margin-bottom:14px}
+.install-bar img{width:40px;height:40px;border-radius:10px;background:#fff;flex:none}
+.install-bar .ib-txt{flex:1;min-width:0;display:flex;flex-direction:column}
+.install-bar .ib-txt b{font-family:Kanit,sans-serif;font-weight:600;font-size:14.5px}
+.install-bar .ib-txt small{color:var(--txt-2);font-size:12px}
+.install-bar .ib-x{background:none;border:0;color:var(--txt-3);font-size:18px;padding:4px;cursor:pointer}
+.install-guide ol{margin:12px 0 12px 20px;display:flex;flex-direction:column;gap:10px;font-size:14.5px;line-height:1.5}
+.install-guide small{color:var(--txt-2)}
+.install-guide .ig-warn{background:var(--caution-tint);color:var(--caution);border-radius:10px;padding:10px 12px;font-size:13.5px;margin-top:10px}
+.install-guide .ig-note{font-size:12.5px;color:var(--txt-2);margin-bottom:10px}
+.install-guide .ig-url{margin-top:12px;font-size:12px;color:var(--txt-3);word-break:break-all;background:var(--layer-2);border-radius:8px;padding:8px 10px}
 .ctext-input{flex:1;min-width:0;font:inherit;font-size:14px;color:var(--txt);background:transparent;border:1px solid transparent;border-radius:8px;padding:5px 8px;outline:none}
 .ctext-input:hover{border-color:var(--stroke-2)}
 .ctext-input:focus,.ctext-input.editing{border-color:var(--txt);background:var(--control)}
@@ -834,6 +845,7 @@ button{border-radius:99px;font-weight:500}
   <div id="roleBanner"></div>
   <div id="cloudBar"></div>
   <div id="viewRoot"></div>
+  <div id="installBar"></div>
   <div id="missBar"></div>
   <div class="hero" id="hero"></div>
   <div class="stats" id="stats"></div>
@@ -1143,6 +1155,13 @@ button{border-radius:99px;font-weight:500}
 </div>
 
 <!-- DAY DETAIL MODAL -->
+<div class="overlay" id="installGuideOverlay">
+  <div class="modal" style="max-width:420px">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px"><img src="assets/icon-192.png" alt="" style="width:52px;height:52px;border-radius:12px;background:#fff"><div><h3 style="margin:0">ติดตั้งแอป MKT-SRC</h3><p class="desc" style="margin:2px 0 0">ไอคอนบนหน้าจอ เปิดเต็มจอเหมือนแอป</p></div></div>
+    <div id="installGuideBody" class="install-guide"></div>
+    <div class="modal-foot"><button class="btn-ghost" onclick="closeModal('installGuideOverlay')">ปิด</button></div>
+  </div>
+</div>
 <div class="overlay" id="dayDetailOverlay">
   <div class="modal" style="max-width:440px">
     <h3 id="dayDetailTitle"><i class="ti ti-calendar"></i> รายการวันนี้</h3>
@@ -2313,6 +2332,7 @@ function renderMobileActions() {
       <button class="btn-ghost" onclick="closeSidebarMobile();bottomNavGo('game-snake')"><i class="ti ti-device-gamepad-2"></i>เกมงู</button>
       <button class="btn-ghost" onclick="closeSidebarMobile();bottomNavGo('game-wheel')"><i class="ti ti-chart-pie"></i>วงล้อสุ่ม</button>
       <button class="btn-ghost" onclick="closeSidebarMobile();bottomNavGo('idea-hub')"><i class="ti ti-bulb"></i>ไอเดีย & AI</button>
+      <button class="btn-ghost install-menu-btn" onclick="closeSidebarMobile();openInstallGuide()"><i class="ti ti-download"></i>ติดตั้งแอป</button>
     </div>
     <div class="more-label">ธีม</div>
     <div style="display:flex;gap:6px">
@@ -2621,6 +2641,7 @@ const DEFAULT_SECTIONS = ["hero","stats","attention","boardSection","reqSection"
 function showDefaultSections(show) {
   DEFAULT_SECTIONS.forEach(id => { const el = document.getElementById(id); if (el) el.style.display = show ? "" : "none"; });
   const mb = document.getElementById("missBar"); if (mb) mb.style.display = show ? "" : "none";
+  if (typeof renderInstallBar === "function") renderInstallBar();
 }
 function routeView() {
   const vr = document.getElementById("viewRoot");
@@ -4186,6 +4207,58 @@ boot();
 <script>
 /* แอปบนมือถือ (PWA): ลงทะเบียน service worker — ทำให้กด "เพิ่มลงหน้าจอหลัก/ติดตั้งแอป" ได้ */
 if ("serviceWorker" in navigator) window.addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
+/* ตัวช่วยติดตั้งแอป: Chrome/Edge/Samsung (Android) = เด้งหน้าต่างติดตั้งจริง, iPhone = สอนทีละขั้น,
+   เปิดใน LINE/Facebook = บอกให้เปิดใน Chrome/Safari ก่อน */
+let deferredInstall = null;
+window.addEventListener("beforeinstallprompt", e => { e.preventDefault(); deferredInstall = e; renderInstallBar(); });
+window.addEventListener("appinstalled", () => { deferredInstall = null; try { localStorage.setItem("mkt_installed", "1"); } catch (_) {} renderInstallBar(); toast("ติดตั้งแอปแล้ว เปิดจากไอคอน MKT-SRC บนหน้าจอได้เลย", "ti-check"); });
+function isStandalone() { return (window.matchMedia && matchMedia("(display-mode: standalone)").matches) || navigator.standalone === true; }
+function installEnv() {
+  const ua = navigator.userAgent || "";
+  const ios = /iPhone|iPad|iPod/i.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  const inApp = /Line\/|FBAN|FBAV|FB_IAB|Instagram|TikTok|Messenger/i.test(ua);
+  const iosSafari = ios && !/CriOS|FxiOS|EdgiOS|OPiOS/i.test(ua) && !inApp;
+  const mobile = ios || /Android/i.test(ua);
+  return { ios, inApp, iosSafari, mobile, android: /Android/i.test(ua) };
+}
+function renderInstallBar() {
+  const el = document.getElementById("installBar"); if (!el) return;
+  const env = installEnv();
+  let hidden = false; try { hidden = localStorage.getItem("mkt_install_hide") === "1"; } catch (_) {}
+  if (isStandalone() || !env.mobile || hidden || sidebarState.activeItem !== "dashboard") { el.innerHTML = ""; return; }
+  el.innerHTML = `<div class="install-bar"><img src="assets/icon-192.png" alt=""><div class="ib-txt"><b>ติดตั้งแอป MKT-SRC</b><small>เปิดเร็ว เต็มจอ เหมือนแอปทั่วไป</small></div>
+    <button class="btn-primary btn-sm" onclick="openInstallGuide()"><i class="ti ti-download"></i> ติดตั้ง</button>
+    <button class="ib-x" title="ซ่อน" onclick="try{localStorage.setItem('mkt_install_hide','1')}catch(_){};renderInstallBar()"><i class="ti ti-x"></i></button></div>`;
+}
+async function openInstallGuide() {
+  if (isStandalone()) { toast("ตอนนี้เปิดเป็นแอปอยู่แล้ว", "ti-check"); return; }
+  if (deferredInstall) {   // Android Chrome/Edge/Samsung: หน้าต่างติดตั้งของระบบ
+    deferredInstall.prompt();
+    const r = await deferredInstall.userChoice.catch(() => null);
+    deferredInstall = null; renderInstallBar();
+    if (r && r.outcome === "accepted") return;
+  }
+  const env = installEnv(), url = location.origin + location.pathname;
+  let steps;
+  if (env.inApp) steps = `<p class="ig-warn"><i class="ti ti-alert-triangle"></i> ตอนนี้เปิดอยู่ในแอป LINE / Facebook — ติดตั้งจากตรงนี้ไม่ได้</p>
+    <ol><li>กดปุ่ม <b>⋯</b> หรือ <b>เมนู</b> มุมขวาบน</li><li>เลือก <b>"เปิดในเบราว์เซอร์"</b> / <b>"Open in ${env.ios ? "Safari" : "Chrome"}"</b></li><li>แล้วกดปุ่ม <b>ติดตั้ง</b> ในหน้านี้อีกครั้ง</li></ol>
+    <button class="btn-ghost btn-sm" onclick="copyInstallUrl()"><i class="ti ti-copy"></i> คัดลอกลิงก์ไปเปิดเอง</button>`;
+  else if (env.ios && !env.iosSafari) steps = `<p class="ig-warn"><i class="ti ti-alert-triangle"></i> บน iPhone ต้องติดตั้งผ่าน <b>Safari</b> เท่านั้น</p>
+    <ol><li>คัดลอกลิงก์ด้านล่าง แล้วเปิดในแอป <b>Safari</b></li><li>ทำตามขั้นตอนติดตั้งของ iPhone</li></ol>
+    <button class="btn-ghost btn-sm" onclick="copyInstallUrl()"><i class="ti ti-copy"></i> คัดลอกลิงก์</button>`;
+  else if (env.ios) steps = `<ol><li>กดปุ่ม <b>แชร์</b> <i class="ti ti-share-2"></i> (สี่เหลี่ยมมีลูกศรชี้ขึ้น)<br><small>iOS ใหม่: กด <b>⋯</b> ข้างแถบที่อยู่เว็บก่อน แล้วเลือก <b>แชร์</b></small></li>
+    <li>เลื่อนลงหา <b>"เพิ่มไปยังหน้าจอโฮม"</b> <i class="ti ti-square-plus"></i></li><li>กด <b>"เพิ่ม"</b> มุมขวาบน</li><li>เปิดแอปจากไอคอน <b>MKT-SRC</b> บนหน้าจอ</li></ol>`;
+  else steps = `<ol><li>เปิดหน้านี้ใน <b>Chrome</b> (ถ้ายังไม่ได้ใช้ Chrome)</li><li>กดปุ่ม <b>⋮</b> มุมขวาบน</li>
+    <li>เลือก <b>"ติดตั้งแอป"</b> หรือ <b>"เพิ่มลงในหน้าจอหลัก"</b></li><li>กด <b>ติดตั้ง</b> แล้วเปิดจากไอคอน <b>MKT-SRC</b></li></ol>
+    <p class="ig-note">ถ้าไม่มีเมนูนี้: อัปเดต Chrome เป็นเวอร์ชันล่าสุด หรือลองเบราว์เซอร์ Samsung Internet / Edge</p>
+    <button class="btn-ghost btn-sm" onclick="copyInstallUrl()"><i class="ti ti-copy"></i> คัดลอกลิงก์</button>`;
+  document.getElementById("installGuideBody").innerHTML = steps + `<div class="ig-url">${esc(url)}</div>`;
+  document.getElementById("installGuideOverlay").classList.add("show");
+}
+function copyInstallUrl() {
+  const url = location.origin + location.pathname;
+  (navigator.clipboard ? navigator.clipboard.writeText(url) : Promise.reject()).then(() => toast("คัดลอกลิงก์แล้ว", "ti-copy"), () => prompt("คัดลอกลิงก์นี้:", url));
+}
 </script>
 </body>
 </html>
