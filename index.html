@@ -713,6 +713,7 @@ button{border-radius:99px;font-weight:500}
 .install-guide .ig-warn{background:var(--caution-tint);color:var(--caution);border-radius:10px;padding:10px 12px;font-size:13.5px;margin-top:10px}
 .install-guide .ig-note{font-size:12.5px;color:var(--txt-2);margin-bottom:10px}
 .install-guide .ig-url{margin-top:12px;font-size:12px;color:var(--txt-3);word-break:break-all;background:var(--layer-2);border-radius:8px;padding:8px 10px}
+.kpi-range{display:inline-flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:13px;color:var(--txt-2)}
 .ctext-input{flex:1;min-width:0;font:inherit;font-size:14px;color:var(--txt);background:transparent;border:1px solid transparent;border-radius:8px;padding:5px 8px;outline:none}
 .ctext-input:hover{border-color:var(--stroke-2)}
 .ctext-input:focus,.ctext-input.editing{border-color:var(--txt);background:var(--control)}
@@ -1579,19 +1580,11 @@ async function doReset(key) {
   render(); toast("รีเซ็ตแล้ว เริ่มนับใหม่ตั้งแต่วันนี้", "ti-refresh");
 }
 /* KPI รายคน → ไฟล์ CSV ดาวน์โหลดลงเครื่อง (Boss/Dev) — เปิดด้วย Excel / Google Sheets ได้ */
-async function downloadKpi() {
-  if (!isAdmin()) return;
-  const ym = (document.getElementById("kpiMonth") || {}).value || todayStr().slice(0, 7);
-  const [y, mo] = ym.split("-").map(Number);
-  const start = ym + "-01", last = `${ym}-${String(new Date(y, mo, 0).getDate()).padStart(2, "0")}`;
-  const end = last < todayStr() ? last : todayStr();
-  if (start > todayStr()) { toast("เดือนนี้ยังมาไม่ถึง", "⚠️"); return; }
+/* KPI รายคน → CSV — เลือกช่วงเดือนได้ (จาก…ถึง…): แยกแถวรายเดือน + แถวสรุปรวมทั้งช่วง */
+function kpiRows(start, end, logins, label) {
   const tr = resetDate("task_reset");
-  let logins = null;
-  const r = await db.from("login_days").select("member_id,day").gte("day", start).lte("day", end).then(x => x, () => ({ error:true }));
-  if (!r.error) logins = r.data || [];
   const RANK = { boss:"Boss", dev:"Dev", employee:"พนักงาน", intern:"เด็กฝึกงาน" };
-  const rows = state.members.filter(m => m.status !== "inactive").map(m => {
+  return state.members.filter(m => m.status !== "inactive").map(m => {
     const inp = state.tasks.filter(t => isMine(t, m.id)).filter(t => { const k = t.due || localDay(t.createdAt); return k >= start && k <= end; });
     const done = inp.filter(t => t.status === "done");
     let onTime = 0, late = 0; const lateDays = [];
@@ -1604,22 +1597,44 @@ async function downloadKpi() {
     const doing = inp.length - done.length - overdue.length;
     const checks = inp.flatMap(t => t.checks || []), on = checks.filter(c => c.on).length;
     const graded = onTime + late + overdue.length;
-    const ld = logins ? new Set(logins.filter(x => x.member_id === m.id).map(x => x.day)).size : "";
-    return { "ชื่อ":m.name, "ตำแหน่ง":m.position||RANK[m.rank]||m.rank||"", "งานทั้งหมด":inp.length, "เสร็จ":done.length,
+    const ld = logins ? new Set(logins.filter(x => x.member_id === m.id && x.day >= start && x.day <= end).map(x => x.day)).size : "";
+    return { "ช่วง":label, "ชื่อ":m.name, "ตำแหน่ง":m.position||RANK[m.rank]||m.rank||"", "งานทั้งหมด":inp.length, "เสร็จ":done.length,
       "เสร็จตรงเวลา":onTime, "เสร็จช้า":late, "เลยกำหนด(ยังไม่เสร็จ)":overdue.length, "กำลังทำ":doing,
       "% ส่งตรงเวลา":graded ? Math.round(onTime / graded * 100) : "", "% งานเสร็จ":inp.length ? Math.round(done.length / inp.length * 100) : "",
-      "ช้าเฉลี่ย(วัน)":lateDays.length ? (lateDays.reduce((a, b) => a + b, 0) / lateDays.length).toFixed(1) : "",
+      "ช้าเฉลี่ย(วัน)":lateDays.length ? (lateDays.reduce((x, y) => x + y, 0) / lateDays.length).toFixed(1) : "",
       "หัวข้อย่อยเสร็จ":checks.length ? `${on}/${checks.length}` : "", "% หัวข้อย่อย":checks.length ? Math.round(on / checks.length * 100) : "",
-      "วันที่เข้าระบบ(เดือนนี้)":ld, "เข้าระบบล่าสุด":m.lastLoginDate || "ยังไม่เคย" };
-  }).sort((a, b) => (a["% ส่งตรงเวลา"] === "") - (b["% ส่งตรงเวลา"] === "") || (b["% ส่งตรงเวลา"] || 0) - (a["% ส่งตรงเวลา"] || 0));
+      "วันที่เข้าระบบ":ld, "เข้าระบบล่าสุด":m.lastLoginDate || "ยังไม่เคย" };
+  }).sort((x, y) => (x["% ส่งตรงเวลา"] === "") - (y["% ส่งตรงเวลา"] === "") || (y["% ส่งตรงเวลา"] || 0) - (x["% ส่งตรงเวลา"] || 0));
+}
+const TH_MON = ["ม.ค.","ก.พ.","มี.ค.","เม.ย.","พ.ค.","มิ.ย.","ก.ค.","ส.ค.","ก.ย.","ต.ค.","พ.ย.","ธ.ค."];
+function ymLabel(ym) { const [y, m] = ym.split("-").map(Number); return `${TH_MON[m-1]} ${y + 543}`; }
+async function downloadKpi() {
+  if (!isAdmin()) return;
+  const cur = todayStr().slice(0, 7);
+  let from = (document.getElementById("kpiFrom") || {}).value || cur, to = (document.getElementById("kpiTo") || {}).value || from;
+  if (to < from) [from, to] = [to, from];
+  if (from > cur) { toast("เดือนที่เลือกยังมาไม่ถึง", "⚠️"); return; }
+  if (to > cur) to = cur;
+  const months = []; { let [y, m] = from.split("-").map(Number); const [ty, tm] = to.split("-").map(Number);
+    while (y < ty || (y === ty && m <= tm)) { months.push(`${y}-${String(m).padStart(2, "0")}`); m++; if (m > 12) { m = 1; y++; } } }
+  if (months.length > 24) { toast("เลือกได้สูงสุด 24 เดือน", "⚠️"); return; }
+  const monthEnd = ym => { const [y, m] = ym.split("-").map(Number); const l = `${ym}-${String(new Date(y, m, 0).getDate()).padStart(2, "0")}`; return l < todayStr() ? l : todayStr(); };
+  const start = months[0] + "-01", end = monthEnd(months[months.length - 1]);
+  let logins = null;
+  const r = await db.from("login_days").select("member_id,day").gte("day", start).lte("day", end).then(x => x, () => ({ error:true }));
+  if (!r.error) logins = r.data || [];
+  let rows = [];
+  months.forEach(ym => { rows = rows.concat(kpiRows(ym + "-01", monthEnd(ym), logins, ymLabel(ym))); });
+  if (months.length > 1) rows = rows.concat(kpiRows(start, end, logins, `รวม ${ymLabel(months[0])} – ${ymLabel(months[months.length - 1])}`));
   if (!rows.length) { toast("ไม่มีข้อมูลสมาชิก", "⚠️"); return; }
   const cols = Object.keys(rows[0]), q = v => `"${String(v).replace(/"/g, '""')}"`;
   const csv = "\uFEFF" + [cols.map(q).join(","), ...rows.map(r => cols.map(c => q(r[c])).join(","))].join("\r\n");
+  const name = months.length > 1 ? `${months[0]}_ถึง_${months[months.length - 1]}` : months[0];
   const a = document.createElement("a");
   a.href = URL.createObjectURL(new Blob([csv], { type:"text/csv;charset=utf-8" }));
-  a.download = `KPI-${ym}-ดึงเมื่อ-${todayStr()}.csv`;
+  a.download = `KPI-${name}-ดึงเมื่อ-${todayStr()}.csv`;
   document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
-  toast(`ดาวน์โหลด KPI เดือน ${ym} แล้ว`, "ti-download");
+  toast(months.length > 1 ? `ดาวน์โหลด KPI ${months.length} เดือนแล้ว` : `ดาวน์โหลด KPI ${ymLabel(months[0])} แล้ว`, "ti-download");
 }
 function renderResetBar() {
   const el = document.getElementById("resetBar"); if (!el) return;
@@ -1628,7 +1643,8 @@ function renderResetBar() {
   el.innerHTML = `<div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:0 0 12px">
     <button class="btn-ghost btn-sm" onclick="doReset('login_reset')"><i class="ti ti-refresh"></i> รีเซ็ตสถานะคนไม่เข้าระบบ</button>
     <button class="btn-ghost btn-sm" onclick="doReset('task_reset')"><i class="ti ti-refresh"></i> รีเซ็ตงานเลยกำหนด</button>
-    <span style="display:inline-flex;gap:6px;align-items:center"><input type="month" id="kpiMonth" value="${todayStr().slice(0,7)}" style="font:inherit;font-size:13px;padding:5px 8px;border:1px solid var(--stroke-2);border-radius:8px;background:var(--control);color:var(--txt)">
+    <span class="kpi-range"><span>KPI จาก</span><input type="month" id="kpiFrom" value="${todayStr().slice(0,7)}" max="${todayStr().slice(0,7)}" style="font:inherit;font-size:13px;padding:5px 8px;border:1px solid var(--stroke-2);border-radius:8px;background:var(--control);color:var(--txt)">
+    <span>ถึง</span><input type="month" id="kpiTo" value="${todayStr().slice(0,7)}" max="${todayStr().slice(0,7)}" style="font:inherit;font-size:13px;padding:5px 8px;border:1px solid var(--stroke-2);border-radius:8px;background:var(--control);color:var(--txt)">
     <button class="btn-primary btn-sm" onclick="downloadKpi()"><i class="ti ti-download"></i> ดาวน์โหลด KPI</button></span>
     <span style="font-size:11.5px;color:var(--txt-3)">${lr ? "เข้าระบบนับตั้งแต่ " + esc(lr) : ""}${lr && tr ? " · " : ""}${tr ? "งานนับตั้งแต่ " + esc(tr) : ""}</span></div>`;
 }
