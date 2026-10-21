@@ -2211,6 +2211,7 @@ function submitCreateRequest() {
   if (!currentUser || can("create_task")) return saveTaskDirect();
   if (!can("request_task")) { toast("ไม่มีสิทธิ์สร้างงาน","🔒"); return; }
   const f = readTaskForm(); if (!f) return;
+  if (dupBlocked(f.title, f.startDate, f.due)) return;
   const req = newRequest({ type:"create", title:f.title, description:f.desc, who:f.who, startDate:f.startDate, due:f.due, freq:f.freq, emoji:state.tEmoji, checks:state.tmpChecks.map(c=>({text:c.text,on:false})) });
   closeModal("taskOverlay");
   addRequest(req, "คำขอสร้างงานใหม่", `${currentUser.name} ขอสร้างงาน "${f.title}"`);
@@ -2238,6 +2239,7 @@ async function approveRequest(reqId) {
   const req = state.requests.find(r => r.id === reqId);
   if (!canApproveReq(req)) { toast("คำขอนี้ต้องให้ Boss/Dev อนุมัติ","🔒"); return; }
   if (req.type === "create") {
+    if (dupBlocked(req.title, req.startDate||"", req.due)) return;
     const t = { id:uid(), title:req.title, desc:req.description, who:req.who, startDate:req.startDate||"", due:req.due, freq:req.freq||"daily", emoji:req.emoji||"ti-car", status:"doing", checks:req.checks||[], createdAt:new Date().toISOString(), completedAt:null, createdBy:req.fromId };
     state.tasks.unshift(t);
     const r = await dbw(db.from("tasks").insert(Object.assign({ id:t.id, created_by:t.createdBy }, taskRow(t))), "สร้างงานไม่สำเร็จ");
@@ -3073,9 +3075,21 @@ function saveTask() {
   if (can("request_task")) { submitCreateRequest(); return; }
   toast("ไม่มีสิทธิ์สร้างงาน","🔒");
 }
+/* กันสร้างงานซ้ำ: ชื่อเหมือนกันทุกตัวอักษร + วันเริ่ม + วันกำหนดส่งเหมือนกัน = งานซ้ำ (ต่างแม้ตัวเดียว = คนละงาน) */
+function normTitle(s) { return String(s || "").trim(); }
+function findDupTask(title, startDate, due, exceptId) {
+  const n = normTitle(title);
+  return state.tasks.find(t => t.id !== exceptId && normTitle(t.title) === n && (t.startDate || "") === (startDate || "") && (t.due || "") === (due || ""));
+}
+function dupBlocked(title, startDate, due, exceptId) {
+  const d = findDupTask(title, startDate, due, exceptId);
+  if (d) toast(`มีงาน "${d.title}" วันที่เดียวกันอยู่แล้ว — ไม่สร้างซ้ำ`, "⚠️");
+  return !!d;
+}
 function saveTaskDirect() {
   if (!can("create_task")) { toast("ไม่มีสิทธิ์สร้างงาน","🔒"); return; }
   const f = readTaskForm(); if (!f) return;
+  if (dupBlocked(f.title, f.startDate, f.due)) return;
   const t = { id:uid(), title:f.title, desc:f.desc, who:f.who, coWho:f.coWho||[], startDate:f.startDate, due:f.due, freq:f.freq, emoji:state.tEmoji, status:"doing", checks:state.tmpChecks.map(c=>({text:c.text,on:false})), createdAt:new Date().toISOString(), completedAt:null, createdBy:currentUser.id };
   state.tasks.unshift(t);
   dbw(db.from("tasks").insert(Object.assign({ id:t.id, created_by:t.createdBy }, taskRow(t))), "เพิ่มงานไม่สำเร็จ");
@@ -3301,6 +3315,7 @@ function reuseTask(tid) {
     startDate:shiftDate(t.startDate, f), due:shiftDate(t.due, f), freq:t.freq, emoji:t.emoji, status:"doing",
     checks:(t.checks||[]).map(c => ({ text:shiftText(c.text, f), on:false })), attachments:[],
     createdAt:new Date().toISOString(), completedAt:null, createdBy:currentUser.id };
+  if (dupBlocked(nt.title, nt.startDate, nt.due)) return;
   if (!confirm(`สร้างงานรอบใหม่?\n\n"${nt.title}"\n${fmtDate(nt.startDate)} → ${fmtDate(nt.due)}\nหัวข้อย่อย ${nt.checks.length} ข้อ (ยังไม่ติ๊ก)\n\nงานเดิมเก็บไว้เป็นประวัติ KPI ไม่ถูกแก้`)) return;
   state.tasks.unshift(nt);
   dbw(db.from("tasks").insert(Object.assign({ id:nt.id, created_by:nt.createdBy }, taskRow(nt))), "สร้างงานไม่สำเร็จ");
