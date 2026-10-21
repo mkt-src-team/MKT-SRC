@@ -2598,6 +2598,7 @@ function renderTaskCard(t) {
   if (st!=="done") { if (canTick) btns += `<button class="btn-ghost btn-sm" onclick="completeTask('${id}')"><i class="ti ti-check"></i> ทำเสร็จแล้ว</button>`; }
   else if (canRe) btns += `<button class="btn-ghost btn-sm" onclick="reopenTask('${id}')"><i class="ti ti-refresh"></i> เปิดงานใหม่</button>`;
   else if (reqRe) btns += `<button class="btn-ghost btn-sm" onclick="submitReopenRequest('${id}')"><i class="ti ti-send"></i> ขอเปิดงานใหม่</button>`;
+  if (canReuseTask(t)) btns += `<button class="btn-primary btn-sm" onclick="reuseTask('${id}')"><i class="ti ti-copy-plus"></i> ใช้ซ้ำ${freqCls(t.freq)==="weekly"?"อาทิตย์หน้า":freqCls(t.freq)==="daily"?"วันถัดไป":"เดือนหน้า"}</button>`;
   if (canEdit) btns += `<button class="btn-ghost btn-sm" onclick="openEditTaskModal('${id}')"><i class="ti ti-pencil"></i> แก้ไข</button>`;
   if (canDel) btns += `<button class="btn-danger btn-sm" onclick="delTaskDirect('${id}')"><i class="ti ti-trash"></i> ลบ</button>`;
   else if (reqDel) btns += `<button class="btn-danger btn-sm" onclick="submitDeleteRequest('${id}')"><i class="ti ti-send"></i> ขอลบ</button>`;
@@ -3251,8 +3252,52 @@ async function completeTask(tid) {
   }
 }
 function canReopenTask(t) { return canManageTasks() || (!!t && !!currentUser && isMine(t, currentUser.id) && can("reopen_task")); }
+/* ===== งานรูทีน: ใช้ซ้ำรอบหน้า =====
+   "เปิดงานใหม่" = ล้างเชคลิสต์ของงานเดิม → ผลงานรอบก่อนหายจาก KPI
+   "ใช้ซ้ำรอบหน้า" = สร้างงานใหม่ (เลื่อนวันที่ +1 เดือน/อาทิตย์/วัน, เชคลิสต์ว่าง) งานเดิมคงอยู่เป็นประวัติ KPI ครบ */
+const MON_EN = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+function canReuseTask(t) { return !!t && freqCls(t.freq) !== "daily" && !!currentUser && can("create_task") && (canManageTasks() || isMine(t, currentUser.id)); }
+function shiftDate(ds, freq) {
+  if (!ds) return ds;
+  const d = new Date(ds + "T00:00:00");
+  if (freq === "weekly") d.setDate(d.getDate() + 7);
+  else if (freq === "daily") d.setDate(d.getDate() + 1);
+  else { const day = d.getDate(); d.setDate(1); d.setMonth(d.getMonth() + 1); d.setDate(Math.min(day, new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate())); }
+  return fmtISO(d);
+}
+function shiftText(txt, freq) {
+  if (freq !== "monthly") return txt;
+  return String(txt)
+    // dd/mm/yy หรือ dd/mm/yyyy → เดือนถัดไป
+    .replace(/\b(\d{1,2})\/(\d{1,2})\/(\d{2}|\d{4})\b/g, (all, dd, mm, yy) => {
+      let m = +mm + 1, y = +yy; if (m > 12) { m = 1; y += 1; }
+      const y2 = yy.length === 2 ? String(y % 100).padStart(2, "0") : String(y);
+      return `${dd.padStart(dd.length, "0")}/${String(m).padStart(mm.length, "0")}/${y2}`;
+    })
+    // Oct26 / Oct 2026 → Nov26 / Nov 2026
+    .replace(/\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)(\s?)(\d{2}|\d{4})\b/g, (all, mon, sp, yy) => {
+      let i = MON_EN.indexOf(mon) + 1, y = +yy; if (i > 11) { i = 0; y += 1; }
+      return MON_EN[i] + sp + (yy.length === 2 ? String(y % 100).padStart(2, "0") : y);
+    });
+}
+function reuseTask(tid) {
+  const t = state.tasks.find(x => x.id === tid);
+  if (!canReuseTask(t)) { toast("ไม่มีสิทธิ์สร้างงาน", "🔒"); return; }
+  const f = freqCls(t.freq);
+  const nt = { id:uid(), title:shiftText(t.title, f), desc:t.desc, who:t.who, coWho:[...(t.coWho||[])],
+    startDate:shiftDate(t.startDate, f), due:shiftDate(t.due, f), freq:t.freq, emoji:t.emoji, status:"doing",
+    checks:(t.checks||[]).map(c => ({ text:shiftText(c.text, f), on:false })), attachments:[],
+    createdAt:new Date().toISOString(), completedAt:null, createdBy:currentUser.id };
+  if (!confirm(`สร้างงานรอบใหม่?\n\n"${nt.title}"\n${fmtDate(nt.startDate)} → ${fmtDate(nt.due)}\nหัวข้อย่อย ${nt.checks.length} ข้อ (ยังไม่ติ๊ก)\n\nงานเดิมเก็บไว้เป็นประวัติ KPI ไม่ถูกแก้`)) return;
+  state.tasks.unshift(nt);
+  dbw(db.from("tasks").insert(Object.assign({ id:nt.id, created_by:nt.createdBy }, taskRow(nt))), "สร้างงานไม่สำเร็จ");
+  [nt.who, ...nt.coWho].filter(x => x && x !== currentUser.id).forEach(id => notify({ toId:id, type:"task", title:"งานรอบใหม่", message:`งาน "${nt.title}" รอบใหม่ถูกสร้างแล้ว` }));
+  render(); toast("สร้างงานรอบใหม่แล้ว — งานเดิมยังอยู่ใน KPI", "ti-copy-plus");
+}
 async function reopenTask(tid) {
-  if (!canReopenTask(state.tasks.find(x=>x.id===tid))) { toast("ไม่มีสิทธิ์เปิดงานนี้","🔒"); return; }
+  const rt = state.tasks.find(x=>x.id===tid);
+  if (rt && freqCls(rt.freq) !== "daily" && !confirm("เปิดงานเดิมใหม่จะล้างเชคลิสต์ และผลงานรอบที่แล้วจะหายจาก KPI\n\nถ้าเป็นงานรูทีนรอบใหม่ แนะนำกด \"ใช้ซ้ำ\" แทน (เก็บประวัติไว้)\n\nยังต้องการเปิดงานเดิมใหม่?")) return;
+  if (!canReopenTask(rt)) { toast("ไม่มีสิทธิ์เปิดงานนี้","🔒"); return; }
   if (await checkOp(tid, "all", { on:false })) toast("เปิดงานใหม่แล้ว (รีเซ็ตเชคลิสต์)","↩︎");
 }
 function delTaskDirect(tid) {
