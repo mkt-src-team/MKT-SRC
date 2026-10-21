@@ -36,11 +36,12 @@
 <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@500;600&family=IBM+Plex+Sans+Thai:wght@400;500;600&display=swap" rel="stylesheet">
 
 <style>
+:root{--alert-yellow:#D4A017;--alert-orange:#E07B24;--alert-red:#D2382B}
 /* ============ MONOCHROME — LIGHT (ขาวดำ เรียบหรู) ============ */
 :root, [data-theme="light"]{
   --bg:#F5F5F3;--layer:#ffffff;--layer-2:#FAFAF8;
   --stroke:#E4E4E0;--stroke-2:#D6D6D1;
-  --txt:#111111;--txt-2:#6B6B66;--txt-3:#9A9A95;
+  --txt:#111111;--txt-2:#6B6B66;--txt-3:#767671;
   --accent:#111111;--accent-hover:#2A2A2A;--accent-tint:rgba(17,17,17,.06);--accent-contrast:#ffffff;
   --control:#ffffff;--control-hover:#F0F0EC;
   --success:#3E6B47;--success-tint:rgba(62,107,71,.10);
@@ -76,7 +77,7 @@ header{position:sticky;top:0;z-index:50;background:var(--mica);backdrop-filter:s
 .logo .badge{width:40px;height:40px;border-radius:9px;background:linear-gradient(150deg,var(--accent),var(--accent-hover));display:grid;place-items:center;font-size:21px;box-shadow:var(--shadow-2)}
 .logo h1{font-size:19px;letter-spacing:.2px;font-weight:650}
 .logo h1 .src{color:var(--accent);font-weight:700}
-.logo small{display:block;color:var(--txt-2);font-size:11.5px;font-weight:400}
+.logo small{display:block;color:var(--txt-2);font-size:12px;font-weight:400}
 .header-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 
@@ -99,24 +100,24 @@ button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
 .theme-picker{position:relative}
 .combo{display:inline-flex;align-items:center;justify-content:space-between;gap:10px;min-width:170px;background:var(--control);border:1px solid var(--stroke-2);border-radius:5px;padding:8px 11px;font-size:13px;font-weight:500;color:var(--txt)}
 .combo:hover{background:var(--control-hover)}
-.combo .chev{font-size:11px;color:var(--txt-2);transition:.2s transform}
+.combo .chev{font-size:12px;color:var(--txt-2);transition:.2s transform}
 .combo.open .chev{transform:rotate(180deg)}
 .combo-flyout{position:absolute;right:0;top:calc(100% + 6px);z-index:70;background:var(--layer);border:1px solid var(--stroke);border-radius:8px;box-shadow:var(--flyout);padding:4px;min-width:230px;display:none;animation:popIn .14s ease}
 @keyframes popIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
 .combo-flyout.show{display:block}
-.flyout-title{font-size:11.5px;color:var(--txt-3);font-weight:600;padding:8px 12px 5px;text-transform:uppercase;letter-spacing:.4px}
+.flyout-title{font-size:12px;color:var(--txt-3);font-weight:600;padding:8px 12px 5px;text-transform:uppercase;letter-spacing:.4px}
 .flyout-sep{height:1px;background:var(--stroke);margin:4px 0}
 .combo-item{position:relative;padding:9px 12px 9px 18px;border-radius:5px;font-size:14px;color:var(--txt);cursor:pointer;transition:.1s background}
 .combo-item:hover{background:var(--control-hover)}
 .combo-item.on{background:var(--accent-tint);font-weight:600}
 .combo-item.on::before{content:"";position:absolute;left:5px;top:50%;transform:translateY(-50%);width:3px;height:17px;border-radius:2px;background:var(--accent)}
-.combo-item .sub{display:block;font-size:11.5px;color:var(--txt-2);font-weight:400;margin-top:2px}
+.combo-item .sub{display:block;font-size:12px;color:var(--txt-2);font-weight:400;margin-top:2px}
 
 /* USER BOX */
 .user-box{display:flex;align-items:center;gap:9px;background:var(--layer);border:1px solid var(--stroke);padding:4px 13px 4px 5px;border-radius:6px}
 .u-avatar{width:29px;height:29px;border-radius:50%;background:var(--accent-tint);display:grid;place-items:center;font-size:15px}
 .u-name{font-size:12.5px;font-weight:600;line-height:1.15}
-.u-role{font-size:9.5px;color:var(--txt-2);line-height:1.15;text-transform:uppercase;letter-spacing:.5px;font-weight:700}
+.u-role{font-size:12px;color:var(--txt-2);line-height:1.15;text-transform:uppercase;letter-spacing:.5px;font-weight:700}
 .u-role.boss{color:var(--burgundy)}
 .u-role.dev{color:var(--accent)}
 .u-role.employee{color:var(--caution)}
@@ -130,7 +131,7 @@ button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
 .notif-wrap{position:relative}
 .notif-bell{font-size:20px;background:none;border:none;padding:6px;cursor:pointer;color:var(--txt);position:relative}
 .notif-bell:hover{opacity:.7}
-.notif-badge{position:absolute;top:2px;right:2px;background:var(--danger);color:#fff;font-size:10px;font-weight:700;min-width:18px;height:18px;border-radius:9px;display:grid;place-items:center;padding:0 4px;border:2px solid var(--layer)}
+.notif-badge{position:absolute;top:2px;right:2px;background:var(--danger);color:#fff;font-size:12px;font-weight:700;min-width:18px;height:18px;border-radius:9px;display:grid;place-items:center;padding:0 4px;border:2px solid var(--layer)}
 .notif-badge.hidden{display:none}
 .notif-panel{position:absolute;left:0;top:calc(100% + 8px);z-index:80;width:380px;max-height:500px;overflow-y:auto;background:var(--layer);border:1px solid var(--stroke);border-radius:10px;box-shadow:var(--flyout);display:none}
 .notif-panel.show{display:block;animation:popIn .14s ease}
@@ -143,7 +144,7 @@ button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
 .notif-item .n-body{flex:1;min-width:0}
 .notif-item .n-title{font-size:13px;font-weight:600;color:var(--txt)}
 .notif-item .n-msg{font-size:12px;color:var(--txt-2);margin-top:2px}
-.notif-item .n-time{font-size:11px;color:var(--txt-3);margin-top:4px}
+.notif-item .n-time{font-size:12px;color:var(--txt-3);margin-top:4px}
 .notif-empty{text-align:center;padding:30px;color:var(--txt-3);font-size:13px}
 .n-del{background:none;border:none;color:var(--txt-3);cursor:pointer;font-size:14px;padding:4px;border-radius:4px;flex:none;opacity:0;transition:.15s}
 .notif-item:hover .n-del{opacity:1}
@@ -155,7 +156,7 @@ main{max-width:1180px;margin:0 auto;padding:20px}
 .role-banner,.cloud-bar{padding:10px 15px;border-radius:6px;font-size:13px;margin-bottom:16px;background:var(--layer);border:1px solid var(--stroke);color:var(--txt-2);display:flex;align-items:center;gap:9px}
 .role-banner b{color:var(--txt)}
 .cloud-bar .dot{width:8px;height:8px;border-radius:50%;flex:none;box-shadow:0 0 0 3px var(--success-tint)}
-.cloud-bar code{margin-left:auto;font-size:11.5px;color:var(--txt-3);background:var(--layer-2);padding:2px 7px;border-radius:4px}
+.cloud-bar code{margin-left:auto;font-size:12px;color:var(--txt-3);background:var(--layer-2);padding:2px 7px;border-radius:4px}
 
 /* STATS */
 .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:12px;margin-bottom:26px}
@@ -163,7 +164,7 @@ main{max-width:1180px;margin:0 auto;padding:20px}
 .stat:hover{box-shadow:var(--shadow-2);transform:translateY(-2px)}
 .stat .label{color:var(--txt-2);font-size:12.5px}
 .stat .value{font-size:29px;font-weight:700;margin-top:6px;letter-spacing:-.5px}
-.stat .sub{font-size:11.5px;color:var(--txt-3);margin-top:3px}
+.stat .sub{font-size:12px;color:var(--txt-3);margin-top:3px}
 
 /* SECTIONS */
 section{margin-bottom:32px}
@@ -195,7 +196,7 @@ section{margin-bottom:32px}
 .bar>i{display:block;height:100%;border-radius:99px;transition:.5s width;background:var(--accent)}
 .bar.good>i{background:var(--success)}.bar.warn>i{background:var(--caution)}.bar.bad>i{background:var(--danger)}
 .mini{display:flex;gap:6px;margin-top:12px;flex-wrap:wrap}
-.chip{font-size:11px;padding:4px 8px;border-radius:5px;background:var(--layer-2);border:1px solid var(--stroke);color:var(--txt-2)}
+.chip{font-size:12px;padding:4px 8px;border-radius:5px;background:var(--layer-2);border:1px solid var(--stroke);color:var(--txt-2)}
 .chip b{color:var(--txt)}
 .m-del{position:absolute;top:9px;right:9px;opacity:.4}
 .m-del:hover{opacity:1}
@@ -209,7 +210,7 @@ section{margin-bottom:32px}
 .task-icon{width:42px;height:42px;border-radius:8px;flex:none;display:grid;place-items:center;font-size:21px;background:var(--layer-2);border:1px solid var(--stroke)}
 .task-main{flex:1;min-width:200px}
 .task-title{font-weight:650;font-size:15.5px;margin-bottom:6px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-.tag{font-size:11px;font-weight:700;padding:3px 9px;border-radius:5px;background:var(--layer-2);border:1px solid var(--stroke);color:var(--txt-2);display:inline-flex;align-items:center;gap:4px}
+.tag{font-size:12px;font-weight:700;padding:3px 9px;border-radius:5px;background:var(--layer-2);border:1px solid var(--stroke);color:var(--txt-2);display:inline-flex;align-items:center;gap:4px}
 .tag i{font-size:12px}
 .tag.overdue{background:var(--danger-tint);color:var(--danger);border-color:transparent}
 .tag.done{background:var(--success-tint);color:var(--success);border-color:transparent}
@@ -226,7 +227,7 @@ section{margin-bottom:32px}
 .check input:checked::after{content:"✓";position:absolute;inset:0;display:grid;place-items:center;color:var(--accent-contrast);font-size:13px;font-weight:900}
 .check .ctext{flex:1;font-size:14px}
 .check input:checked + .ctext{text-decoration:line-through;color:var(--txt-3)}
-.check .who{font-size:11px;color:var(--txt-2);background:var(--layer-2);border:1px solid var(--stroke);padding:2px 8px;border-radius:5px}
+.check .who{font-size:12px;color:var(--txt-2);background:var(--layer-2);border:1px solid var(--stroke);padding:2px 8px;border-radius:5px}
 .del-check{opacity:.45;font-size:14px;background:none;border:none;color:var(--txt-2);padding:2px 6px}
 .del-check:hover{opacity:1;color:var(--danger)}
 .add-check{display:flex;gap:8px;margin-top:8px}
@@ -276,15 +277,15 @@ section{margin-bottom:32px}
 .auth-info{background:var(--accent-tint);color:var(--txt);padding:10px;border-radius:6px;font-size:13px;margin-bottom:12px;display:none;text-align:left;line-height:1.55}
 .auth-info.show{display:block}
 button:disabled{opacity:.6;cursor:progress}
-.chip-link{font-size:11px;margin-top:10px;display:flex;gap:6px;align-items:center;justify-content:space-between;background:var(--caution-tint);color:var(--caution);border-radius:6px;padding:6px 8px}
+.chip-link{font-size:12px;margin-top:10px;display:flex;gap:6px;align-items:center;justify-content:space-between;background:var(--caution-tint);color:var(--caution);border-radius:6px;padding:6px 8px}
 .forgot-link{display:block;text-align:center;font-size:12.5px;color:var(--accent);margin-top:12px;cursor:pointer;text-decoration:none}
 .forgot-link:hover{text-decoration:underline}
-.rank-badge{display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;margin-left:6px;text-transform:uppercase;letter-spacing:.5px}
+.rank-badge{display:inline-block;font-size:12px;font-weight:700;padding:2px 8px;border-radius:4px;margin-left:6px;text-transform:uppercase;letter-spacing:.5px}
 
 /* REQUEST PANEL */
 .request-card{background:var(--layer);border:1px solid var(--stroke);border-radius:8px;padding:14px 16px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
 .request-card .req-info{flex:1;min-width:200px}
-.request-card .req-type{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.3px;margin-bottom:4px}
+.request-card .req-type{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.3px;margin-bottom:4px}
 .request-card .req-type.create{color:var(--success)}
 .request-card .req-type.delete{color:var(--danger)}
 .request-card .req-title{font-weight:600;font-size:14px}
@@ -331,7 +332,7 @@ button:disabled{opacity:.6;cursor:progress}
 .sidebar-brand .text{display:flex;flex-direction:column;min-width:0;line-height:1.15}
 .sidebar-brand .text b{font-size:14px;font-weight:650;white-space:nowrap}
 .sidebar-brand .text b .src{color:var(--accent)}
-.sidebar-brand .text small{font-size:11px;color:var(--txt-3);white-space:nowrap}
+.sidebar-brand .text small{font-size:12px;color:var(--txt-3);white-space:nowrap}
 #sidebar button.sidebar-collapse-btn{width:28px;height:28px;padding:0;border:0;border-radius:6px;background:transparent;display:grid;place-items:center;color:var(--txt-3);flex:none}
 #sidebar button.sidebar-collapse-btn:hover{background:var(--layer-2);color:var(--txt)}
 #sidebar.collapsed .sidebar-brand .text{display:none}
@@ -354,7 +355,7 @@ button:disabled{opacity:.6;cursor:progress}
 #sidebar button.sidebar-item.active::before{content:"";position:absolute;left:0;top:9px;bottom:9px;width:3px;border-radius:0 3px 3px 0;background:var(--accent)}
 #sidebar button.sidebar-item.active svg{color:var(--accent)}
 .sidebar-item .label{flex:1;overflow:hidden;text-overflow:ellipsis}
-.sidebar-item .count{min-width:20px;height:20px;padding:0 6px;border-radius:10px;font-size:11px;font-weight:650;display:grid;place-items:center;background:var(--layer-2);color:var(--txt-2);border:1px solid var(--stroke)}
+.sidebar-item .count{min-width:20px;height:20px;padding:0 6px;border-radius:10px;font-size:12px;font-weight:650;display:grid;place-items:center;background:var(--layer-2);color:var(--txt-2);border:1px solid var(--stroke)}
 .sidebar-item .count.alert{background:#c42b1c;color:#fff;border-color:transparent}
 #sidebar.collapsed .sidebar-nav{padding:4px 8px 12px}
 #sidebar.collapsed .sidebar-group{margin-top:10px;padding-top:10px;border-top:1px solid var(--stroke)}
@@ -363,14 +364,14 @@ button:disabled{opacity:.6;cursor:progress}
 #sidebar.collapsed .sidebar-group.collapsed .sidebar-items{display:flex}
 #sidebar.collapsed button.sidebar-item{justify-content:center;padding:0}
 #sidebar.collapsed .sidebar-item .label{display:none}
-#sidebar.collapsed .sidebar-item .count{position:absolute;top:2px;right:2px;min-width:16px;height:16px;font-size:9.5px;padding:0 4px}
+#sidebar.collapsed .sidebar-item .count{position:absolute;top:2px;right:2px;min-width:16px;height:16px;font-size:12px;padding:0 4px}
 .sidebar-footer{padding:10px;border-top:1px solid var(--stroke);flex-shrink:0}
 .sidebar-footer .user-mini{display:flex;align-items:center;gap:10px;padding:8px;border-radius:8px;cursor:pointer;transition:background .12s}
 .sidebar-footer .user-mini:hover{background:var(--layer-2)}
 .sidebar-footer .s-avatar{width:32px;height:32px;border-radius:50%;flex:none;display:grid;place-items:center;font-size:13px;font-weight:700;background:var(--accent-tint);color:var(--accent)}
 .sidebar-footer .user-info{flex:1;min-width:0}
 .sidebar-footer .u-name{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.sidebar-footer .u-role{font-size:11px;font-weight:500;letter-spacing:0;text-transform:none;color:var(--txt-3)}
+.sidebar-footer .u-role{font-size:12px;font-weight:500;letter-spacing:0;text-transform:none;color:var(--txt-3)}
 .sidebar-footer .more{color:var(--txt-3);display:grid}
 #sidebar.collapsed .sidebar-footer{padding:10px 8px}
 #sidebar.collapsed .sidebar-footer .user-info,#sidebar.collapsed .sidebar-footer .more{display:none}
@@ -412,7 +413,7 @@ main{padding:20px 24px}
   .header-right .user-box .u-role{display:none}
   body{padding-bottom:64px}
   #bottomNav{display:flex;position:fixed;left:0;right:0;bottom:0;height:58px;background:var(--mica);backdrop-filter:saturate(160%) blur(20px);-webkit-backdrop-filter:saturate(160%) blur(20px);border-top:1px solid var(--stroke);z-index:90}
-  #bottomNav .bn-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;color:var(--txt-3);font-size:10px;font-weight:600;background:transparent;border:0;cursor:pointer;padding:6px 2px}
+  #bottomNav .bn-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;color:var(--txt-3);font-size:12px;font-weight:600;background:transparent;border:0;cursor:pointer;padding:6px 2px}
   #bottomNav .bn-item.active{color:var(--accent)}
   #bottomNav .bn-item .ic{font-size:19px}
   #mobileFab{display:flex;position:fixed;right:16px;bottom:74px;width:52px;height:52px;border-radius:50%;background:var(--accent);color:var(--accent-contrast);align-items:center;justify-content:center;font-size:24px;box-shadow:var(--shadow-2);z-index:91;border:0;cursor:pointer}
@@ -435,7 +436,7 @@ h2 i.ti,h3 i.ti,.sec-head h2 i.ti{font-size:.88em;vertical-align:-1px;margin-rig
 .cal-ctrl{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
 .cal-title{font-weight:700;font-size:15px;min-width:150px;text-align:center}
 .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
-.cal-dow{text-align:center;font-size:11px;font-weight:700;color:var(--txt-3);padding:4px 0}
+.cal-dow{text-align:center;font-size:12px;font-weight:700;color:var(--txt-3);padding:4px 0}
 .cal-cell{background:var(--layer);border:1px solid var(--stroke);border-radius:8px;min-height:98px;padding:6px;transition:.12s;overflow:hidden;position:relative;cursor:pointer}
 .cal-cell:hover{border-color:var(--accent)}
 .cal-cell.out{opacity:.42}
@@ -444,7 +445,7 @@ h2 i.ti,h3 i.ti,.sec-head h2 i.ti{font-size:.88em;vertical-align:-1px;margin-rig
 .cal-num{display:flex;justify-content:space-between;align-items:center;font-size:12px;font-weight:700;color:var(--txt-2);margin-bottom:4px}
 .cal-cell.today .cal-num>span:first-child{background:var(--accent);color:var(--accent-contrast);border-radius:50%;width:21px;height:21px;display:grid;place-items:center}
 .cal-cell.has-overdue .cal-num>span:first-child{background:var(--danger);color:#fff;border-radius:50%;width:21px;height:21px;display:grid;place-items:center}
-.ev-chip{font-size:11px;padding:3px 6px;border-radius:5px;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-left:3px solid var(--txt-3);background:var(--layer-2)}
+.ev-chip{font-size:12px;padding:3px 6px;border-radius:5px;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-left:3px solid var(--txt-3);background:var(--layer-2)}
 .ev-chip.t-event{background:var(--accent-tint);border-color:var(--accent)}
 .ev-chip.t-campaign{background:var(--caution-tint);border-color:var(--caution)}
 .ev-chip.t-content{background:var(--success-tint);border-color:var(--success)}
@@ -474,7 +475,7 @@ button.stat-link:hover{border-color:var(--accent)}
 .attention.bad{background:var(--danger-tint)}
 .attention>span:nth-child(2){flex:1}
 .task-toolbar{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:14px}
-.tab-count{min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:var(--layer-2);border:1px solid var(--stroke);font-size:11px;display:inline-grid;place-items:center;font-weight:600}
+.tab-count{min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:var(--layer-2);border:1px solid var(--stroke);font-size:12px;display:inline-grid;place-items:center;font-weight:600}
 .cal-filter.on .tab-count{background:var(--layer)}
 .tab-count.alert{background:#c42b1c;color:#fff;border-color:transparent}
 .mine-toggle{display:inline-flex;align-items:center;gap:7px;font-size:13px;color:var(--txt-2);cursor:pointer;user-select:none}
@@ -485,11 +486,11 @@ button.stat-link:hover{border-color:var(--accent)}
 .role-detail{margin:-8px 0 16px;padding:12px 15px;border:1px solid var(--stroke);border-top:0;border-radius:0 0 6px 6px;background:var(--layer)}
 .perm-summary{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:6px 16px;font-size:13px}
 .ps-on{color:var(--txt)} .ps-off{color:var(--txt-3)}
-.perm-bar{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:10px;padding-top:10px;border-top:1px dashed var(--stroke);font-size:11.5px;color:var(--txt-2)}
+.perm-bar{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:10px;padding-top:10px;border-top:1px dashed var(--stroke);font-size:12px;color:var(--txt-2)}
 .perm-row{display:flex;gap:10px;align-items:flex-start;padding:9px 10px;border-radius:6px;border:1px solid var(--stroke);margin-bottom:6px;cursor:pointer;background:var(--layer-2)}
 .perm-row input{width:18px;height:18px;margin-top:2px;accent-color:var(--accent);flex:none}
 .perm-row b{display:block;font-size:13.5px;font-weight:600}
-.perm-row small{display:block;font-size:11.5px;color:var(--txt-2);font-weight:400}
+.perm-row small{display:block;font-size:12px;color:var(--txt-2);font-weight:400}
 .perm-row small.perm-def{color:var(--txt-3)}
 .perm-row.changed{border-color:var(--caution);background:var(--caution-tint)}
 .perm-admin-note{font-size:12px;color:var(--txt-2);margin-top:4px}
@@ -498,23 +499,23 @@ button.cal-filter{display:inline-flex;align-items:center;gap:7px;padding:5px 12p
 button.cal-filter:hover{background:var(--layer-2);color:var(--txt)}
 button.cal-filter.on{background:var(--accent-tint);color:var(--txt);border-color:var(--accent);font-weight:600}
 button.cal-filter i{width:9px;height:9px;border-radius:3px;display:inline-block}
-.ev-legend{display:flex;gap:12px;flex-wrap:wrap;font-size:11.5px;color:var(--txt-2);margin-bottom:10px;align-items:center}
+.ev-legend{display:flex;gap:12px;flex-wrap:wrap;font-size:12px;color:var(--txt-2);margin-bottom:10px;align-items:center}
 .ev-legend b{display:inline-block;width:10px;height:10px;border-radius:3px;vertical-align:middle;margin-right:4px}
 .kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:16px}
 .kpi{background:var(--layer);border:1px solid var(--stroke);border-radius:10px;padding:12px 14px}
-.kpi .k-label{font-size:11.5px;color:var(--txt-2);font-weight:600}
+.kpi .k-label{font-size:12px;color:var(--txt-2);font-weight:600}
 .kpi .k-value{font-size:26px;font-weight:750;margin-top:4px}
 .tl-row{display:flex;gap:14px;align-items:center;background:var(--layer);border:1px solid var(--stroke);border-radius:10px;padding:11px 14px;margin-bottom:8px;transition:.12s}
 .tl-row:hover{border-color:var(--accent)}
 .tl-info{flex:1;min-width:0}
 .tl-title{font-weight:650;font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.tl-meta{font-size:11.5px;color:var(--txt-2);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tl-meta{font-size:12px;color:var(--txt-2);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .tl-bar{width:170px;height:9px;background:var(--track);border-radius:99px;overflow:hidden;flex-shrink:0}
 .tl-bar i{display:block;height:100%;border-radius:99px;transition:.3s}
 .tl-pct{width:44px;text-align:right;font-weight:750;font-size:13.5px;flex-shrink:0}
 @media(max-width:620px){
   .cal-cell{min-height:66px;padding:4px}
-  .ev-chip{font-size:9.5px;padding:2px 4px;border-left-width:2px}
+  .ev-chip{font-size:12px;padding:2px 4px;border-left-width:2px}
   .cal-title{min-width:120px;font-size:13.5px}
   .tl-bar{display:none}
 }
@@ -563,7 +564,7 @@ button{border-radius:99px;font-weight:500}
 .initials{border-radius:50%;background:var(--accent);color:var(--accent-contrast);display:grid;place-items:center;font-family:"Kanit",sans-serif;font-weight:500;flex:none;text-transform:uppercase}
 .u-avatar{background:var(--accent)!important;color:var(--accent-contrast);font-size:12px!important}
 .avatar{background:var(--accent)!important;color:var(--accent-contrast);border:none!important;font-size:17px!important;font-family:"Kanit",sans-serif}
-.score-pill{display:inline-flex;align-items:center;gap:5px;border-radius:99px;padding:3px 11px;font-size:11.5px;border:1px solid var(--stroke-2);color:var(--txt-2);white-space:nowrap}
+.score-pill{display:inline-flex;align-items:center;gap:5px;border-radius:99px;padding:3px 11px;font-size:12px;border:1px solid var(--stroke-2);color:var(--txt-2);white-space:nowrap}
 .score-pill.good{border-color:var(--txt);color:var(--txt)}
 .score-pill.bad{border-color:var(--danger);color:var(--danger)}
 .mood-score{text-align:center;margin:10px 0 4px}
@@ -589,7 +590,7 @@ button{border-radius:99px;font-weight:500}
 .dash-row:hover{background:var(--layer-2)}
 .dash-row .ic{width:34px;height:34px;border-radius:10px;border:1px solid var(--stroke);display:grid;place-items:center;font-size:16px;flex:none}
 .dash-row .t{font-weight:500;font-size:13.5px}
-.dash-row .s{font-size:11.5px;color:var(--txt-2)}
+.dash-row .s{font-size:12px;color:var(--txt-2)}
 .dash-row .s.late{color:var(--danger)}
 .dash-row .mbar{width:56px;height:3px;border-radius:9px;background:var(--track);flex:none}
 .dash-row .mbar i{display:block;height:100%;border-radius:9px;background:var(--txt)}
@@ -611,7 +612,7 @@ button{border-radius:99px;font-weight:500}
 .snake-pad{display:none;flex-direction:column;align-items:center;gap:6px;margin-top:12px}
 .snake-pad div{display:flex;gap:6px}
 .snake-pad button{width:56px;height:46px;border-radius:14px;font-size:20px;padding:0}
-.game-hint{font-size:11.5px;color:var(--txt-3);text-align:center;margin-top:10px}
+.game-hint{font-size:12px;color:var(--txt-3);text-align:center;margin-top:10px}
 .lb-row{display:flex;align-items:center;gap:9px;padding:8px 4px;border-bottom:1px solid var(--stroke)}
 .lb-row:last-child{border-bottom:none}
 .lb-row.me{background:var(--accent-tint);border-radius:10px}
@@ -627,14 +628,14 @@ button{border-radius:99px;font-weight:500}
 .field .check input[type=checkbox]{width:19px;height:19px;padding:0;flex:none;border-radius:4px}
 .field .check .ctext-input{width:auto;flex:1;padding:6px 10px;border:1px solid var(--stroke-2);background:var(--control);border-radius:8px}
 .field .check .ctext-input:focus{border-color:var(--txt);box-shadow:none}
-.miss-banner{display:flex;align-items:center;gap:0;border:2px solid #D2382B;background:rgba(210,56,43,.10);border-radius:14px;margin-bottom:16px;overflow:hidden;animation:missPulse 1.6s ease-in-out infinite}
+.miss-banner{display:flex;align-items:center;gap:0;border:2px solid var(--alert-red);background:rgba(210,56,43,.10);border-radius:14px;margin-bottom:16px;overflow:hidden;animation:missPulse 1.6s ease-in-out infinite}
 @keyframes missPulse{0%,100%{box-shadow:0 0 0 0 rgba(210,56,43,.45)}50%{box-shadow:0 0 0 5px rgba(210,56,43,0)}}
-.miss-banner .mb-head{flex:none;background:#D2382B;color:#fff;font-weight:700;font-family:Kanit,sans-serif;padding:10px 12px;display:flex;gap:6px;align-items:center;white-space:nowrap;z-index:1}
+.miss-banner .mb-head{flex:none;background:var(--alert-red);color:#fff;font-weight:700;font-family:Kanit,sans-serif;padding:10px 12px;display:flex;gap:6px;align-items:center;white-space:nowrap;z-index:1}
 .mb-track{flex:1;overflow:hidden;min-width:0}
 .mb-run{display:inline-flex;gap:28px;padding:10px 14px;white-space:nowrap;animation:missRun linear infinite}
 @keyframes missRun{from{transform:translateX(0)}to{transform:translateX(-50%)}}
 .miss-name{font-weight:700;font-size:15px;display:inline-flex;gap:6px;align-items:center}
-.miss-name.red{color:#D2382B}.miss-name.orange{color:#E07B24}
+.miss-name.red{color:var(--alert-red)}.miss-name.orange{color:var(--alert-orange)}
 .miss-name small{font-weight:500;font-size:12.5px;opacity:.9}
 .miss-banner:hover .mb-run{animation-play-state:paused}
 /* การ์ดสมาชิกที่ขาดเข้าระบบ: กรอบไฟวิ่งรอบการ์ด (ส้ม 2 วัน / แดง 3 วันขึ้นไป) */
@@ -643,7 +644,7 @@ button{border-radius:99px;font-weight:500}
   background:linear-gradient(var(--layer),var(--layer)) padding-box,
   conic-gradient(from var(--missAng),var(--mc) 0 18%,transparent 30% 50%,var(--mc) 50% 68%,transparent 80%) border-box!important;
   border:3px solid transparent!important;animation:missSpin 2.2s linear infinite,missCardGlow 1.6s ease-in-out infinite}
-.member.miss-orange{--mc:#E07B24}.member.miss-red{--mc:#D2382B}
+.member.miss-orange{--mc:var(--alert-orange)}.member.miss-red{--mc:var(--alert-red)}
 @keyframes missSpin{to{--missAng:360deg}}
 @keyframes missCardGlow{0%,100%{box-shadow:0 0 0 0 transparent}50%{box-shadow:0 0 14px 1px var(--mc)}}
 .member.miss-run .name{color:var(--mc)}
@@ -714,6 +715,14 @@ button{border-radius:99px;font-weight:500}
 .install-guide .ig-note{font-size:12.5px;color:var(--txt-2);margin-bottom:10px}
 .install-guide .ig-url{margin-top:12px;font-size:12px;color:var(--txt-3);word-break:break-all;background:var(--layer-2);border-radius:8px;padding:8px 10px}
 .kpi-range{display:inline-flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:13px;color:var(--txt-2)}
+/* ===== a11y (impeccable audit) ===== */
+/* กรอบโฟกัสเห็นชัด เฉพาะตอนใช้คีย์บอร์ด (ไม่ขึ้นตอนแตะ/คลิก) */
+:focus-visible{outline:2px solid var(--txt)!important;outline-offset:2px}
+/* มือถือ: ปุ่มไอคอนเล็กให้กดง่าย ≥44px */
+@media (pointer: coarse), (max-width: 768px){
+  .del-check,.dd-acts .btn-sm,.ib-x,.idea-row .ir-foot .btn-sm{min-width:44px;min-height:44px;display:inline-grid;place-items:center}
+  .del-check{opacity:.7;font-size:17px}
+}
 .ctext-input{flex:1;min-width:0;font:inherit;font-size:14px;color:var(--txt);background:transparent;border:1px solid transparent;border-radius:8px;padding:5px 8px;outline:none}
 .ctext-input:hover{border-color:var(--stroke-2)}
 .ctext-input:focus,.ctext-input.editing{border-color:var(--txt);background:var(--control)}
@@ -725,7 +734,7 @@ button{border-radius:99px;font-weight:500}
 .initials img,.avatar img,.u-avatar img,.s-avatar img{width:100%;height:100%;object-fit:cover;display:block;border-radius:50%}
 .prize-card{position:relative;overflow:hidden;text-align:center;border-radius:14px;padding:16px 14px 14px;background:#111;color:#EDEDEA;--txt-3:#9A9A95;--accent:#EDEDEA;--accent-contrast:#111;border:1px solid #2a2a2a}
 .prize-card::before{content:"";position:absolute;inset:-40% -40% auto;height:160%;background:radial-gradient(circle at 50% 30%,rgba(255,205,90,.22),transparent 55%);pointer-events:none}
-.prize-tag{display:inline-block;border:1px solid rgba(255,210,110,.55);color:#E9B949;border-radius:99px;padding:2px 11px;font-size:11px}
+.prize-tag{display:inline-block;border:1px solid rgba(255,210,110,.55);color:#E9B949;border-radius:99px;padding:2px 11px;font-size:12px}
 .prize-crown{font-size:58px;line-height:1;margin:10px 0 4px}
 .prize-crown .crown::after{width:12px;height:12px;top:-4px;right:-8px}
 .prize-title{font-family:"Kanit",sans-serif;font-size:19px}
@@ -734,7 +743,7 @@ button{border-radius:99px;font-weight:500}
 .prize-preview{display:flex;align-items:center;justify-content:center;gap:12px;margin:18px auto 0;padding:14px 20px 10px 14px;border-radius:99px;background:linear-gradient(135deg,rgba(233,185,73,.16),rgba(255,255,255,.04));border:1px solid rgba(233,185,73,.35);width:fit-content}
 .prize-preview .pv-name{font-family:"Kanit",sans-serif;font-size:18px;line-height:1.2}
 .prize-preview .initials{background:#EDEDEA;color:#111}
-.prize-you{font-size:10.5px;color:var(--txt-3)}
+.prize-you{font-size:12px;color:var(--txt-3)}
 .prize-rules{text-align:left;margin-top:12px;display:grid;gap:6px;font-size:12px;color:var(--txt-3)}
 .prize-rules i{margin-right:4px}
 .prize-status{margin-top:12px;padding-top:10px;border-top:1px solid rgba(127,127,127,.3);font-size:12.5px}
@@ -774,7 +783,7 @@ button{border-radius:99px;font-weight:500}
 .more-games{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:6px}
 .more-games button{display:flex;flex-direction:column;align-items:center;gap:4px;padding:12px 6px;border-radius:14px;font-size:12px}
 .more-games button i{font-size:22px}
-.more-label{font-size:11px;color:var(--txt-3);padding:0 2px}
+.more-label{font-size:12px;color:var(--txt-3);padding:0 2px}
 @media(max-width:1024px){.game-grid{grid-template-columns:1fr}.snake-pad{display:flex}}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
@@ -1040,7 +1049,7 @@ button{border-radius:99px;font-weight:500}
       <div id="editCheckList" style="margin-top:8px"></div>
     </div>
     <div class="field">
-      <label><i class="ti ti-paperclip"></i> ไฟล์แนบ <span style="font-weight:400;color:var(--txt-3);font-size:11px">(อัปโหลดไฟล์ขึ้น Google Drive เอง แล้ววางลิงก์ที่นี่)</span></label>
+      <label><i class="ti ti-paperclip"></i> ไฟล์แนบ <span style="font-weight:400;color:var(--txt-3);font-size:12px">(อัปโหลดไฟล์ขึ้น Google Drive เอง แล้ววางลิงก์ที่นี่)</span></label>
       <div id="editAttachList" style="margin-bottom:8px"></div>
       <div class="add-check" id="editAddAttachBox">
         <input id="editAttachName" placeholder="ชื่อไฟล์ เช่น ภาพหน้าปก" style="flex:1">
@@ -1422,7 +1431,7 @@ function missedDays(m) {
   return Math.max(0, Math.floor((new Date(today) - new Date(base)) / 86400000));
 }
 function missLevel(d) { return d >= 3 ? "red" : d === 2 ? "orange" : d === 1 ? "yellow" : ""; }
-const MISS_COLOR = { yellow:"#D4A017", orange:"#E07B24", red:"#D2382B" };
+const MISS_COLOR = { yellow:"var(--alert-yellow)", orange:"var(--alert-orange)", red:"var(--alert-red)" };
 function monthLoginCount(m) {
   // รวมวันจาก login_days + วันเข้าระบบล่าสุดของสมาชิก (กันกรณีบันทึกวันนั้นลงตารางไม่ทัน)
   const days = new Set((state.loginDays && state.loginDays[m.id]) || []);
@@ -1656,7 +1665,7 @@ function renderResetBar() {
     <span class="kpi-range"><span>KPI จาก</span><input type="month" id="kpiFrom" value="${todayStr().slice(0,7)}" max="${todayStr().slice(0,7)}" style="font:inherit;font-size:13px;padding:5px 8px;border:1px solid var(--stroke-2);border-radius:8px;background:var(--control);color:var(--txt)">
     <span>ถึง</span><input type="month" id="kpiTo" value="${todayStr().slice(0,7)}" max="${todayStr().slice(0,7)}" style="font:inherit;font-size:13px;padding:5px 8px;border:1px solid var(--stroke-2);border-radius:8px;background:var(--control);color:var(--txt)">
     <button class="btn-primary btn-sm" onclick="downloadKpi()"><i class="ti ti-download"></i> ดาวน์โหลด KPI</button></span>
-    <span style="font-size:11.5px;color:var(--txt-3)">${lr ? "เข้าระบบนับตั้งแต่ " + esc(lr) : ""}${lr && tr ? " · " : ""}${tr ? "งานนับตั้งแต่ " + esc(tr) : ""}</span></div>`;
+    <span style="font-size:12px;color:var(--txt-3)">${lr ? "เข้าระบบนับตั้งแต่ " + esc(lr) : ""}${lr && tr ? " · " : ""}${tr ? "งานนับตั้งแต่ " + esc(tr) : ""}</span></div>`;
 }
 function taskStatus(t) {
   if (t.status==="done") return "done";
@@ -2182,7 +2191,7 @@ function renderBoard() {
       <div class="board-actions" style="justify-content:space-between;align-items:center">
         <span style="font-size:12px;color:var(--txt-2)"><i class="ti ti-circle-check"></i> รับทราบแล้ว ${ackedBy.length} คน${ackNames?` <span style="color:var(--txt-3)">(${esc(ackNames)})</span>`:""}</span>
         ${currentUser?(iAcked
-          ? `<span class="tag done" style="font-size:11px"><i class="ti ti-circle-check"></i> คุณรับทราบแล้ว</span>`
+          ? `<span class="tag done" style="font-size:12px"><i class="ti ti-circle-check"></i> คุณรับทราบแล้ว</span>`
           : `<button class="btn-primary btn-sm" onclick="ackAnnouncement('${sid(a.id)}')"><i class="ti ti-check"></i> รับทราบ</button>`):""}
       </div>
       ${canManageAnn(a)?`<div class="board-actions">
@@ -2518,7 +2527,7 @@ function renderAttention() {
     return `<div class="score-row2">${avatarHtml(m.name,26,m.id)}<span class="n">${esc(m.name)} ${crownHtml(m.id)}</span><span class="score-pill ${md.cls}">${esc(md.lbl)}${s.hasTask?" "+s.score+"%":""}</span></div>`; }).join("");
   el.innerHTML = `<div class="dash-card"><div class="dc-head"><h3>งานของวันนี้</h3><button class="dc-link" onclick="openTasks('today')">ดูทั้งหมด →</button></div>
       ${rows || `<div style="padding:18px 6px;color:var(--txt-3);font-size:13px">ไม่มีงานเร่งด่วนวันนี้</div>`}</div>
-    <div class="dash-card"><div class="dc-head"><h3>คะแนนทีม</h3><span style="font-size:11.5px;color:var(--txt-3)">ส่งตรงเวลา</span></div>${scores || `<div style="padding:18px 6px;color:var(--txt-3);font-size:13px">ยังไม่มีสมาชิก</div>`}</div>`;
+    <div class="dash-card"><div class="dc-head"><h3>คะแนนทีม</h3><span style="font-size:12px;color:var(--txt-3)">ส่งตรงเวลา</span></div>${scores || `<div style="padding:18px 6px;color:var(--txt-3);font-size:13px">ยังไม่มีสมาชิก</div>`}</div>`;
 }
 function openTasks(filter) { state.filter = filter; navigateTo("today-tasks"); }
 
@@ -2532,7 +2541,7 @@ function loginStatusChip(m) {
     : `<i class="ti ti-alert-triangle"></i> ไม่เข้าระบบ ${d} วัน`;
   const bg = lv === "red" ? "background:rgba(210,56,43,.12);" : "";
   const td = new Date(todayStr()), days = new Date(td.getFullYear(), td.getMonth() + 1, 0).getDate(); // จำนวนวันทั้งเดือน (ต.ค. = 31)
-  return `<div class="chip-link login-chip" style="border-color:${color};border-width:${lv==="red"?2:1}px;${bg}"><span style="color:${color};font-weight:700">${label}</span><span style="color:var(--txt-2);font-size:11px"><i class="ti ti-login"></i> เดือนนี้เข้าระบบ ${monthLoginCount(m)}/${days} วัน</span></div>`;
+  return `<div class="chip-link login-chip" style="border-color:${color};border-width:${lv==="red"?2:1}px;${bg}"><span style="color:${color};font-weight:700">${label}</span><span style="color:var(--txt-2);font-size:12px"><i class="ti ti-login"></i> เดือนนี้เข้าระบบ ${monthLoginCount(m)}/${days} วัน</span></div>`;
 }
 function renderTeam() {
   renderResetBar();
@@ -2554,7 +2563,7 @@ function renderTeam() {
     if (m.status === "pending") {
       return `<div class="member" style="opacity:0.75;border:2px dashed var(--accent)">
         ${removeBtn}
-        <div style="position:absolute;top:8px;right:40px;background:var(--caution);color:#fff;font-size:11px;padding:2px 8px;border-radius:20px;font-weight:600"><i class="ti ti-hourglass"></i> รอเข้าระบบ</div>
+        <div style="position:absolute;top:8px;right:40px;background:var(--caution);color:#fff;font-size:12px;padding:2px 8px;border-radius:20px;font-weight:600"><i class="ti ti-hourglass"></i> รอเข้าระบบ</div>
         <div class="top">
           <div class="avatar" style="opacity:.6">${avatarInner(m.name, m.id)}</div>
           <div><div class="name">${esc(m.name)} <span class="rank-badge ${rk}">${rl}</span></div><div class="role">${esc(m.email)}</div></div>
@@ -2628,7 +2637,7 @@ function renderTaskCard(t) {
         <div class="task-meta">
           <span><i class="ti ti-user"></i> ${whoLabel(t)}</span>
           <span><i class="ti ti-calendar"></i> เริ่ม: ${fmtDate(t.startDate)} → กำหนดส่ง: ${fmtDate(t.due)}</span>
-          <span class="tag ${freqCls(t.freq)}" style="font-size:10px">${FREQ_MAP[freqCls(t.freq)]}</span>
+          <span class="tag ${freqCls(t.freq)}" style="font-size:12px">${FREQ_MAP[freqCls(t.freq)]}</span>
           <span><i class="ti ti-list-check"></i> ${doneC}/${checks.length} ข้อ</span>
         </div>
         ${t.desc?`<div style="font-size:12.5px;color:var(--txt-2);margin-top:7px">${esc(t.desc)}</div>`:""}
@@ -2803,7 +2812,7 @@ function renderEventCalendar() {
       <div class="cal-num"><span>${d.getDate()}</span></div>
       ${evs.map(e=>`<div class="ev-chip t-${evType(e.type)}" title="${esc(e.desc)}"><i class="ti ${EV_ICON[evType(e.type)]}"></i> ${esc(e.title)}${e.time?" "+esc(String(e.time).replace("-"," – ")):""}</div>`).join("")}
       ${taskDue.slice(0,maxT).map(t=>`<div class="ev-chip t-task ${isOverdue(t)?'overdue':''}"><i class="ti ${isOverdue(t)?'ti-alert-triangle':'ti-clipboard-check'}"></i> ${esc(t.title)}</div>`).join("")}
-      ${taskDue.length>maxT?`<div class="cal-overflow-text" style="font-size:10px;color:var(--txt-3)">+${taskDue.length-maxT} งาน</div>`:""}
+      ${taskDue.length>maxT?`<div class="cal-overflow-text" style="font-size:12px;color:var(--txt-3)">+${taskDue.length-maxT} งาน</div>`:""}
       ${dotsList.length?`<div class="cal-dots">${dotsHtml}</div>`:""}
     </div>`;
   }
@@ -2837,7 +2846,7 @@ function openDayDetail(ds) {
   const evs = state.events.filter(e=>evOn(e, ds));
   const tasks = visibleTasks().filter(t=>t.due===ds && taskStatus(t)!=="done");
   const rows = [
-    ...evs.map(e=>`<div class="ev-chip t-${evType(e.type)} dd-row" style="white-space:normal;margin-bottom:6px;padding:8px 10px"><div class="dd-main"><i class="ti ${EV_ICON[evType(e.type)]}"></i> ${esc(e.title)}${e.time?" · "+esc(String(e.time).replace("-"," – ")):""}${e.endDate&&e.endDate>e.date?`<div style="font-size:11px;font-weight:400;color:var(--txt-2);margin-top:3px"><i class="ti ti-calendar-event"></i> ${fmtDate(e.date)} – ${fmtDate(e.endDate)}</div>`:""}${e.desc?`<div style="font-size:11px;font-weight:400;color:var(--txt-2);margin-top:3px">${esc(e.desc)}</div>`:""}</div>${canEditEvent(e)?`<span class="dd-acts"><button class="btn-ghost btn-sm" title="แก้ไข" onclick="closeModal('dayDetailOverlay');openEventModal('${ds}','${esc(e.id)}')"><i class="ti ti-pencil"></i></button><button class="btn-ghost btn-sm" title="ลบ" onclick="quickDeleteEvent('${esc(e.id)}')"><i class="ti ti-trash"></i></button></span>`:""}</div>`),
+    ...evs.map(e=>`<div class="ev-chip t-${evType(e.type)} dd-row" style="white-space:normal;margin-bottom:6px;padding:8px 10px"><div class="dd-main"><i class="ti ${EV_ICON[evType(e.type)]}"></i> ${esc(e.title)}${e.time?" · "+esc(String(e.time).replace("-"," – ")):""}${e.endDate&&e.endDate>e.date?`<div style="font-size:12px;font-weight:400;color:var(--txt-2);margin-top:3px"><i class="ti ti-calendar-event"></i> ${fmtDate(e.date)} – ${fmtDate(e.endDate)}</div>`:""}${e.desc?`<div style="font-size:12px;font-weight:400;color:var(--txt-2);margin-top:3px">${esc(e.desc)}</div>`:""}</div>${canEditEvent(e)?`<span class="dd-acts"><button class="btn-ghost btn-sm" title="แก้ไข" onclick="closeModal('dayDetailOverlay');openEventModal('${ds}','${esc(e.id)}')"><i class="ti ti-pencil"></i></button><button class="btn-ghost btn-sm" title="ลบ" onclick="quickDeleteEvent('${esc(e.id)}')"><i class="ti ti-trash"></i></button></span>`:""}</div>`),
     ...tasks.map(t=>{ return `<div class="ev-chip t-task ${isOverdue(t)?'overdue':''} dd-row" style="white-space:normal;margin-bottom:6px;padding:8px 10px"><div class="dd-main"><i class="ti ${isOverdue(t)?'ti-alert-triangle':'ti-clipboard-check'}"></i> ${esc(t.title)}${" · "+whoLabel(t)}</div>${canEditTask(t)?`<span class="dd-acts"><button class="btn-ghost btn-sm" title="แก้ไขงาน" onclick="closeModal('dayDetailOverlay');openEditTaskModal('${esc(t.id)}')"><i class="ti ti-pencil"></i></button></span>`:""}</div>`; })
   ];
   document.getElementById("dayDetailList").innerHTML = rows.length ? rows.join("") : `<div class="empty"><div class="e-emoji"><i class="ti ti-calendar"></i></div><b>ไม่มีรายการในวันนี้</b></div>`;
@@ -3005,7 +3014,7 @@ function tlRowHtml(t) {
   return `<div class="tl-row" onclick="openEditTaskModal('${sid(t.id)}')" style="cursor:pointer">
     <div class="task-icon" style="width:36px;height:36px;font-size:17px"><i class="ti ${taskIco(t.emoji)}"></i></div>
     <div class="tl-info">
-      <div class="tl-title">${esc(t.title)} ${over?'<span class="tag overdue" style="font-size:10px"><i class="ti ti-alert-triangle"></i> เลยกำหนด</span>':(st==="done"?'<span class="tag done" style="font-size:10px"><i class="ti ti-check"></i></span>':"")}</div>
+      <div class="tl-title">${esc(t.title)} ${over?'<span class="tag overdue" style="font-size:12px"><i class="ti ti-alert-triangle"></i> เลยกำหนด</span>':(st==="done"?'<span class="tag done" style="font-size:12px"><i class="ti ti-check"></i></span>':"")}</div>
       <div class="tl-meta"><i class="ti ti-user"></i> ${whoLabel(t)} • <i class="ti ti-calendar"></i> ${fmtDate(t.startDate)} → ${fmtDate(t.due)}</div>
     </div>
     <div class="tl-bar"><i style="width:${pct}%;background:${color}"></i></div>
@@ -3519,7 +3528,7 @@ async function renderBannedList() {
     <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 4px;border-bottom:1px solid var(--stroke)">
       <div style="min-width:0">
         <div style="font-size:14px;word-break:break-all">${esc(row.email)}</div>
-        <div style="font-size:11px;color:var(--txt-2)">แบนเมื่อ ${row.banned_at ? new Date(row.banned_at).toLocaleString("th-TH") : "-"}</div>
+        <div style="font-size:12px;color:var(--txt-2)">แบนเมื่อ ${row.banned_at ? new Date(row.banned_at).toLocaleString("th-TH") : "-"}</div>
       </div>
       <button class="btn-primary btn-sm" style="flex:none" onclick="unbanEmail('${esc(row.email).replace(/'/g,"\\'")}')"><i class="ti ti-check"></i> ปลดแบน</button>
     </div>`).join("");
@@ -3646,11 +3655,11 @@ function renderSnakeBoard() {
       </div>
       ${lead ? `<div class="prize-status">${iLead ? `ตอนนี้คุณนำอยู่! รักษาไว้ให้ถึงวันอาทิตย์` : `ต้องทำให้ได้เกิน <b>${lead.score}</b> คะแนน ถึงจะแซงขึ้นนำ`}</div>` : `<div class="prize-status">ยังไม่มีใครเล่น — เล่นตอนนี้ขึ้นนำทันที</div>`}
     </div>
-    <div class="dc-head" style="margin-top:14px"><h3>อันดับสัปดาห์นี้</h3><span style="font-size:11.5px;color:var(--txt-3)">ปิดรอบ ${end.toLocaleDateString("th-TH",{day:"numeric",month:"short"})} 23:59</span></div>
+    <div class="dc-head" style="margin-top:14px"><h3>อันดับสัปดาห์นี้</h3><span style="font-size:12px;color:var(--txt-3)">ปิดรอบ ${end.toLocaleDateString("th-TH",{day:"numeric",month:"short"})} 23:59</span></div>
     ${rows.length ? rows.slice(0,10).map((r,i) => { const m = memberById(r.member_id); const nm = m ? m.name : (r.member_name||"?");
       return `<div class="lb-row ${currentUser && r.member_id===currentUser.id?'me':''}"><b class="rk">${i+1}</b>${avatarHtml(nm,24,r.member_id)}<span class="n">${esc(nm)} ${crownHtml(r.member_id)}</span>${i===0?'<span class="score-pill good">กำลังนำ</span>':''}<b>${r.score}</b></div>`; }).join("")
       : `<div style="padding:16px 4px;color:var(--txt-3);font-size:13px">ยังไม่มีใครเล่นสัปดาห์นี้ — เป็นคนแรกเลย!</div>`}
-    <div class="champ-box"><i class="ti ti-crown"></i><div><div style="font-size:11.5px;color:var(--txt-3)">แชมป์สัปดาห์ที่แล้ว</div>
+    <div class="champ-box"><i class="ti ti-crown"></i><div><div style="font-size:12px;color:var(--txt-3)">แชมป์สัปดาห์ที่แล้ว</div>
       <div style="font-weight:500">${champM ? `${esc(champM.name)} <i class="ti ti-crown crown"></i> · ${champ.score} คะแนน` : "ยังไม่มี"}</div></div></div>`;
 }
 function snakeReset() {
@@ -3883,8 +3892,8 @@ function renderWheelSide() {
     ${custom}
     <label class="wheel-opt"><input type="checkbox" ${WHL.exclude?'checked':''} onchange="WHL.exclude=this.checked;drawWheel();renderWheelCount()"> ตัดคนที่โดนแล้วออกจากวงล้อ</label>
     ${WHL.picked.length ? `<div class="wheel-picked">โดนไปแล้ว: ${WHL.picked.map(esc).join(", ")}</div>` : ""}
-    <div class="dc-head" style="margin-top:14px"><h3>ประวัติการสุ่ม</h3>${isAdmin() && state.spins.length ? `<button class="dc-link" onclick="clearWheelHistory()">ล้างประวัติ</button>` : `<span style="font-size:11.5px;color:var(--txt-3)">ทั้งทีมเห็นเหมือนกัน</span>`}</div>
-    ${state.spins.length ? state.spins.slice(0,10).map(r => `<div class="lb-row"><span class="n"><b>${esc(r.result)}</b>${r.topic?` <span style="color:var(--txt-3)">— ${esc(r.topic)}</span>`:''}<div style="font-size:11px;color:var(--txt-3)">สุ่มโดย ${esc(r.by_name||"")} · ${timeAgo(r.created_at)}</div></span></div>`).join("")
+    <div class="dc-head" style="margin-top:14px"><h3>ประวัติการสุ่ม</h3>${isAdmin() && state.spins.length ? `<button class="dc-link" onclick="clearWheelHistory()">ล้างประวัติ</button>` : `<span style="font-size:12px;color:var(--txt-3)">ทั้งทีมเห็นเหมือนกัน</span>`}</div>
+    ${state.spins.length ? state.spins.slice(0,10).map(r => `<div class="lb-row"><span class="n"><b>${esc(r.result)}</b>${r.topic?` <span style="color:var(--txt-3)">— ${esc(r.topic)}</span>`:''}<div style="font-size:12px;color:var(--txt-3)">สุ่มโดย ${esc(r.by_name||"")} · ${timeAgo(r.created_at)}</div></span></div>`).join("")
       : `<div style="padding:12px 4px;color:var(--txt-3);font-size:13px">ยังไม่มีประวัติ</div>`}`;
 }
 function setWheelMode(m) { if (WHL.spinning) return; WHL.mode = m; WHL.picked = []; WHL.result = ""; saveWheelState(); document.getElementById("wheelResult").innerHTML = ""; drawWheel(); renderWheelSide(); renderWheelCount(); }
