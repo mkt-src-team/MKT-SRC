@@ -1387,14 +1387,24 @@ let avatarsReady = null, avatarsAt = 0, avatarsSnap = "";
 /* บันทึกการเข้าระบบรายวัน (ตาราง login_days) — นับรายเดือน รีเซ็ตวันที่ 1 ของทุกเดือน */
 let loginsAt = 0, loginsSnap = "", loginMarked = "";
 function monthStart() { return todayStr().slice(0, 8) + "01"; }
+/* บันทึก "เข้าระบบวันนี้" — แยกจากการดึงข้อมูลหลัก (เดิมถ้าดึงข้อมูลพลาด/เน็ตมือถือหลุด จะข้ามการบันทึกไป)
+   เรียกตอน: เปิดเว็บ, กลับมาที่แอป/แท็บ, ทุกรอบซิงก์ — ถ้าล้มเหลวจะลองใหม่ทุก 30 วินาทีจนสำเร็จ */
+let markingLogin = false, markRetry = null;
+async function markLoginDay() {
+  if (!db || !currentUser || markingLogin) return;
+  const today = todayStr();
+  if (loginMarked === today + currentUser.id) return;
+  markingLogin = true;
+  try {
+    const w = await db.from("login_days").upsert({ id: currentUser.id + "_" + today, member_id: currentUser.id, day: today }).then(x => x, () => ({ error:true }));
+    if (!w.error) { loginMarked = today + currentUser.id; clearTimeout(markRetry); markRetry = null; }
+    else { console.warn("markLoginDay", w.error); clearTimeout(markRetry); markRetry = setTimeout(markLoginDay, 30000); }
+  } finally { markingLogin = false; }
+}
 async function pullLogins(force) {
   if (!db || !currentUser || (!force && Date.now() - loginsAt < 60000)) return;
   loginsAt = Date.now();
-  const today = todayStr();
-  if (loginMarked !== today) {
-    const w = await db.from("login_days").upsert({ id: currentUser.id + "_" + today, member_id: currentUser.id, day: today }).then(x => x, () => ({ error:true }));
-    if (!w.error) loginMarked = today;
-  }
+  await markLoginDay();
   const r = await db.from("login_days").select("member_id,day").gte("day", monthStart()).then(x => x, () => ({ error:true }));
   if (r.error) return;
   const map = {}; (r.data || []).forEach(x => { (map[x.member_id] = map[x.member_id] || []).push(x.day); });
@@ -1773,7 +1783,8 @@ function kickPull() {
 }
 function setPollInterval() {
   if (syncTimer) clearInterval(syncTimer);
-  syncTimer = setInterval(() => { if (!document.hidden) pull(); }, rtLive ? SYNC_MS_LIVE : SYNC_MS);
+  markLoginDay();
+  syncTimer = setInterval(() => { if (!document.hidden) { markLoginDay(); pull(); } }, rtLive ? SYNC_MS_LIVE : SYNC_MS);
 }
 function startRealtime() {
   if (!db || typeof db.channel !== "function") return;
@@ -1798,7 +1809,9 @@ function startSync() {
   setPollInterval();
 }
 function stopSync() { if (syncTimer) { clearInterval(syncTimer); syncTimer = null; } stopRealtime(); }
-document.addEventListener("visibilitychange", () => { if (!document.hidden && currentUser) kickPull(); });
+document.addEventListener("visibilitychange", () => { if (!document.hidden && currentUser) { markLoginDay(); kickPull(); } });
+window.addEventListener("focus", () => { if (currentUser) markLoginDay(); });
+window.addEventListener("pageshow", () => { if (currentUser) markLoginDay(); });
 window.addEventListener("focus", () => { if (currentUser) kickPull(); });
 window.addEventListener("online", () => { if (currentUser) kickPull(); });
 
