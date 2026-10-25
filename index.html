@@ -724,6 +724,7 @@ button{border-radius:99px;font-weight:500}
   .del-check{opacity:.7;font-size:17px}
 }
 #dayOffBox:empty{display:none!important}
+.dayoff-btn{background:var(--success)!important;border-color:var(--success)!important;color:#0E0E0E!important}
 .ev-chip.t-off{border-left-color:var(--success);background:var(--success-tint);color:var(--txt)}
 .ctext-input{flex:1;min-width:0;font:inherit;font-size:14px;color:var(--txt);background:transparent;border:1px solid transparent;border-radius:8px;padding:5px 8px;outline:none}
 .ctext-input:hover{border-color:var(--stroke-2)}
@@ -2918,9 +2919,9 @@ function openDayDetail(ds) {
   if (offBox) {
     const opts = state.members.filter(m => isCheckinRank(m) || m.rank === "boss");
     offBox.innerHTML = !currentUser ? "" : isAdmin()
-      ? `<select id="dayOffWho" style="font:inherit;font-size:13px;padding:7px 9px;border-radius:8px;border:1px solid var(--stroke-2);background:var(--control);color:var(--txt)">${opts.map(m => `<option value="${esc(m.id)}" ${m.id===currentUser.id?"selected":""}>${esc(m.name)}</option>`).join("")}</select>
-         <button class="btn-ghost" onclick="toggleDayOff(document.getElementById('dayOffWho').value, dayDetailDate)"><i class="ti ti-beach"></i> ลง/ยกเลิกวันหยุด</button>`
-      : (canSetDayOff(currentUser.id, ds) ? `<button class="btn-ghost" onclick="toggleDayOff(currentUser.id, dayDetailDate)"><i class="ti ti-beach"></i> ${isDayOff(currentUser.id, ds) ? "ยกเลิกวันหยุดของฉัน" : "ลงวันหยุดของฉัน"}</button>` : "");
+      ? `<select id="dayOffWho" style="font:inherit;font-size:14px;padding:9px 12px;min-height:44px;border-radius:8px;border:1px solid var(--stroke-2);background:var(--control);color:var(--txt)">${opts.map(m => `<option value="${esc(m.id)}" ${m.id===currentUser.id?"selected":""}>${esc(m.name)}</option>`).join("")}</select>
+         <button class="btn-primary dayoff-btn" onclick="toggleDayOff(document.getElementById('dayOffWho').value, dayDetailDate)"><i class="ti ti-beach"></i> ลง/ยกเลิกวันหยุด</button>`
+      : (canSetDayOff(currentUser.id, ds) ? `<button class="btn-primary dayoff-btn" onclick="toggleDayOff(currentUser.id, dayDetailDate)"><i class="ti ti-beach"></i> ${isDayOff(currentUser.id, ds) ? "ยกเลิกวันหยุดของฉัน" : "ลงวันหยุดของฉัน"}</button>` : "");
   }
   document.getElementById("dayDetailOverlay").classList.add("show");
 }
