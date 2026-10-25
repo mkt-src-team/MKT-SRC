@@ -236,3 +236,16 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON ideas TO anon, authenticated;
 -- 19. อีเวนต์หลายวัน — วันที่สิ้นสุด (ว่าง = วันเดียว)
 -- ============================================
 ALTER TABLE events ADD COLUMN IF NOT EXISTS end_date TEXT DEFAULT '';
+
+-- ============================================
+-- 20. วันหยุดรายคน — วันหยุดไม่นับเป็นวันไม่เข้าระบบ (1 แถวต่อคนต่อวัน id = memberId_วันที่)
+-- ============================================
+CREATE TABLE IF NOT EXISTS day_offs (
+  id TEXT PRIMARY KEY, member_id TEXT NOT NULL, day TEXT NOT NULL,
+  created_by TEXT DEFAULT '', created_at TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS day_offs_day ON day_offs(day);
+ALTER TABLE day_offs ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "anon all day_offs" ON day_offs;
+CREATE POLICY "anon all day_offs" ON day_offs FOR ALL USING (TRUE) WITH CHECK (TRUE);
+GRANT SELECT, INSERT, UPDATE, DELETE ON day_offs TO anon, authenticated;

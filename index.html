@@ -723,6 +723,7 @@ button{border-radius:99px;font-weight:500}
   .del-check,.dd-acts .btn-sm,.ib-x,.idea-row .ir-foot .btn-sm{min-width:44px;min-height:44px;display:inline-grid;place-items:center}
   .del-check{opacity:.7;font-size:17px}
 }
+.ev-chip.t-off{border-left-color:var(--success);background:var(--success-tint);color:var(--txt)}
 .ctext-input{flex:1;min-width:0;font:inherit;font-size:14px;color:var(--txt);background:transparent;border:1px solid transparent;border-radius:8px;padding:5px 8px;outline:none}
 .ctext-input:hover{border-color:var(--stroke-2)}
 .ctext-input:focus,.ctext-input.editing{border-color:var(--txt);background:var(--control)}
@@ -1178,6 +1179,7 @@ button{border-radius:99px;font-weight:500}
     <p class="desc">งานและอีเวนต์ทั้งหมดในวันนี้</p>
     <div id="dayDetailList"></div>
     <div class="modal-foot">
+      <span id="dayOffBox" style="display:inline-flex;gap:6px;flex-wrap:wrap;margin-right:auto"></span>
       <button class="btn-ghost" onclick="closeModal('dayDetailOverlay')">ปิด</button>
       <button class="btn-primary" id="dayDetailAdd" onclick="closeModal('dayDetailOverlay');openEventModal(dayDetailDate)"><i class="ti ti-plus"></i> เพิ่มอีเวนต์วันนี้</button>
     </div>
@@ -1421,14 +1423,69 @@ async function pullLogins(force) {
   if (snap === loginsSnap) return;
   loginsSnap = snap; state.loginDays = map; scheduleRender();
 }
-/* จำนวนวันที่ไม่เข้าระบบติดต่อกัน (นับวันนี้ด้วยถ้ายังไม่เข้า) */
+/* ===== วันหยุดรายคน (ตาราง day_offs — SQL ข้อ 20) =====
+   วันหยุดไม่นับเป็นวันขาด · พนักงานลงของตัวเองได้วันนี้/อนาคต · Boss/Dev ลงย้อนหลังและลงแทนคนอื่นได้ */
+let dayOffsReady = null, dayOffsAt = 0, dayOffsSnap = "";
+async function pullDayOffs(force) {
+  if (!db || !currentUser || (!force && Date.now() - dayOffsAt < 60000)) return;
+  dayOffsAt = Date.now();
+  const since = (() => { const d = new Date(todayStr()); d.setDate(d.getDate() - 120); return fmtISO(d); })();
+  const r = await db.from("day_offs").select("id,member_id,day,created_by").gte("day", since).then(x => x, () => ({ error:true }));
+  dayOffsReady = !r.error;
+  if (r.error) return;
+  const snap = JSON.stringify(r.data || []);
+  if (snap === dayOffsSnap) return;
+  dayOffsSnap = snap; state.dayOffs = r.data || []; scheduleRender();
+}
+function isDayOff(mid, ds) { return (state.dayOffs || []).some(x => x.member_id === mid && x.day === ds); }
+function dayOffsOn(ds) { return (state.dayOffs || []).filter(x => x.day === ds); }
+function canSetDayOff(mid, ds) {
+  if (!currentUser) return false;
+  if (isAdmin()) return true;
+  return mid === currentUser.id && ds >= todayStr();
+}
+async function toggleDayOff(mid, ds) {
+  if (!canSetDayOff(mid, ds)) { toast(isAdmin() ? "ไม่มีสิทธิ์" : "ลงวันหยุดได้เฉพาะวันนี้และวันข้างหน้า (ย้อนหลังให้ Boss/Dev ลงให้)", "🔒"); return; }
+  if (dayOffsReady === false) { toast("ต้องรัน SQL ข้อ 20 (ตาราง day_offs) ใน Supabase ก่อน", "⚠️"); return; }
+  const id = mid + "_" + ds, on = isDayOff(mid, ds), who = (memberById(mid) || {}).name || "";
+  if (on) {
+    if (!confirm(`ยกเลิกวันหยุดของ ${who} วันที่ ${fmtDate(ds)}?`)) return;
+    const r = await dbw(db.from("day_offs").delete().eq("id", id), "ยกเลิกวันหยุดไม่สำเร็จ");
+    if (r && r.error) return;
+    state.dayOffs = (state.dayOffs || []).filter(x => x.id !== id);
+    toast("ยกเลิกวันหยุดแล้ว", "ti-x");
+  } else {
+    const row = { id, member_id: mid, day: ds, created_by: currentUser.id };
+    const r = await dbw(db.from("day_offs").upsert(row), "ลงวันหยุดไม่สำเร็จ");
+    if (r && r.error) return;
+    state.dayOffs = [...(state.dayOffs || []).filter(x => x.id !== id), row];
+    toast(`ลงวันหยุด ${who} · ${fmtDate(ds)} แล้ว`, "ti-beach");
+  }
+  dayOffsSnap = JSON.stringify(state.dayOffs);
+  if (dayDetailDate) openDayDetail(dayDetailDate);
+  render();
+}
+/* จำนวนวันทำงานที่ไม่เข้าระบบติดต่อกัน (นับวันนี้ด้วยถ้ายังไม่เข้า) — ข้ามวันหยุดของคนนั้น */
 function missedDays(m) {
   const today = todayStr();
   if (m.lastLoginDate === today) return 0;
   const lr = resetDate("login_reset");
   const base = (m.lastLoginDate || "") > lr ? m.lastLoginDate : lr;
   if (!base) return 99;
-  return Math.max(0, Math.floor((new Date(today) - new Date(base)) / 86400000));
+  let n = 0; const d = new Date(base + "T00:00:00");
+  for (let i = 0; i < 400; i++) {
+    d.setDate(d.getDate() + 1); const ds = fmtISO(d);
+    if (ds > today) break;
+    if (!isDayOff(m.id, ds)) n++;
+  }
+  return n;
+}
+/* จำนวนวันทำงานในเดือนนี้ของคนนั้น = วันทั้งเดือน − วันหยุด (วันหยุดที่ยังเข้าระบบ นับเป็นวันทำงาน) */
+function monthWorkDays(m) {
+  const td = new Date(todayStr()), y = td.getFullYear(), mo = td.getMonth(), total = new Date(y, mo + 1, 0).getDate();
+  const ms = monthStart(), logged = new Set((state.loginDays && state.loginDays[m.id]) || []);
+  const offs = (state.dayOffs || []).filter(x => x.member_id === m.id && x.day.slice(0, 7) === ms.slice(0, 7) && !logged.has(x.day)).length;
+  return total - offs;
 }
 function missLevel(d) { return d >= 3 ? "red" : d === 2 ? "orange" : d === 1 ? "yellow" : ""; }
 const MISS_COLOR = { yellow:"var(--alert-yellow)", orange:"var(--alert-orange)", red:"var(--alert-red)" };
@@ -1622,7 +1679,7 @@ function kpiRows(start, end, logins, label) {
       "% ส่งตรงเวลา":graded ? Math.round(onTime / graded * 100) : "", "% งานเสร็จ":inp.length ? Math.round(done.length / inp.length * 100) : "",
       "ช้าเฉลี่ย(วัน)":lateDays.length ? (lateDays.reduce((x, y) => x + y, 0) / lateDays.length).toFixed(1) : "",
       "หัวข้อย่อยเสร็จ":checks.length ? `${on}/${checks.length}` : "", "% หัวข้อย่อย":checks.length ? Math.round(on / checks.length * 100) : "",
-      "วันที่เข้าระบบ":ld, "เข้าระบบล่าสุด":m.lastLoginDate || "ยังไม่เคย" };
+      "วันที่เข้าระบบ":ld, "วันหยุด":(state.dayOffs||[]).filter(x => x.member_id === m.id && x.day >= start && x.day <= end).length, "เข้าระบบล่าสุด":m.lastLoginDate || "ยังไม่เคย" };
   }).sort((x, y) => (x["% ส่งตรงเวลา"] === "") - (y["% ส่งตรงเวลา"] === "") || (y["% ส่งตรงเวลา"] || 0) - (x["% ส่งตรงเวลา"] || 0));
 }
 const TH_MON = ["ม.ค.","ก.พ.","มี.ค.","เม.ย.","พ.ค.","มิ.ย.","ก.ค.","ส.ค.","ก.ย.","ต.ค.","พ.ย.","ธ.ค."];
@@ -1781,6 +1838,7 @@ async function pull(force) {
   pullGames();
   pullAvatars(force);
   pullLogins(force);
+  pullDayOffs(force);
   pullAppSettings(force);
 }
 
@@ -2540,8 +2598,9 @@ function loginStatusChip(m) {
     : !m.lastLoginDate ? '<i class="ti ti-alert-triangle"></i> ยังไม่เคยเข้าระบบ'
     : `<i class="ti ti-alert-triangle"></i> ไม่เข้าระบบ ${d} วัน`;
   const bg = lv === "red" ? "background:rgba(210,56,43,.12);" : "";
-  const td = new Date(todayStr()), days = new Date(td.getFullYear(), td.getMonth() + 1, 0).getDate(); // จำนวนวันทั้งเดือน (ต.ค. = 31)
-  return `<div class="chip-link login-chip" style="border-color:${color};border-width:${lv==="red"?2:1}px;${bg}"><span style="color:${color};font-weight:700">${label}</span><span style="color:var(--txt-2);font-size:12px"><i class="ti ti-login"></i> เดือนนี้เข้าระบบ ${monthLoginCount(m)}/${days} วัน</span></div>`;
+  const days = monthWorkDays(m), offToday = m.lastLoginDate !== todayStr() && isDayOff(m.id, todayStr());
+  const c2 = offToday ? "var(--success)" : color, l2 = offToday ? '<i class="ti ti-beach"></i> วันหยุด' : label;
+  return `<div class="chip-link login-chip" style="border-color:${c2};border-width:${lv==="red"&&!offToday?2:1}px;${offToday?"":bg}"><span style="color:${c2};font-weight:700">${l2}</span><span style="color:var(--txt-2);font-size:12px"><i class="ti ti-login"></i> เดือนนี้เข้าระบบ ${monthLoginCount(m)}/${days} วันทำงาน</span></div>`;
 }
 function renderTeam() {
   renderResetBar();
@@ -2810,6 +2869,7 @@ function renderEventCalendar() {
     const dotsHtml = dotsList.slice(0,4).join("") + (dayItemCount>4?`<span class="cal-dot-more">+${dayItemCount-4}</span>`:"");
     cells += `<div class="cal-cell ${out?"out":""} ${ds===today?"today":""} ${hasOverdue?"has-overdue":""}" ${cellClickAttr}>
       <div class="cal-num"><span>${d.getDate()}</span></div>
+      ${out ? "" : dayOffsOn(ds).map(x => `<div class="ev-chip t-off"><i class="ti ti-beach"></i> หยุด · ${esc((memberById(x.member_id)||{}).name||"")}</div>`).join("")}
       ${evs.map(e=>`<div class="ev-chip t-${evType(e.type)}" title="${esc(e.desc)}"><i class="ti ${EV_ICON[evType(e.type)]}"></i> ${esc(e.title)}${e.time?" "+esc(String(e.time).replace("-"," – ")):""}</div>`).join("")}
       ${taskDue.slice(0,maxT).map(t=>`<div class="ev-chip t-task ${isOverdue(t)?'overdue':''}"><i class="ti ${isOverdue(t)?'ti-alert-triangle':'ti-clipboard-check'}"></i> ${esc(t.title)}</div>`).join("")}
       ${taskDue.length>maxT?`<div class="cal-overflow-text" style="font-size:12px;color:var(--txt-3)">+${taskDue.length-maxT} งาน</div>`:""}
@@ -2845,12 +2905,22 @@ function openDayDetail(ds) {
   document.getElementById("dayDetailTitle").innerHTML = '<i class="ti ti-calendar"></i> ' + d.toLocaleDateString("th-TH",{day:"numeric",month:"long",year:"numeric"});
   const evs = state.events.filter(e=>evOn(e, ds));
   const tasks = visibleTasks().filter(t=>t.due===ds && taskStatus(t)!=="done");
+  const offRows = dayOffsOn(ds).map(x => `<div class="ev-chip t-off dd-row" style="white-space:normal;margin-bottom:6px;padding:8px 10px"><div class="dd-main"><i class="ti ti-beach"></i> วันหยุด · ${esc((memberById(x.member_id)||{}).name||"")}</div>${canSetDayOff(x.member_id, ds)?`<span class="dd-acts"><button class="btn-ghost btn-sm" onclick="toggleDayOff('${esc(x.member_id)}','${ds}')">ยกเลิก</button></span>`:""}</div>`);
   const rows = [
+    ...offRows,
     ...evs.map(e=>`<div class="ev-chip t-${evType(e.type)} dd-row" style="white-space:normal;margin-bottom:6px;padding:8px 10px"><div class="dd-main"><i class="ti ${EV_ICON[evType(e.type)]}"></i> ${esc(e.title)}${e.time?" · "+esc(String(e.time).replace("-"," – ")):""}${e.endDate&&e.endDate>e.date?`<div style="font-size:12px;font-weight:400;color:var(--txt-2);margin-top:3px"><i class="ti ti-calendar-event"></i> ${fmtDate(e.date)} – ${fmtDate(e.endDate)}</div>`:""}${e.desc?`<div style="font-size:12px;font-weight:400;color:var(--txt-2);margin-top:3px">${esc(e.desc)}</div>`:""}</div>${canEditEvent(e)?`<span class="dd-acts"><button class="btn-ghost btn-sm" title="แก้ไข" onclick="closeModal('dayDetailOverlay');openEventModal('${ds}','${esc(e.id)}')"><i class="ti ti-pencil"></i></button><button class="btn-ghost btn-sm" title="ลบ" onclick="quickDeleteEvent('${esc(e.id)}')"><i class="ti ti-trash"></i></button></span>`:""}</div>`),
     ...tasks.map(t=>{ return `<div class="ev-chip t-task ${isOverdue(t)?'overdue':''} dd-row" style="white-space:normal;margin-bottom:6px;padding:8px 10px"><div class="dd-main"><i class="ti ${isOverdue(t)?'ti-alert-triangle':'ti-clipboard-check'}"></i> ${esc(t.title)}${" · "+whoLabel(t)}</div>${canEditTask(t)?`<span class="dd-acts"><button class="btn-ghost btn-sm" title="แก้ไขงาน" onclick="closeModal('dayDetailOverlay');openEditTaskModal('${esc(t.id)}')"><i class="ti ti-pencil"></i></button></span>`:""}</div>`; })
   ];
   document.getElementById("dayDetailList").innerHTML = rows.length ? rows.join("") : `<div class="empty"><div class="e-emoji"><i class="ti ti-calendar"></i></div><b>ไม่มีรายการในวันนี้</b></div>`;
   document.getElementById("dayDetailAdd").style.display = (currentUser && can("add_event")) ? "" : "none";
+  const offBox = document.getElementById("dayOffBox");
+  if (offBox) {
+    const opts = state.members.filter(m => isCheckinRank(m) || m.rank === "boss");
+    offBox.innerHTML = !currentUser ? "" : isAdmin()
+      ? `<select id="dayOffWho" style="font:inherit;font-size:13px;padding:7px 9px;border-radius:8px;border:1px solid var(--stroke-2);background:var(--control);color:var(--txt)">${opts.map(m => `<option value="${esc(m.id)}" ${m.id===currentUser.id?"selected":""}>${esc(m.name)}</option>`).join("")}</select>
+         <button class="btn-ghost" onclick="toggleDayOff(document.getElementById('dayOffWho').value, dayDetailDate)"><i class="ti ti-beach"></i> ลง/ยกเลิกวันหยุด</button>`
+      : (canSetDayOff(currentUser.id, ds) ? `<button class="btn-ghost" onclick="toggleDayOff(currentUser.id, dayDetailDate)"><i class="ti ti-beach"></i> ${isDayOff(currentUser.id, ds) ? "ยกเลิกวันหยุดของฉัน" : "ลงวันหยุดของฉัน"}</button>` : "");
+  }
   document.getElementById("dayDetailOverlay").classList.add("show");
 }
 
