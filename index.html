@@ -726,6 +726,7 @@ button{border-radius:99px;font-weight:500}
 #dayOffBox:empty{display:none!important}
 .dayoff-btn{background:var(--success)!important;border-color:var(--success)!important;color:#0E0E0E!important}
 .ev-chip.t-off{border-left-color:var(--success);background:var(--success-tint);color:var(--txt)}
+#updateBar{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(76px + env(safe-area-inset-bottom));z-index:9999;background:var(--accent);color:var(--accent-contrast);padding:10px 16px;border-radius:999px;font-weight:600;font-size:14px;box-shadow:var(--shadow-2);cursor:pointer;display:flex;gap:6px;align-items:center}
 .ctext-input{flex:1;min-width:0;font:inherit;font-size:14px;color:var(--txt);background:transparent;border:1px solid transparent;border-radius:8px;padding:5px 8px;outline:none}
 .ctext-input:hover{border-color:var(--stroke-2)}
 .ctext-input:focus,.ctext-input.editing{border-color:var(--txt);background:var(--control)}
@@ -4378,6 +4379,39 @@ boot();
 <script>
 /* แอปบนมือถือ (PWA): ลงทะเบียน service worker — ทำให้กด "เพิ่มลงหน้าจอหลัก/ติดตั้งแอป" ได้ */
 if ("serviceWorker" in navigator) window.addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
+/* อัปเดตอัตโนมัติ: เช็คทุก 5 นาที + ตอนกลับมาที่แอป ถ้าหน้าเว็บบนเซิร์ฟเวอร์เปลี่ยน → โหลดเวอร์ชันใหม่เอง
+   โหลดใหม่เฉพาะจังหวะที่ปลอดภัย: แอปอยู่เบื้องหลัง หรือไม่ได้พิมพ์/ไม่มีหน้าต่างเปิด/ไม่ได้เล่นเกม — ไม่งั้นขึ้นแถบให้แตะเอง */
+let bootHash = null, updateReady = false;
+function strHash(t) { let h = 0; for (let i = 0; i < t.length; i++) h = (h * 31 + t.charCodeAt(i)) | 0; return h; }
+function safeToReload() {
+  if (document.hidden) return true;
+  const typing = typeof isTypingInMain === "function" && isTypingInMain();
+  const modal = !!document.querySelector(".overlay.show");
+  const game = typeof SNK !== "undefined" && SNK.running;
+  return !typing && !modal && !game;
+}
+function applyUpdate() {
+  if (safeToReload()) { location.reload(); return; }
+  if (document.getElementById("updateBar")) return;
+  const b = document.createElement("div"); b.id = "updateBar";
+  b.innerHTML = '<i class="ti ti-refresh"></i> มีเวอร์ชันใหม่ — แตะเพื่ออัปเดต';
+  b.onclick = () => location.reload();
+  document.body.appendChild(b);
+}
+async function checkForUpdate() {
+  try {
+    const r = await fetch(location.pathname + "?v=" + Date.now(), { cache: "no-store" });
+    if (!r.ok) return;
+    const h = strHash(await r.text());
+    if (bootHash === null) { bootHash = h; return; }
+    if (h !== bootHash) { updateReady = true; applyUpdate(); }
+  } catch (_) {}
+}
+window.addEventListener("load", () => { checkForUpdate(); setInterval(checkForUpdate, 5 * 60 * 1000); });
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden && updateReady) location.reload();        // สลับไปแอปอื่น → อัปเดตเงียบๆ
+  else if (!document.hidden) checkForUpdate();
+});
 /* ตัวช่วยติดตั้งแอป: Chrome/Edge/Samsung (Android) = เด้งหน้าต่างติดตั้งจริง, iPhone = สอนทีละขั้น,
    เปิดใน LINE/Facebook = บอกให้เปิดใน Chrome/Safari ก่อน */
 let deferredInstall = null;
