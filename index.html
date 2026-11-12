@@ -466,7 +466,20 @@ h2 i.ti,h3 i.ti,.sec-head h2 i.ti{font-size:.88em;vertical-align:-1px;margin-rig
 @media(max-width:1024px){
   .cal-cell .ev-chip,.cal-cell .cal-overflow-text{display:none}
   .cal-cell .cal-dots{display:flex}
+  .cal-count{position:absolute;right:5px;bottom:3px;font-size:12px;font-weight:700;color:var(--txt);line-height:1}
+  .cal-cell.sel{border-color:var(--txt);box-shadow:0 0 0 1px var(--txt) inset}
+  .cal-agenda{display:block}
 }
+.cal-count{display:none}
+@media(max-width:1024px){.cal-count{display:block}}
+.cal-agenda{display:none;margin-top:14px;background:var(--layer);border:1px solid var(--stroke);border-radius:14px;padding:12px}
+.ag-head{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.ag-head b{font-family:Kanit,sans-serif;font-size:15px}
+.ag-head span{color:var(--txt-2);font-size:13px;flex:1}
+.ag-row{display:flex;flex-direction:column;align-items:flex-start;gap:2px;width:100%;text-align:left;white-space:normal;font:inherit;font-size:14px;padding:10px 12px;margin-bottom:6px;cursor:pointer;color:var(--txt)}
+.ag-row small{font-size:12px;color:var(--txt-2)}
+.ag-empty{color:var(--txt-3);font-size:13px;padding:10px 2px}
+.cal-dot.dot-off{background:var(--success)}
 .stat-link{text-align:left;font:inherit;color:inherit;cursor:pointer;width:100%}
 button.stat-link{border:1px solid var(--stroke);padding:15px 17px;border-radius:8px;background:var(--layer);font-weight:400}
 button.stat-link:hover{border-color:var(--accent)}
@@ -2863,15 +2876,18 @@ function renderEventCalendar() {
     const taskDue = (out || (calFilter !== "all" && calFilter !== "task")) ? [] : visibleTasks().filter(t => t.due === ds && taskStatus(t) !== "done");
     const maxT = calFilter === "task" ? 4 : 2;
     const hasOverdue = !out && taskDue.some(isOverdue);
-    const dayItemCount = evs.length + taskDue.length;
-    const cellClickAttr = out ? "" : `onclick="openDayDetail('${ds}')"`;
+    const offs = out ? [] : dayOffsOn(ds);
+    const dayItemCount = evs.length + taskDue.length + offs.length;
+    const cellClickAttr = out ? "" : `onclick="calTap('${ds}')"`;
     const dotsList = [
+      ...offs.map(() => `<span class="cal-dot dot-off"></span>`),
       ...evs.map(e=>`<span class="cal-dot dot-${evType(e.type)}"></span>`),
       ...taskDue.map(t=>`<span class="cal-dot ${isOverdue(t)?'dot-task-overdue':'dot-task'}"></span>`)
     ];
     const dotsHtml = dotsList.slice(0,4).join("") + (dayItemCount>4?`<span class="cal-dot-more">+${dayItemCount-4}</span>`:"");
-    cells += `<div class="cal-cell ${out?"out":""} ${ds===today?"today":""} ${hasOverdue?"has-overdue":""}" ${cellClickAttr}>
+    cells += `<div class="cal-cell ${out?"out":""} ${ds===today?"today":""} ${hasOverdue?"has-overdue":""} ${!out&&ds===calSel?"sel":""}" ${cellClickAttr}>
       <div class="cal-num"><span>${d.getDate()}</span></div>
+      ${dayItemCount && !out ? `<span class="cal-count">${dayItemCount}</span>` : ""}
       ${out ? "" : dayOffsOn(ds).map(x => `<div class="ev-chip t-off"><i class="ti ti-beach"></i> หยุด · ${esc((memberById(x.member_id)||{}).name||"")}</div>`).join("")}
       ${evs.map(e=>`<div class="ev-chip t-${evType(e.type)}" title="${esc(e.desc)}"><i class="ti ${EV_ICON[evType(e.type)]}"></i> ${esc(e.title)}${e.time?" "+esc(String(e.time).replace("-"," – ")):""}</div>`).join("")}
       ${taskDue.slice(0,maxT).map(t=>`<div class="ev-chip t-task ${isOverdue(t)?'overdue':''}"><i class="ti ${isOverdue(t)?'ti-alert-triangle':'ti-clipboard-check'}"></i> ${esc(t.title)}</div>`).join("")}
@@ -2896,7 +2912,34 @@ function renderEventCalendar() {
     <div class="cal-grid">
       ${["อา.","จ.","อ.","พ.","พฤ.","ศ.","ส."].map(d=>`<div class="cal-dow">${d}</div>`).join("")}
       ${cells}
-    </div>`;
+    </div>
+    <div class="cal-agenda" id="calAgenda">${calAgendaHtml()}</div>`;
+}
+/* ===== ปฏิทินบนมือถือ: แตะวัน → รายการของวันนั้นแสดงใต้ปฏิทิน (คอมยังเปิดหน้าต่างรายละเอียดเหมือนเดิม) ===== */
+let calSel = null;
+function isNarrow() { return window.matchMedia && matchMedia("(max-width:1024px)").matches; }
+function calTap(ds) {
+  if (!isNarrow()) { openDayDetail(ds); return; }
+  calSel = ds; renderEventCalendar();
+  const a = document.getElementById("calAgenda"); if (a) a.scrollIntoView({ behavior:"smooth", block:"start" });
+}
+function calAgendaHtml() {
+  const y = calCursor.getFullYear(), m = calCursor.getMonth(), t = todayStr();
+  if (!calSel || calSel.slice(0, 7) !== `${y}-${String(m + 1).padStart(2, "0")}`) calSel = t.slice(0, 7) === `${y}-${String(m + 1).padStart(2, "0")}` ? t : `${y}-${String(m + 1).padStart(2, "0")}-01`;
+  const ds = calSel;
+  const offs = dayOffsOn(ds);
+  const evs = calFilter === "task" ? [] : state.events.filter(e => evOn(e, ds) && (calFilter === "all" || evType(e.type) === calFilter));
+  const tasks = (calFilter !== "all" && calFilter !== "task") ? [] : visibleTasks().filter(x => x.due === ds && taskStatus(x) !== "done");
+  const n = offs.length + evs.length + tasks.length;
+  const label = new Date(ds + "T00:00:00").toLocaleDateString("th-TH", { weekday:"short", day:"numeric", month:"short" });
+  const rows = [
+    ...offs.map(x => `<div class="ev-chip t-off ag-row"><i class="ti ti-beach"></i> หยุด · ${esc((memberById(x.member_id)||{}).name||"")}</div>`),
+    ...evs.map(e => `<button type="button" class="ev-chip t-${evType(e.type)} ag-row" onclick="openEventModal('${ds}','${esc(e.id)}')"><i class="ti ${EV_ICON[evType(e.type)]}"></i> ${esc(e.title)}${e.time?" · "+esc(String(e.time).replace("-"," – ")):""}${e.endDate&&e.endDate>e.date?`<small>${fmtDate(e.date)} – ${fmtDate(e.endDate)}</small>`:""}</button>`),
+    ...tasks.map(x => `<button type="button" class="ev-chip t-task ${isOverdue(x)?"overdue":""} ag-row" onclick="${canEditTask(x)?`openEditTaskModal('${esc(x.id)}')`:""}"><i class="ti ${isOverdue(x)?"ti-alert-triangle":"ti-clipboard-check"}"></i> ${esc(x.title)}<small>${whoLabel(x)}</small></button>`)
+  ].join("");
+  return `<div class="ag-head"><b>${label}</b><span>${n ? n + " รายการ" : "ไม่มีรายการ"}</span>
+    <button class="btn-ghost btn-sm" onclick="openDayDetail('${ds}')"><i class="ti ti-dots"></i> จัดการวันนี้</button></div>
+    ${rows || `<div class="ag-empty">ไม่มีงาน อีเวนต์ หรือวันหยุดในวันนี้</div>`}`;
 }
 function calMove(n){ calCursor = new Date(calCursor.getFullYear(), calCursor.getMonth()+n, 1); routeView(); }
 function calToday(){ calCursor = new Date(); routeView(); }
