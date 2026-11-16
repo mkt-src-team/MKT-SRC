@@ -795,6 +795,7 @@ button{border-radius:99px;font-weight:500}
 .tf-menu button{display:flex;gap:8px;align-items:center;width:100%;text-align:left;background:none;border:0;border-radius:8px;padding:10px 12px;font-size:14px;color:var(--txt);min-height:44px}
 .tf-menu button:hover{background:var(--layer-2)}.tf-menu button.danger{color:var(--danger)}
 .check input[type=checkbox]{width:22px;height:22px}
+.tf-note{flex:1;font-size:13px;color:var(--success);display:flex;align-items:center;gap:6px;min-height:44px}
 .ctext-input{flex:1;min-width:0;font:inherit;font-size:14px;color:var(--txt);background:transparent;border:1px solid transparent;border-radius:8px;padding:5px 8px;outline:none}
 .ctext-input:hover{border-color:var(--stroke-2)}
 .ctext-input:focus,.ctext-input.editing{border-color:var(--txt);background:var(--control)}
@@ -2815,8 +2816,9 @@ function renderTaskCard(t) {
   const reuseLbl = `ใช้ซ้ำ${freqCls(t.freq)==="weekly"?"อาทิตย์หน้า":"เดือนหน้า"}`;
   let primary = "", more = [];
   if (st !== "done" && canTick) primary = `<button class="btn-primary tf-main" onclick="completeTask('${id}')"><i class="ti ti-check"></i> ทำเสร็จแล้ว</button>`;
-  else if (st === "done" && canReuseTask(t)) primary = `<button class="btn-primary tf-main" onclick="reuseTask('${id}')"><i class="ti ti-copy-plus"></i> ${reuseLbl}</button>`;
-  if (st !== "done" && canReuseTask(t)) more.push(`<button onclick="reuseTask('${id}')"><i class="ti ti-copy-plus"></i> ${reuseLbl}</button>`);
+  const nxt = canReuseTask(t) ? nextRoundOf(t) : null;
+  if (st === "done" && canReuseTask(t)) primary = nxt ? `<span class="tf-note"><i class="ti ti-circle-check"></i> สร้างรอบถัดไปแล้ว · ส่ง ${fmtDate(nxt.due)}</span>` : `<button class="btn-primary tf-main" onclick="reuseTask('${id}')"><i class="ti ti-copy-plus"></i> ${reuseLbl}</button>`;
+  if (st !== "done" && canReuseTask(t) && !nxt) more.push(`<button onclick="reuseTask('${id}')"><i class="ti ti-copy-plus"></i> ${reuseLbl} (สร้างล่วงหน้า)</button>`);
   if (st === "done" && canRe) more.push(`<button onclick="reopenTask('${id}')"><i class="ti ti-refresh"></i> เปิดงานเดิมใหม่ (กดเสร็จผิด)</button>`);
   else if (st === "done" && reqRe) more.push(`<button onclick="submitReopenRequest('${id}')"><i class="ti ti-send"></i> ขอเปิดงานเดิมใหม่</button>`);
   if (canDel) more.push(`<button class="danger" onclick="delTaskDirect('${id}')"><i class="ti ti-trash"></i> ลบงาน</button>`);
@@ -2919,7 +2921,8 @@ const closedTaskRows = new Set();
 document.addEventListener("click", e => { document.querySelectorAll(".tf-more[open]").forEach(d => { if (!d.contains(e.target)) d.open = false; }); });   // แสดงเต็มเป็นค่าเริ่มต้น — จำเฉพาะแถวที่ผู้ใช้หุบเอง
 function isRoutine(t) { const f = freqCls(t.freq); return f === "monthly" || f === "weekly"; }
 function routineBase(title) {
-  return String(title || "").replace(/\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s?\d{2,4}\b/gi, "")
+  return String(title || "").replace(/\b(?:\d{1,2}\s+)?(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s?\d{2,4}\b/gi, "")
+    .replace(/(มกราคม|กุมภาพันธ์|มีนาคม|เมษายน|พฤษภาคม|มิถุนายน|กรกฎาคม|สิงหาคม|กันยายน|ตุลาคม|พฤศจิกายน|ธันวาคม|ม\.ค\.|ก\.พ\.|มี\.ค\.|เม\.ย\.|พ\.ค\.|มิ\.ย\.|ก\.ค\.|ส\.ค\.|ก\.ย\.|ต\.ค\.|พ\.ย\.|ธ\.ค\.)\s*(\d{4}|\d{2})?/g, "")
     .replace(/\b\d{1,2}\/\d{1,2}\/\d{2,4}\b/g, "").replace(/\s+/g, " ").trim().toLowerCase();
 }
 function routineGroup(t) {
@@ -3619,20 +3622,41 @@ function shiftDate(ds, freq) {
   }
   return fmtISO(d);
 }
+const TH_MON_FULL = ["มกราคม","กุมภาพันธ์","มีนาคม","เมษายน","พฤษภาคม","มิถุนายน","กรกฎาคม","สิงหาคม","กันยายน","ตุลาคม","พฤศจิกายน","ธันวาคม"];
+const TH_MON_ABBR = ["ม.ค.","ก.พ.","มี.ค.","เม.ย.","พ.ค.","มิ.ย.","ก.ค.","ส.ค.","ก.ย.","ต.ค.","พ.ย.","ธ.ค."];
+/* ปีในข้อความ → ค.ศ. เต็ม (รองรับ 26 / 2026 / 69 / 2569) ใช้หาจำนวนวันของเดือน */
+function yrCE(yy) { const n = +yy; if (!yy) return new Date().getFullYear(); if (yy.length === 2) return n >= 50 ? 2500 + n - 543 : 2000 + n; return n > 2400 ? n - 543 : n; }
+function bumpYr(yy) { if (!yy) return yy; const n = +yy + 1; return yy.length === 2 ? String(n % 100).padStart(2, "0") : String(n); }
+function clampDay(dd, monIdx, yy) { const max = new Date(yrCE(yy), monIdx + 1, 0).getDate(); return Math.min(+dd, max); }
 function shiftText(txt, freq) {
   if (freq !== "monthly") return txt;
   return String(txt)
-    // dd/mm/yy หรือ dd/mm/yyyy → เดือนถัดไป
+    // dd/mm/yy หรือ dd/mm/yyyy → เดือนถัดไป (วันที่เกินเดือนถูกปรับ เช่น 31/10 → 30/11)
     .replace(/\b(\d{1,2})\/(\d{1,2})\/(\d{2}|\d{4})\b/g, (all, dd, mm, yy) => {
-      let m = +mm + 1, y = +yy; if (m > 12) { m = 1; y += 1; }
-      const y2 = yy.length === 2 ? String(y % 100).padStart(2, "0") : String(y);
-      return `${dd.padStart(dd.length, "0")}/${String(m).padStart(mm.length, "0")}/${y2}`;
+      let m = +mm + 1, y = yy; if (m > 12) { m = 1; y = bumpYr(yy); }
+      const d = clampDay(dd, m - 1, y);
+      return `${String(d).padStart(dd.length, "0")}/${String(m).padStart(mm.length, "0")}/${y}`;
     })
-    // Oct26 / Oct 2026 → Nov26 / Nov 2026
-    .replace(/\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)(\s?)(\d{2}|\d{4})\b/g, (all, mon, sp, yy) => {
-      let i = MON_EN.indexOf(mon) + 1, y = +yy; if (i > 11) { i = 0; y += 1; }
-      return MON_EN[i] + sp + (yy.length === 2 ? String(y % 100).padStart(2, "0") : y);
+    // [5 ]Oct26 / Oct 2026 / 5 Nov 69 → เดือนถัดไป
+    .replace(/\b(?:(\d{1,2})(\s+))?(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)(\s?)(\d{2}|\d{4})\b/gi, (all, dd, sp1, mon, sp, yy) => {
+      let i = MON_EN.findIndex(x => x.toLowerCase() === mon.toLowerCase()) + 1, y = yy; if (i > 11) { i = 0; y = bumpYr(yy); }
+      const name = mon === mon.toUpperCase() ? MON_EN[i].toUpperCase() : MON_EN[i];
+      return (dd ? clampDay(dd, i, y) + sp1 : "") + name + sp + y;
+    })
+    // เดือนภาษาไทย: กันยายน 2026 / ต.ค. 69 → เดือนถัดไป
+    .replace(new RegExp(`(\\d{1,2}\\s*)?(${TH_MON_FULL.join("|")}|${TH_MON_ABBR.map(x => x.replace(/\./g, "\\.")).join("|")})(\\s*)(\\d{4}|\\d{2})?`, "g"), (all, dd, mon, sp, yy) => {
+      const full = TH_MON_FULL.indexOf(mon), idx = full >= 0 ? full : TH_MON_ABBR.indexOf(mon);
+      let i = idx + 1, y = yy; if (i > 11) { i = 0; y = bumpYr(yy); }
+      const name = full >= 0 ? TH_MON_FULL[i] : TH_MON_ABBR[i];
+      return (dd ? clampDay(dd.trim(), i, y) + dd.slice(String(+dd.trim()).length) : "") + name + sp + (y || "");
     });
+}
+/* รอบถัดไปของงานนี้สร้างแล้วหรือยัง (ชื่อเดียวกันหลังตัดเดือน + กำหนดส่งเดือนถัดไป) — กันสร้างรอบซ้ำ */
+function nextRoundOf(t) {
+  if (!t || !isRoutine(t)) return null;
+  const f = freqCls(t.freq), base = routineBase(shiftText(t.title, f)), nd = shiftDate(t.due, f);
+  if (!nd) return null;
+  return state.tasks.find(x => x.id !== t.id && isRoutine(x) && routineBase(x.title) === base && (x.due || "").slice(0, f === "weekly" ? 10 : 7) === nd.slice(0, f === "weekly" ? 10 : 7)) || null;
 }
 function reuseTask(tid) {
   const t = state.tasks.find(x => x.id === tid);
@@ -3643,6 +3667,7 @@ function reuseTask(tid) {
     checks:(t.checks||[]).map(c => ({ text:shiftText(c.text, f), on:false })), attachments:[],
     createdAt:new Date().toISOString(), completedAt:null, createdBy:currentUser.id };
   if (dupBlocked(nt.title, nt.startDate, nt.due)) return;   // ใช้ซ้ำ: กันกดซ้ำได้งานรอบเดียวกัน 2 ตัว
+  const ex = nextRoundOf(t); if (ex) { toast(`รอบถัดไปมีแล้ว: "${ex.title}" ส่ง ${fmtDate(ex.due)}`, "⚠️"); return; }
   if (!confirm(`สร้างงานรอบใหม่?\n\n"${nt.title}"\n${fmtDate(nt.startDate)} → ${fmtDate(nt.due)}\nหัวข้อย่อย ${nt.checks.length} ข้อ (ยังไม่ติ๊ก)\n\nงานเดิมเก็บไว้เป็นประวัติ KPI ไม่ถูกแก้`)) return;
   state.tasks.unshift(nt);
   dbw(db.from("tasks").insert(Object.assign({ id:nt.id, created_by:nt.createdBy }, taskRow(nt))), "สร้างงานไม่สำเร็จ");
