@@ -776,6 +776,25 @@ button{border-radius:99px;font-weight:500}
 .tr-body .task-icon,.tr-body .task-title{display:none}
 #eventOverlay .field{min-width:0}#eventOverlay .field input{min-width:0;max-width:100%}
 @media(max-width:1024px){main{padding-bottom:84px}}
+.prof-perm{background:var(--layer-2);border:1px solid var(--stroke);border-radius:12px;padding:10px 12px;margin-bottom:14px;font-size:13px}
+.prof-perm .pp-h{font-weight:600;margin-bottom:2px}.prof-perm .pp-n{color:var(--txt-2);margin-bottom:6px}
+.tt-group{margin-bottom:14px}.tt-h{font-size:12.5px;font-weight:600;color:var(--txt-2);margin:0 0 6px}
+.tt-item{display:flex;flex-wrap:wrap;align-items:center;gap:8px;width:100%;text-align:left;background:var(--control);border:1px solid var(--stroke-2);border-radius:10px;padding:11px 12px;margin-bottom:6px;font-size:14px;font-weight:600;color:var(--txt);min-height:44px}
+.tt-item small{flex-basis:100%;font-weight:400;font-size:12px;color:var(--txt-3);margin-left:26px}
+.tt-kpi{display:grid;grid-template-columns:auto 1fr auto 1fr;gap:6px;align-items:center;font-size:13px;color:var(--txt-2)}
+.tr-body .task-head .task-meta span:not(.tag),.tr-body .task-prog{display:none}
+.tr-body .task-head{padding-top:6px;padding-bottom:0}
+.task-foot{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.task-foot .tf-main{flex:1;min-height:44px;font-size:14px}
+.task-foot > .btn-ghost{min-height:44px}
+.trow{overflow:visible}.trow summary{border-radius:12px}
+.tf-more{position:relative}
+.tf-more summary{list-style:none;min-height:44px;min-width:44px;display:grid;place-items:center;cursor:pointer;border-radius:8px}
+.tf-more summary::-webkit-details-marker{display:none}
+.tf-menu{position:absolute;right:0;bottom:calc(100% + 6px);z-index:30;background:var(--layer);border:1px solid var(--stroke-2);border-radius:12px;box-shadow:var(--flyout);padding:6px;min-width:230px}
+.tf-menu button{display:flex;gap:8px;align-items:center;width:100%;text-align:left;background:none;border:0;border-radius:8px;padding:10px 12px;font-size:14px;color:var(--txt);min-height:44px}
+.tf-menu button:hover{background:var(--layer-2)}.tf-menu button.danger{color:var(--danger)}
+.check input[type=checkbox]{width:22px;height:22px}
 .ctext-input{flex:1;min-width:0;font:inherit;font-size:14px;color:var(--txt);background:transparent;border:1px solid transparent;border-radius:8px;padding:5px 8px;outline:none}
 .ctext-input:hover{border-color:var(--stroke-2)}
 .ctext-input:focus,.ctext-input.editing{border-color:var(--txt);background:var(--control)}
@@ -884,7 +903,7 @@ button{border-radius:99px;font-weight:500}
     <div class="badge brand-img"><img src="assets/logo-256.png" alt="Sirichai Motorsales"></div>
     <div>
       <h1>MKT-<span class="src">SRC</span></h1>
-      <small>ระบบติดตามงานทีม • เชคลิสต์ • คะแนนความพึงพอใจ</small>
+      <small>ระบบติดตามงานทีม • เชคลิสต์ • KPI ส่งตรงเวลา</small>
     </div>
   </div>
   <div class="header-right">
@@ -908,11 +927,17 @@ button{border-radius:99px;font-weight:500}
   <div id="roleBanner"></div>
   <div id="cloudBar"></div>
   <div id="viewRoot"></div>
-  <div id="installBar"></div>
   <div id="missBar"></div>
   <div class="hero" id="hero"></div>
-  <div class="stats" id="stats"></div>
   <div class="dash-grid" id="attention"></div>
+  <section id="reqSection" style="display:none">
+    <div class="sec-head">
+      <h2><i class="ti ti-inbox"></i> คำขอรออนุมัติ</h2>
+      <span class="hint" id="reqCount"></span>
+    </div>
+    <div id="reqList"></div>
+  </section>
+  <div class="stats" id="stats"></div>
 
   <!-- Board ประกาศ -->
   <section id="boardSection">
@@ -924,23 +949,17 @@ button{border-radius:99px;font-weight:500}
   </section>
 
   <!-- Requests (for admin) -->
-  <section id="reqSection" style="display:none">
-    <div class="sec-head">
-      <h2><i class="ti ti-inbox"></i> คำขอรออนุมัติ</h2>
-      <span class="hint" id="reqCount"></span>
-    </div>
-    <div id="reqList"></div>
-  </section>
 
   <!-- Team -->
   <section id="teamSection">
     <div class="sec-head">
-      <h2><i class="ti ti-users"></i> ทีมงาน & คะแนนความพึงพอใจ</h2>
+      <h2><i class="ti ti-users"></i> ทีมงาน & KPI ส่งตรงเวลา</h2>
       <span class="hint">คะแนน = สัดส่วนงานที่ส่งตรงเวลา · ดีเยี่ยม ≥80% · ดี ≥75% · ปานกลาง ≥50%</span>
     </div>
     <div id="resetBar"></div>
     <div class="team-grid" id="teamGrid"></div>
   </section>
+  <div id="installBar"></div>
 
 
 </main>
@@ -1049,7 +1068,7 @@ button{border-radius:99px;font-weight:500}
     <div class="field">
       <label>ประเภทงาน *</label>
       <select id="tFreq">
-        <option value="daily">รายวัน</option>
+        <option value="daily">งานครั้งเดียว</option>
         <option value="weekly">รายอาทิตย์</option>
         <option value="monthly">รายเดือน</option>
       </select>
@@ -1085,7 +1104,7 @@ button{border-radius:99px;font-weight:500}
     <div class="field">
       <label>ประเภทงาน *</label>
       <select id="editFreq">
-        <option value="daily">รายวัน</option>
+        <option value="daily">งานครั้งเดียว</option>
         <option value="weekly">รายอาทิตย์</option>
         <option value="monthly">รายเดือน</option>
       </select>
@@ -1225,6 +1244,14 @@ button{border-radius:99px;font-weight:500}
     <div class="modal-foot"><button class="btn-ghost" onclick="closeModal('installGuideOverlay')">ปิด</button></div>
   </div>
 </div>
+<div class="overlay" id="teamToolsOverlay">
+  <div class="modal" style="max-width:440px">
+    <h3><i class="ti ti-settings"></i> จัดการทีม</h3>
+    <p class="desc">เครื่องมือสำหรับ Boss / Dev</p>
+    <div id="teamToolsBody"></div>
+    <div class="modal-foot"><button class="btn-ghost" onclick="closeModal('teamToolsOverlay')">ปิด</button></div>
+  </div>
+</div>
 <div class="overlay" id="dayDetailOverlay">
   <div class="modal" style="max-width:440px">
     <h3 id="dayDetailTitle"><i class="ti ti-calendar"></i> รายการวันนี้</h3>
@@ -1344,12 +1371,12 @@ const SB_ICON = {
 };
 const SIDEBAR_MENU = [
   { group:'overview', label:'ภาพรวม', items:[
-    { id:'dashboard', label:'Dashboard', icon:'dashboard' },
+    { id:'dashboard', label:'หน้าหลัก', icon:'dashboard' },
     { id:'today-tasks', label:'งาน', icon:'today', count:true }
   ]},
   { group:'plan', label:'วางแผน', items:[
     { id:'event-cal', label:'ปฏิทิน', icon:'calendar' },
-    { id:'campaign-timeline', label:'ไทม์ไลน์งาน', icon:'timeline', perm:'view_all_tasks' }
+    { id:'campaign-timeline', label:'ไทม์ไลน์', icon:'timeline', perm:'view_all_tasks' }
   ]},
   { group:'knowledge', label:'คลังความรู้', items:[
     { id:'idea-hub', label:'ไอเดีย & AI', icon:'bulb' }
@@ -1430,7 +1457,7 @@ function closeSidebarMobile() {
 /* ============ RANK HELPERS ============ */
 const RANKS = { boss:"Boss", dev:"Dev", employee:"พนักงาน", intern:"เด็กฝึกงาน" };
 const RANK_EMOJI = { boss:"ti-crown", dev:"ti-code", employee:"ti-briefcase", intern:"ti-school" };
-const FREQ_MAP = { daily:'<i class="ti ti-repeat"></i> รายวัน', weekly:'<i class="ti ti-calendar-week"></i> รายอาทิตย์', monthly:'<i class="ti ti-calendar-month"></i> รายเดือน' };
+const FREQ_MAP = { daily:'<i class="ti ti-point"></i> งานครั้งเดียว', weekly:'<i class="ti ti-calendar-week"></i> รายอาทิตย์', monthly:'<i class="ti ti-calendar-month"></i> รายเดือน' };
 const EV_ICON = { event:"ti-confetti", campaign:"ti-target-arrow", content:"ti-device-mobile", launch:"ti-rocket", meeting:"ti-users", deadline:"ti-clock-exclamation" };
 const TASK_EMOJIS = ["🚗","📣","🎨","💻","📊","📝","📸","🎬","🛍️","📈","🔧","⭐","🔥"];
 // ไอคอนงาน: ของใหม่เก็บเป็นชื่อคลาส "ti-..." ในช่อง emoji เดิม — งานเก่าที่เก็บเป็นอีโมจิจะแปลงเป็นไอคอนตามลำดับเดียวกันตอนแสดงผล
@@ -1712,9 +1739,9 @@ async function pullAppSettings(force) {
 async function doReset(key) {
   if (!isAdmin()) return;
   if (appSettingsReady === false) { toast("ต้องรัน SQL ข้อ 16 (app_settings) ใน Supabase ก่อน", "⚠️"); return; }
-  const what = key === "login_reset" ? "สถานะคนไม่เข้าระบบ" : "งานที่เลยกำหนด (ไม่เสร็จตามวันที่กำหนด)";
-  if (!confirm(`รีเซ็ต${what}?
-เริ่มนับใหม่ตั้งแต่วันนี้ (${todayStr()}) เป็นต้นไป`)) return;
+  const what = key === "login_reset" ? "เริ่มนับเช็คอินใหม่" : "เริ่มนับ KPI ใหม่ (งานที่กำหนดส่งก่อนวันนี้จะไม่ถูกนับว่าช้า)";
+  if (!confirm(`${what}?
+เริ่มนับตั้งแต่วันนี้ (${todayStr()}) — ประวัติเดิมไม่ถูกลบ`)) return;
   const today = todayStr();
   const r = await dbw(db.from("app_settings").upsert({ key, value: today }), "รีเซ็ตไม่สำเร็จ");
   if (r && r.error) return;
@@ -1783,8 +1810,26 @@ async function downloadKpi() {
   document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
   toast(months.length > 1 ? `ดาวน์โหลด KPI ${months.length} เดือนแล้ว` : `ดาวน์โหลด KPI ${ymLabel(months[0])} แล้ว`, "ti-download");
 }
+function openTeamTools() {
+  if (!isAdmin()) return;
+  const lr = resetDate("login_reset"), tr = resetDate("task_reset"), ym = todayStr().slice(0, 7);
+  const inp = 'style="font:inherit;font-size:14px;padding:8px 10px;border:1px solid var(--stroke-2);border-radius:8px;background:var(--control);color:var(--txt);min-width:0"';
+  document.getElementById("teamToolsBody").innerHTML = `
+    <div class="tt-group"><div class="tt-h">สมาชิก</div>
+      <button class="tt-item" onclick="closeModal('teamToolsOverlay');openTeamModal()"><i class="ti ti-user-plus"></i> เพิ่มสมาชิก</button>
+      <button class="tt-item" onclick="closeModal('teamToolsOverlay');openResetPassModal()"><i class="ti ti-key"></i> รีเซ็ตรหัสผ่านสมาชิก</button>
+      <button class="tt-item" onclick="closeModal('teamToolsOverlay');openBannedModal()"><i class="ti ti-ban"></i> รายชื่อที่ถูกแบน</button></div>
+    <div class="tt-group"><div class="tt-h">ดาวน์โหลด KPI</div>
+      <div class="tt-kpi"><span>จาก</span><input type="month" id="kpiFrom" value="${ym}" max="${ym}" ${inp}><span>ถึง</span><input type="month" id="kpiTo" value="${ym}" max="${ym}" ${inp}></div>
+      <button class="btn-primary" style="width:100%;margin-top:8px" onclick="downloadKpi()"><i class="ti ti-download"></i> ดาวน์โหลด KPI</button></div>
+    <div class="tt-group"><div class="tt-h">เริ่มนับใหม่ (ไม่ลบประวัติ)</div>
+      <button class="tt-item" onclick="closeModal('teamToolsOverlay');doReset('login_reset')"><i class="ti ti-refresh"></i> เริ่มนับเช็คอินใหม่ จากวันนี้<small>${lr ? "ปัจจุบันนับตั้งแต่ " + esc(lr) : ""}</small></button>
+      <button class="tt-item" onclick="closeModal('teamToolsOverlay');doReset('task_reset')"><i class="ti ti-refresh"></i> เริ่มนับ KPI ใหม่ จากวันนี้<small>${tr ? "ปัจจุบันนับตั้งแต่ " + esc(tr) : ""}</small></button></div>`;
+  document.getElementById("teamToolsOverlay").classList.add("show");
+}
 function renderResetBar() {
   const el = document.getElementById("resetBar"); if (!el) return;
+  el.innerHTML = ""; return;   // ย้ายไปเมนู "จัดการทีม" (openTeamTools)
   if (!isAdmin()) { el.innerHTML = ""; return; }
   const lr = resetDate("login_reset"), tr = resetDate("task_reset");
   el.innerHTML = `<div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:0 0 12px">
@@ -1973,7 +2018,8 @@ function renderCloudBar() {
   if (!currentUser && cloudState !== "off") { el.innerHTML = ""; return; }
   if (cloudState==="off") el.innerHTML=`<div class="cloud-bar"><span class="dot" style="background:var(--danger);box-shadow:0 0 0 3px var(--danger-tint)"></span><span><b>เชื่อมต่อฐานข้อมูลไม่ได้</b> — ตรวจสอบอินเทอร์เน็ตแล้วรีเฟรชหน้า</span></div>`;
   else if (cloudState==="loading") el.innerHTML=`<div class="cloud-bar"><span class="dot" style="background:var(--txt-3);box-shadow:none"></span><span>กำลังเชื่อมต่อคลาวด์...</span></div>`;
-  else if (cloudState==="on") el.innerHTML=`<div class="cloud-bar"><span class="dot" style="background:var(--success)"></span><span><b>ซิงค์ออนไลน์</b> — ${rtLive ? "เรียลไทม์ อัปเดตทันทีที่มีการเปลี่ยนแปลง" : `อัพเดททุก ${SYNC_MS/1000} วินาที`}</span><code>Supabase</code></div>`;
+  else if (cloudState==="on") el.innerHTML="";   // ปกติไม่ต้องแสดง — ขึ้นเฉพาะตอนเชื่อมต่อไม่ได้
+  else if (false) el.innerHTML=`<div class="cloud-bar"><span class="dot" style="background:var(--success)"></span><span><b>ซิงค์ออนไลน์</b> — ${rtLive ? "เรียลไทม์ อัปเดตทันทีที่มีการเปลี่ยนแปลง" : `อัพเดททุก ${SYNC_MS/1000} วินาที`}</span><code>Supabase</code></div>`;
   else el.innerHTML=`<div class="cloud-bar"><span class="dot" style="background:var(--danger);box-shadow:0 0 0 3px var(--danger-tint)"></span><span><b>เชื่อมต่อไม่สำเร็จ</b> — กำลังลองใหม่ ข้อมูลบนจออาจไม่ล่าสุด</span></div>`;
 }
 
@@ -2454,15 +2500,12 @@ function renderHeader() {
     <div><div class="u-name">${esc(currentUser.name)} ${crownHtml(currentUser.id)}</div><div class="u-role ${rankCls(currentUser.rank)}">${RANKS[currentUser.rank]||""}</div></div>
   </div>`;
   if (canInviteDirect()) {
-    html += `<button class="btn-ghost" onclick="openResetPassModal()"><i class="ti ti-key"></i> Reset</button>
-      <button class="btn-ghost" onclick="openTeamModal()"><i class="ti ti-user-plus"></i> เพิ่มคน</button>
-      <button class="btn-ghost" onclick="openBannedModal()"><i class="ti ti-ban"></i> รายชื่อแบน</button>
-      <button class="btn-ghost" onclick="openBoardModal()"><i class="ti ti-pin"></i> ประกาศ</button>
+    html += `<button class="btn-ghost" onclick="openTeamTools()"><i class="ti ti-settings"></i> จัดการทีม</button>
       <button class="btn-primary" onclick="openTaskModal()"><i class="ti ti-plus"></i> เพิ่มงาน</button>`;
   } else if (canCreateTask()) {
     html += `<button class="btn-primary" onclick="openTaskModal()"><i class="ti ti-plus"></i> ${can("create_task")?"เพิ่มงาน":"ขอสร้างงาน"}</button>`;
   }
-  html += `<button class="btn-ghost btn-sm" onclick="logout()">ออก</button>`;
+  html += `<button class="btn-ghost btn-sm" onclick="logout()">ออกจากระบบ</button>`;
   el.innerHTML = html;
   renderNotifBadge();
   if (notifOpen) renderNotifPanel();
@@ -2496,28 +2539,30 @@ function renderMobileActions() {
   const fab = document.getElementById("mobileFab");
   if (!el || !fab) return;
   if (!currentUser) { el.innerHTML = ""; fab.style.display = "none"; return; }
-  let html = `<div class="more-label">พักสมอง</div>
+  let html = `<div class="more-label">คลังความรู้</div>
+    <div class="more-games">
+      <button class="btn-ghost" onclick="closeSidebarMobile();bottomNavGo('idea-hub')"><i class="ti ti-bulb"></i>ไอเดีย & AI</button>
+      <button class="btn-ghost" onclick="closeSidebarMobile();showProfile()"><i class="ti ti-user"></i>โปรไฟล์ & สิทธิ์</button>
+    </div>
+    <div class="more-label">พักสมอง</div>
     <div class="more-games">
       <button class="btn-ghost" onclick="closeSidebarMobile();bottomNavGo('game-snake')"><i class="ti ti-device-gamepad-2"></i>เกมงู</button>
       <button class="btn-ghost" onclick="closeSidebarMobile();bottomNavGo('game-wheel')"><i class="ti ti-chart-pie"></i>วงล้อสุ่ม</button>
-      <button class="btn-ghost" onclick="closeSidebarMobile();bottomNavGo('idea-hub')"><i class="ti ti-bulb"></i>ไอเดีย & AI</button>
-      <button class="btn-ghost install-menu-btn" onclick="closeSidebarMobile();openInstallGuide()"><i class="ti ti-download"></i>ติดตั้งแอป</button>
     </div>
+    <div class="more-label">ตั้งค่า</div>
+    <div class="more-games"><button class="btn-ghost install-menu-btn" onclick="closeSidebarMobile();openInstallGuide()"><i class="ti ti-download"></i>ติดตั้งแอป</button></div>
     <div class="more-label">ธีม</div>
     <div style="display:flex;gap:6px">
       <button class="btn-ghost ${themeMode==='light'?'is-active-theme':''}" style="flex:1;padding:8px 4px;font-size:12px" onclick="setMode('light')"><i class="ti ti-sun"></i> สว่าง</button>
       <button class="btn-ghost ${themeMode==='dark'?'is-active-theme':''}" style="flex:1;padding:8px 4px;font-size:12px" onclick="setMode('dark')"><i class="ti ti-moon"></i> มืด</button>
-      <button class="btn-ghost ${themeMode==='system'?'is-active-theme':''}" style="flex:1;padding:8px 4px;font-size:12px" onclick="setMode('system')"><i class="ti ti-device-desktop"></i> ระบบ</button>
+      <button class="btn-ghost ${themeMode==='system'?'is-active-theme':''}" style="flex:1;padding:8px 4px;font-size:12px" onclick="setMode('system')"><i class="ti ti-device-desktop"></i> ตามระบบ</button>
     </div>`;
   if (canInviteDirect()) {
-    html += `<button class="btn-ghost" onclick="closeSidebarMobile();openResetPassModal()"><i class="ti ti-key"></i> Reset</button>
-      <button class="btn-ghost" onclick="closeSidebarMobile();openTeamModal()"><i class="ti ti-user-plus"></i> เพิ่มคน</button>
-      <button class="btn-ghost" onclick="closeSidebarMobile();openBannedModal()"><i class="ti ti-ban"></i> รายชื่อแบน</button>
-      <button class="btn-ghost" onclick="closeSidebarMobile();openBoardModal()"><i class="ti ti-pin"></i> ประกาศ</button>`;
+    html += `<div class="more-label">ผู้ดูแล</div><button class="btn-ghost" onclick="closeSidebarMobile();openTeamTools()"><i class="ti ti-settings"></i> จัดการทีม</button>`;
   }
   const showingMobileNow = forceView === "mobile" ? true : forceView === "desktop" ? false : (window.innerWidth <= 1024);
   if (canForceView) html += `<button class="btn-ghost" onclick="cycleForceView()">${showingMobileNow ? '<i class="ti ti-device-desktop"></i> ดูเวอร์ชันคอม' : '<i class="ti ti-device-mobile"></i> ดูเวอร์ชันมือถือ'}</button>`;
-  html += `<button class="btn-ghost btn-sm" onclick="logout()">ออก</button>`;
+  html += `<button class="btn-ghost" onclick="logout()"><i class="ti ti-logout"></i> ออกจากระบบ</button>`;
   el.innerHTML = html;
   fab.style.display = (canInviteDirect() || canCreateTask()) ? "" : "none";
   renderBottomNav();
@@ -2557,8 +2602,16 @@ function permSummaryHtml(m) {
     ${off.map(p=>`<div class="ps-off"><i class="ti ti-x"></i> ${p.label}</div>`).join("")}
   </div>`;
 }
+function myPermsHtml() {
+  if (!currentUser) return "";
+  const note = isAdmin() ? "มีสิทธิ์จัดการงานและคนในทีมทั้งหมด"
+    : (can("manage_all_tasks") ? "จัดการงานของทั้งทีมได้" : can("create_task") ? "สร้างและจัดการงานของตัวเองได้" : "ทำงานที่ได้รับมอบหมาย");
+  return `<div class="prof-perm"><div class="pp-h"><i class="ti ti-shield-check"></i> สิทธิ์ของฉัน · <b>${RANKS[rankCls(currentUser.rank)]||""}</b></div>
+    <div class="pp-n">${note}</div>${isAdmin() ? `<div class="ps-on"><i class="ti ti-check"></i> ทำได้ทุกอย่าง รวมถึงเชิญ/ลบสมาชิก อนุมัติคำขอ และปรับสิทธิ์ของแต่ละคน</div>` : permSummaryHtml(currentUser)}</div>`;
+}
 function renderRoleBanner() {
   const el = document.getElementById("roleBanner");
+  el.innerHTML = ""; return;   // ย้ายไปหน้าโปรไฟล์ (myPermsHtml) — ไม่กินพื้นที่หน้าหลัก
   if (!currentUser) { el.innerHTML = ""; return; }
   const custom = !isAdmin() && Object.keys(currentUser.perms||{}).length > 0;
   const note = isAdmin() ? "มีสิทธิ์จัดการงานและคนในทีมทั้งหมด"
@@ -2724,7 +2777,7 @@ function renderTeam() {
       </div>
       <div class="mood-score"><div class="num">${s.hasTask?s.score+"%":"—"}</div>${s.hasTask?`<div style="margin-top:6px"><span class="score-pill ${mood.cls}">${esc(mood.lbl)}</span></div>`:""}<div style="font-size:12px;color:var(--txt-2);margin-top:6px">${esc(mood.t)}</div></div>
       <div class="bar ${mood.cls}"><i style="width:${s.hasTask?s.score:0}%"></i></div>
-      <div class="score-row"><span>คะแนนความพึงพอใจ</span><b style="color:${sc}">${s.hasTask?s.score+"%":"—"}</b></div>
+      <div class="score-row" style="display:none"><span>KPI ส่งตรงเวลา</span><b style="color:${sc}">${s.hasTask?s.score+"%":"—"}</b></div>
       <div class="mini">
         <span class="chip"><i class="ti ti-clipboard-check"></i> <b>${s.total}</b> งาน</span>
         <span class="chip" style="color:var(--success)"><i class="ti ti-check"></i> <b>${s.onTime}</b> ตรงเวลา</span>
@@ -2758,16 +2811,20 @@ function renderTaskCard(t) {
   const reqDel = !canDel && mine && can("request_task");
   const canRe = canReopenTask(t);
   const reqRe = !canRe && mine && can("request_task");
-  let btns = "";
-  if (st!=="done") { if (canTick) btns += `<button class="btn-ghost btn-sm" onclick="completeTask('${id}')"><i class="ti ti-check"></i> ทำเสร็จแล้ว</button>`; }
-  else if (canRe) btns += `<button class="btn-ghost btn-sm" onclick="reopenTask('${id}')"><i class="ti ti-refresh"></i> เปิดงานใหม่</button>`;
-  else if (reqRe) btns += `<button class="btn-ghost btn-sm" onclick="submitReopenRequest('${id}')"><i class="ti ti-send"></i> ขอเปิดงานใหม่</button>`;
-  if (canReuseTask(t)) btns += `<button class="btn-primary btn-sm" onclick="reuseTask('${id}')"><i class="ti ti-copy-plus"></i> ใช้ซ้ำ${freqCls(t.freq)==="weekly"?"อาทิตย์หน้า":freqCls(t.freq)==="daily"?"วันถัดไป":"เดือนหน้า"}</button>`;
-  if (canEdit) btns += `<button class="btn-ghost btn-sm" onclick="openEditTaskModal('${id}')"><i class="ti ti-pencil"></i> แก้ไข</button>`;
-  if (canDel) btns += `<button class="btn-danger btn-sm" onclick="delTaskDirect('${id}')"><i class="ti ti-trash"></i> ลบ</button>`;
-  else if (reqDel) btns += `<button class="btn-danger btn-sm" onclick="submitDeleteRequest('${id}')"><i class="ti ti-send"></i> ขอลบ</button>`;
-  const status = over?"เลยกำหนดส่งแล้ว":(st==="done"?"งานเสร็จสมบูรณ์":(mine && !canEdit && !admin ? "ติ๊กเชคลิสต์ได้อย่างเดียว" : "กำลังดำเนินการ"));
-  const foot = `<span style="font-size:12px;color:var(--txt-2)">${status}</span><div class="foot-btns">${btns}</div>`;
+  // ปุ่มหลัก 1 ปุ่ม (ใหญ่) + แก้ไข + ที่เหลือเก็บใน ⋯
+  const reuseLbl = `ใช้ซ้ำ${freqCls(t.freq)==="weekly"?"อาทิตย์หน้า":"เดือนหน้า"}`;
+  let primary = "", more = [];
+  if (st !== "done" && canTick) primary = `<button class="btn-primary tf-main" onclick="completeTask('${id}')"><i class="ti ti-check"></i> ทำเสร็จแล้ว</button>`;
+  else if (st === "done" && canReuseTask(t)) primary = `<button class="btn-primary tf-main" onclick="reuseTask('${id}')"><i class="ti ti-copy-plus"></i> ${reuseLbl}</button>`;
+  if (st !== "done" && canReuseTask(t)) more.push(`<button onclick="reuseTask('${id}')"><i class="ti ti-copy-plus"></i> ${reuseLbl}</button>`);
+  if (st === "done" && canRe) more.push(`<button onclick="reopenTask('${id}')"><i class="ti ti-refresh"></i> เปิดงานเดิมใหม่ (กดเสร็จผิด)</button>`);
+  else if (st === "done" && reqRe) more.push(`<button onclick="submitReopenRequest('${id}')"><i class="ti ti-send"></i> ขอเปิดงานเดิมใหม่</button>`);
+  if (canDel) more.push(`<button class="danger" onclick="delTaskDirect('${id}')"><i class="ti ti-trash"></i> ลบงาน</button>`);
+  else if (reqDel) more.push(`<button class="danger" onclick="submitDeleteRequest('${id}')"><i class="ti ti-send"></i> ขอลบงาน</button>`);
+  const editBtn = canEdit ? `<button class="btn-ghost" onclick="openEditTaskModal('${id}')"><i class="ti ti-pencil"></i> แก้ไข</button>` : "";
+  const moreBtn = more.length ? `<details class="tf-more"><summary class="btn-ghost" title="เพิ่มเติม"><i class="ti ti-dots"></i></summary><div class="tf-menu">${more.join("")}</div></details>` : "";
+  const status = !primary && !editBtn && !moreBtn ? `<span style="font-size:12px;color:var(--txt-2)">${st==="done"?"งานเสร็จสมบูรณ์":"ติ๊กเชคลิสต์ได้อย่างเดียว"}</span>` : "";
+  const foot = `${status}${primary}${editBtn}${moreBtn}`;
 
   return `<div class="task ${st==='done'?'done':''} ${over?'overdue':''}">
     <div class="task-head">
@@ -2792,12 +2849,9 @@ function renderTaskCard(t) {
         <label class="check">
           <input type="checkbox" ${c.on?"checked":""} ${canTick?"":"disabled"} onchange="toggleCheck('${id}',${i},this)">
           <span class="ctext">${esc(c.text)}</span>
-          ${canChecklist?`<button class="del-check" title="แก้ไขข้อความ" onclick="event.preventDefault();startEditCheck('${id}',${i},this)"><i class="ti ti-pencil"></i></button><button class="del-check" title="ลบหัวข้อย่อย" onclick="event.preventDefault();delCheck('${id}',${i})"><i class="ti ti-trash"></i></button>`:""}
+
         </label>`).join("")}
-      ${canChecklist?`<div class="add-check">
-        <input placeholder="เพิ่มหัวข้อย่อย..." onkeydown="if(event.key==='Enter'){addCheck('${id}',this)}">
-        <button class="btn-ghost btn-sm" onclick="addCheck('${id}',this.previousElementSibling)">＋ เพิ่ม</button>
-      </div>`:""}
+      ${!checks.length && canChecklist ? `<div style="font-size:12.5px;color:var(--txt-3);padding:4px 2px">ยังไม่มีหัวข้อย่อย — เพิ่มได้ที่ปุ่ม "แก้ไข"</div>` : ""}
     </div>
     <div class="task-foot">${foot}</div>
   </div>`;
@@ -2861,7 +2915,8 @@ function byDue(a,b){ return (a.due||"9999") < (b.due||"9999") ? -1 : (a.due||"99
    งานทั่วไป: สถานะไม่ซ้อนกัน เลยกำหนด / วันนี้ / กำลังทำ / เสร็จ + ของฉัน/ทั้งทีม · จัดกลุ่มตามวัน
    งานประจำ: รอบนี้ / ประวัติรอบก่อน · จัดกลุ่มตามความถี่ · แสดงผลรอบก่อนของงานชื่อเดียวกัน
    ทุกงานเป็นแถวกระชับ แตะเพื่อกาง (การ์ดเดิมอยู่ข้างใน — ปุ่มทั้งหมดเหมือนเดิม) */
-const closedTaskRows = new Set();   // แสดงเต็มเป็นค่าเริ่มต้น — จำเฉพาะแถวที่ผู้ใช้หุบเอง
+const closedTaskRows = new Set();
+document.addEventListener("click", e => { document.querySelectorAll(".tf-more[open]").forEach(d => { if (!d.contains(e.target)) d.open = false; }); });   // แสดงเต็มเป็นค่าเริ่มต้น — จำเฉพาะแถวที่ผู้ใช้หุบเอง
 function isRoutine(t) { const f = freqCls(t.freq); return f === "monthly" || f === "weekly"; }
 function routineBase(title) {
   return String(title || "").replace(/\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s?\d{2,4}\b/gi, "")
@@ -2941,22 +2996,24 @@ function renderTasksView() {
     const nextR = routine.filter(t => taskStatus(t) !== "done" && (t.startDate || t.due || "") > me);
     const cur = routine.filter(t => !nextR.includes(t) && (taskStatus(t) !== "done" || (t.due || "") >= ms));
     const hist = routine.filter(t => !cur.includes(t) && !nextR.includes(t)).sort((a, b) => String(b.due || "").localeCompare(String(a.due || "")));
-    const rtab = state.routineTab === "history" ? "history" : "current";
-    tabsHtml = `<div class="cal-filters tr-tabs" role="tablist">
-      <button type="button" class="cal-filter ${rtab === "current" ? "on" : ""}" onclick="setRoutineTab('current')">รอบนี้ (${ymLabel(today.slice(0, 7))})<span class="tab-count">${cur.length}</span></button>
-      <button type="button" class="cal-filter ${rtab === "history" ? "on" : ""}" onclick="setRoutineTab('history')">ประวัติรอบก่อน<span class="tab-count">${hist.length}</span></button></div>`;
+    // งานประจำ: สถานะแยกชัดเหมือนงานทั่วไป — ต้องทำ / เสร็จแล้ว (รอบนี้) / รอบถัดไป / ประวัติรอบก่อน
+    const todo = cur.filter(t => taskStatus(t) !== "done"), doneNow = cur.filter(t => taskStatus(t) === "done");
+    const RT = [["todo", "ต้องทำ", todo.length], ["done", "เสร็จแล้ว", doneNow.length], ["next", "รอบถัดไป", nextR.length], ["history", "ประวัติรอบก่อน", hist.length]].filter(x => x[0] !== "next" || x[2]);
+    const rtab = RT.some(x => x[0] === state.routineTab) ? state.routineTab : "todo";
+    const rtOver = todo.filter(isOverdue).length;
+    tabsHtml = `<div class="cal-filters tr-tabs" role="tablist">${RT.map(([id, l, n]) => `<button type="button" role="tab" aria-selected="${rtab === id}" class="cal-filter ${rtab === id ? "on" : ""} ${id === "todo" && rtOver ? "alert-tab" : ""}" onclick="setRoutineTab('${id}')">${l}${id === "todo" || id === "done" ? ` (${ymLabel(today.slice(0, 7))})` : ""}<span class="tab-count ${id === "todo" && rtOver ? "alert" : ""}">${n}</span></button>`).join("")}</div>`;
     const prevLine = t => {
       const base = routineBase(t.title);
       const prev = all.filter(x => x.id !== t.id && isRoutine(x) && routineBase(x.title) === base && taskStatus(x) === "done" && (x.due || "") < (t.due || "")).sort((a, b) => String(b.due || "").localeCompare(String(a.due || ""))).slice(0, 2);
       return prev.length ? `<div class="tr-hist">${prev.map(x => `${ymLabel((x.due || "").slice(0, 7))} ${taskResult(x)}`).join(" · ")}</div>` : "";
     };
     const row = t => taskRowHtml(t, prevLine(t));
-    if (rtab === "current") {
-      const srt = arr => arr.sort((a, b) => (taskStatus(a) === "done") - (taskStatus(b) === "done") || byDue(a, b));
-      body = cur.length ? grp("ทุกวัน (รอบเดือน)", srt(cur.filter(t => routineGroup(t) === "daily")), row) + grp("ทุกสัปดาห์", srt(cur.filter(t => routineGroup(t) === "weekly")), row) + grp("ทุกเดือน", srt(cur.filter(t => routineGroup(t) === "monthly")), row)
-        : empty("ยังไม่มีงานประจำรอบนี้");
-      body += grp("รอบถัดไป (สร้างไว้ล่วงหน้า)", nextR.sort(byDue), row);
-    } else {
+    const byFreq = arr => grp("ทุกวัน (รอบเดือน)", arr.filter(t => routineGroup(t) === "daily").sort(byDue), row)
+      + grp("ทุกสัปดาห์", arr.filter(t => routineGroup(t) === "weekly").sort(byDue), row) + grp("ทุกเดือน", arr.filter(t => routineGroup(t) === "monthly").sort(byDue), row);
+    if (rtab === "todo") body = todo.length ? grp('<i class="ti ti-alert-triangle"></i> เลยกำหนด', todo.filter(isOverdue).sort(byDue), row) + byFreq(todo.filter(t => !isOverdue(t))) : empty("งานประจำรอบนี้ทำเสร็จครบแล้ว");
+    else if (rtab === "done") body = doneNow.length ? byFreq(doneNow) : empty("ยังไม่มีงานประจำที่เสร็จในรอบนี้");
+    else if (rtab === "next") body = grp("สร้างไว้ล่วงหน้า", nextR.sort(byDue), row);
+    else {
       const byMonth = {}; hist.forEach(t => { const k = (t.due || "").slice(0, 7); (byMonth[k] = byMonth[k] || []).push(t); });
       body = hist.length ? Object.keys(byMonth).sort().reverse().map(k => grp(k ? ymLabel(k) : "ไม่ระบุ", byMonth[k], row)).join("") : empty("ยังไม่มีประวัติงานประจำ");
     }
@@ -4449,7 +4506,7 @@ async function setMyName() {
 }
 function showProfile() {
   if (!currentUser) return;
-  document.getElementById("profileInfo").innerHTML = `
+  document.getElementById("profileInfo").innerHTML = myPermsHtml() + `
     <div style="text-align:center;margin-bottom:16px">
       <div style="display:flex;justify-content:center;margin-bottom:8px">${avatarHtml(currentUser.name,84,currentUser.id)}</div>
       <div style="display:flex;gap:6px;justify-content:center;margin-bottom:12px">
