@@ -741,6 +741,39 @@ button{border-radius:99px;font-weight:500}
 .dayoff-btn{background:var(--success)!important;border-color:var(--success)!important;color:#0E0E0E!important}
 .ev-chip.t-off{border-left-color:var(--success);background:var(--success-tint);color:var(--txt)}
 #updateBar{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(76px + env(safe-area-inset-bottom));z-index:9999;background:var(--accent);color:var(--accent-contrast);padding:10px 16px;border-radius:999px;font-weight:600;font-size:14px;box-shadow:var(--shadow-2);cursor:pointer;display:flex;gap:6px;align-items:center}
+.tr-seg{display:flex;background:var(--layer);border:1px solid var(--stroke);border-radius:12px;padding:3px;margin:4px 0 10px;max-width:520px}
+.tr-seg button{flex:1;border:0;background:none;border-radius:9px;padding:10px 6px;font-size:14.5px;font-weight:600;color:var(--txt-2);min-height:44px}
+.tr-seg button.on{background:var(--accent);color:var(--accent-contrast)}
+.tr-seg button span{font-weight:500;opacity:.75;margin-left:4px}
+.tr-scope{display:flex;gap:6px;margin-bottom:10px}
+.tr-scope button{border:1px solid var(--stroke-2);background:var(--control);color:var(--txt-2);border-radius:999px;padding:7px 14px;font-size:13px;font-weight:600}
+.tr-scope button.on{background:var(--layer-2);color:var(--txt);border-color:var(--txt)}
+.tr-tabs{margin:0 0 12px!important}
+.cal-filter.alert-tab{border-color:var(--danger);color:var(--danger)}
+.tr-list{max-width:900px}
+.tr-gh{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:var(--txt-2);margin:16px 2px 8px}
+.tr-gh span{margin-left:auto;font-weight:500;color:var(--txt-3)}
+.trow{background:var(--layer);border:1px solid var(--stroke);border-radius:12px;margin-bottom:8px;overflow:hidden}
+.trow.rt{border-left:3px solid var(--success)}
+.trow.over{border-color:var(--danger)}
+.trow summary{list-style:none;display:flex;align-items:center;gap:10px;padding:11px 14px;cursor:pointer;min-height:56px}
+.trow summary::-webkit-details-marker{display:none}
+.tr-main{flex:1;min-width:0}
+.tr-main b{display:block;font-size:14.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.trow.dn .tr-main b{color:var(--txt-2)}
+.tr-main small{display:block;font-size:12.5px;color:var(--txt-2);margin-top:1px}
+.tr-bar{height:4px;background:var(--track);border-radius:4px;margin-top:7px;overflow:hidden}
+.tr-bar i{display:block;height:100%;background:var(--txt)}
+.trow.over .tr-bar i{background:var(--danger)}
+.tr-hist{font-size:12px;color:var(--txt-3);margin-top:5px}
+.tr-pill{flex:none;font-size:12px;padding:3px 9px;border-radius:999px;border:1px solid var(--stroke-2);color:var(--txt-2)}
+.tr-pill.late{border-color:var(--danger);color:var(--danger)}
+.tr-pill.ok{border-color:var(--success);color:var(--success)}
+.tr-chev{color:var(--txt-3);transition:transform .15s;flex:none}
+.trow[open] .tr-chev{transform:rotate(180deg)}
+.tr-body{border-top:1px dashed var(--stroke)}
+.tr-body .task{border:0;box-shadow:none;margin:0;border-radius:0;background:transparent}
+.tr-body .task-icon,.tr-body .task-title{display:none}
 .ctext-input{flex:1;min-width:0;font:inherit;font-size:14px;color:var(--txt);background:transparent;border:1px solid transparent;border-radius:8px;padding:5px 8px;outline:none}
 .ctext-input:hover{border-color:var(--stroke-2)}
 .ctext-input:focus,.ctext-input.editing{border-color:var(--txt);background:var(--control)}
@@ -2604,7 +2637,7 @@ function renderAttention() {
       ${rows || `<div style="padding:18px 6px;color:var(--txt-3);font-size:13px">ไม่มีงานเร่งด่วนวันนี้</div>`}</div>
     <div class="dash-card"><div class="dc-head"><h3>คะแนนทีม</h3><span style="font-size:12px;color:var(--txt-3)">ส่งตรงเวลา</span></div>${scores || `<div style="padding:18px 6px;color:var(--txt-3);font-size:13px">ยังไม่มีสมาชิก</div>`}</div>`;
 }
-function openTasks(filter) { state.filter = filter; navigateTo("today-tasks"); }
+function openTasks(filter) { state.taskKind = "general"; state.taskScope = "team"; state.filter = filter === "all" ? "doing" : filter; navigateTo("today-tasks"); }
 
 /* เช็คอินรายวัน: พนักงาน/เด็กฝึกงานต้องเข้าระบบอย่างน้อยวันละ 1 ครั้ง */
 function loginStatusChip(m) {
@@ -2790,59 +2823,122 @@ const TASK_TABS = [
   { id:"done", label:"เสร็จแล้ว" },
   { id:"all", label:"ทั้งหมด" }
 ];
-function setTaskFilter(f) { state.filter = TASK_TABS.some(t=>t.id===f) ? f : "today"; routeView(); }
 function toggleMine() { state.mine = !state.mine; routeView(); }
 function byDue(a,b){ return (a.due||"9999") < (b.due||"9999") ? -1 : (a.due||"9999") > (b.due||"9999") ? 1 : 0; }
+/* ===== แถบงาน (ออกแบบใหม่ พ.ย. 2026) =====
+   งานทั่วไป (daily) | งานประจำ (monthly/weekly) แยกกันชัด
+   งานทั่วไป: สถานะไม่ซ้อนกัน เลยกำหนด / วันนี้ / กำลังทำ / เสร็จ + ของฉัน/ทั้งทีม · จัดกลุ่มตามวัน
+   งานประจำ: รอบนี้ / ประวัติรอบก่อน · จัดกลุ่มตามความถี่ · แสดงผลรอบก่อนของงานชื่อเดียวกัน
+   ทุกงานเป็นแถวกระชับ แตะเพื่อกาง (การ์ดเดิมอยู่ข้างใน — ปุ่มทั้งหมดเหมือนเดิม) */
+const openTaskRows = new Set();
+function isRoutine(t) { const f = freqCls(t.freq); return f === "monthly" || f === "weekly"; }
+function routineBase(title) {
+  return String(title || "").replace(/\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s?\d{2,4}\b/gi, "")
+    .replace(/\b\d{1,2}\/\d{1,2}\/\d{2,4}\b/g, "").replace(/\s+/g, " ").trim().toLowerCase();
+}
+function routineGroup(t) {
+  const s = String(t.title || "");
+  if (/ทุกวัน/.test(s)) return "daily";
+  if (freqCls(t.freq) === "weekly" || /ทุกสัปดาห์|ทุกอาทิตย์/.test(s)) return "weekly";
+  return "monthly";
+}
+function taskResult(t) {
+  if (taskStatus(t) !== "done") return isOverdue(t) ? "เลยกำหนด" : "ยังไม่เสร็จ";
+  const d = localDay(t.completedAt);
+  if (t.due && d && d > t.due) return `ส่งช้า ${Math.round((new Date(d) - new Date(t.due)) / 86400000)} วัน`;
+  return "เสร็จตรงเวลา";
+}
+function setTaskKind(k) { state.taskKind = k; routeView(); }
+function setTaskScope(s) { state.taskScope = s; routeView(); }
+function setRoutineTab(r) { state.routineTab = r; routeView(); }
+function setTaskFilter(f) { state.filter = f; routeView(); }
+function toggleTaskRow(id, el) { if (el.open) openTaskRows.add(id); else openTaskRows.delete(id); }
+function taskRowHtml(t, extra) {
+  const checks = t.checks || [], doneC = checks.filter(c => c.on).length;
+  const st = taskStatus(t), over = isOverdue(t);
+  const pct = checks.length ? Math.round(doneC / checks.length * 100) : (st === "done" ? 100 : 0);
+  const dueTxt = st === "done" ? `เสร็จ ${fmtDate(localDay(t.completedAt))}` : (t.due === todayStr() ? "ส่งวันนี้" : `ส่ง ${fmtDate(t.due)}`);
+  const pill = st === "done" ? `<span class="tr-pill ok">${taskResult(t)}</span>` : over ? `<span class="tr-pill late">เลยกำหนด</span>` : "";
+  const rt = isRoutine(t);
+  return `<details class="trow ${rt ? "rt" : ""} ${over ? "over" : ""} ${st === "done" ? "dn" : ""}" ${openTaskRows.has(t.id) ? "open" : ""} ontoggle="toggleTaskRow('${sid(t.id)}',this)">
+    <summary><div class="tr-main"><b>${esc(t.title)}</b>
+      <small>${whoLabel(t)} · ${dueTxt}${checks.length ? ` · ${doneC}/${checks.length} ข้อ` : ""}</small>
+      <div class="tr-bar"><i style="width:${pct}%"></i></div>${extra || ""}</div>
+      ${pill}<i class="ti ti-chevron-down tr-chev"></i></summary>
+    <div class="tr-body">${renderTaskCard(t)}</div></details>`;
+}
 function renderTasksView() {
   const vr = document.getElementById("viewRoot");
   const today = todayStr();
   const onlyMine = !!currentUser && !can("view_all_tasks");
-  const tasks = visibleTasks();
-  const isToday = t => !isOverdue(t) && taskStatus(t) !== "done" && (t.due === today || t.startDate === today);
-  const isDoing = t => taskStatus(t) !== "done" && !isOverdue(t) && !isToday(t);
-  const myAll = currentUser ? tasks.filter(t => isMine(t, currentUser.id)) : [];
-  const myOver = myAll.filter(t => isOverdue(t)).sort(byDue);
-  const myToday = myAll.filter(isToday).sort(byDue);
-  const myDoing = myAll.filter(isDoing).sort(byDue);
-  const myDone = myAll.filter(t => taskStatus(t) === "done").sort((a,b) => String(b.completedAt||"").localeCompare(String(a.completedAt||"")));
-  const tabs = TASK_TABS.filter(t => !(onlyMine && t.id === "mine"));   // เด็กฝึกงานเห็นแต่งานตัวเองอยู่แล้ว
-  const overdue = tasks.filter(t => isOverdue(t)).sort(byDue);
-  const dueToday = tasks.filter(isToday).sort(byDue);
-  const doing = tasks.filter(isDoing).sort(byDue);
-  const done = tasks.filter(t => taskStatus(t) === "done").sort((a,b) => String(b.completedAt||"").localeCompare(String(a.completedAt||"")));
-  const counts = { mine: myOver.length + myToday.length + myDoing.length, today: overdue.length + dueToday.length, doing: doing.length, overdue: overdue.length, done: done.length, all: tasks.length };
-  const f = (state.filter in counts && tabs.some(t => t.id === state.filter)) ? state.filter : "today";
-
-  const cards = arr => arr.map(renderTaskCard).join("");
+  const all = visibleTasks();
+  const kind = state.taskKind === "routine" ? "routine" : "general";
+  const scope = onlyMine ? "mine" : (state.taskScope === "team" ? "team" : "mine");
+  const inScope = t => scope === "team" || (currentUser && isMine(t, currentUser.id));
+  const general = all.filter(t => !isRoutine(t) && inScope(t));
+  const routine = all.filter(t => isRoutine(t) && inScope(t));
   const empty = msg => `<div class="empty"><div class="e-emoji"><i class="ti ti-inbox"></i></div><b>${msg}</b></div>`;
-  const group = (title, arr) => arr.length ? `<div class="sec-head" style="margin-top:6px"><h2 style="font-size:15px">${title}</h2><span class="hint">${arr.length} งาน</span></div>${cards(arr)}` : "";
-  let body;
-  if (f === "mine") {
-    body = myAll.length
-      ? group('<i class="ti ti-alert-triangle"></i> เลยกำหนด', myOver) + group('<i class="ti ti-calendar"></i> งานของวันนี้', myToday) + group('<i class="ti ti-refresh"></i> กำลังทำ', myDoing) + group('<i class="ti ti-check"></i> เสร็จแล้ว', myDone)
-      : empty("ยังไม่มีงานที่มอบหมายให้คุณ");
-  } else if (f === "today") {
-    body = (overdue.length || dueToday.length)
-      ? group('<i class="ti ti-alert-triangle"></i> เลยกำหนด', overdue) + group('<i class="ti ti-calendar"></i> งานของวันนี้', dueToday)
-      : empty("ไม่มีงานเร่งด่วนวันนี้") ;
-  } else if (f === "all") {
-    const rest = [...overdue, ...dueToday, ...doing, ...done];
-    body = rest.length ? cards(rest) : empty(state.tasks.length ? "ไม่มีงานที่ตรงเงื่อนไข" : "ยังไม่มีงาน");
+  const grp = (title, arr, fn) => arr.length ? `<div class="tr-gh">${title}<span>${arr.length}</span></div>${arr.map(fn || (t => taskRowHtml(t))).join("")}` : "";
+  const addDays = n => { const d = new Date(today + "T00:00:00"); d.setDate(d.getDate() + n); return fmtISO(d); };
+  let tabsHtml = "", body = "";
+
+  if (kind === "general") {
+    const notDone = general.filter(t => taskStatus(t) !== "done");
+    const overdue = notDone.filter(isOverdue).sort(byDue);
+    const todayL = notDone.filter(t => !isOverdue(t) && (t.due === today || t.startDate === today)).sort(byDue);
+    const doing = notDone.filter(t => !isOverdue(t) && !(t.due === today || t.startDate === today)).sort(byDue);
+    const done = general.filter(t => taskStatus(t) === "done").sort((a, b) => String(b.completedAt || "").localeCompare(String(a.completedAt || "")));
+    const counts = { overdue: overdue.length, today: todayL.length, doing: doing.length, done: done.length };
+    let f = ["overdue", "today", "doing", "done"].includes(state.filter) ? state.filter : (overdue.length ? "overdue" : "today");
+    if (state.filter === "all" || state.filter === "mine") f = overdue.length ? "overdue" : "today";
+    const TAB = [["overdue", "เลยกำหนด"], ["today", "วันนี้"], ["doing", "กำลังทำ"], ["done", "เสร็จ"]];
+    tabsHtml = `<div class="cal-filters tr-tabs" role="tablist">${TAB.map(([id, l]) => `<button type="button" role="tab" aria-selected="${f === id}" class="cal-filter ${f === id ? "on" : ""} ${id === "overdue" && counts.overdue ? "alert-tab" : ""}" onclick="setTaskFilter('${id}')">${l}<span class="tab-count ${id === "overdue" && counts.overdue ? "alert" : ""}">${counts[id]}</span></button>`).join("")}</div>`;
+    if (f === "overdue") body = overdue.length ? grp('<i class="ti ti-alert-triangle"></i> เลยกำหนด', overdue) : empty("ไม่มีงานเลยกำหนด");
+    else if (f === "today") body = todayL.length ? grp(`<i class="ti ti-calendar"></i> วันนี้ · ${fmtDate(today)}`, todayL) : empty("ไม่มีงานของวันนี้");
+    else if (f === "doing") {
+      const tm = addDays(1), wk = addDays(7);
+      body = doing.length ? grp("พรุ่งนี้", doing.filter(t => t.due === tm)) + grp("ภายใน 7 วัน", doing.filter(t => t.due > tm && t.due <= wk))
+        + grp("หลังจากนั้น", doing.filter(t => t.due > wk)) + grp("ยังไม่ถึงวันเริ่ม / ไม่มีกำหนด", doing.filter(t => !t.due || t.due < tm)) : empty("ไม่มีงานที่กำลังทำ");
+    } else {
+      const byMonth = {}; done.forEach(t => { const k = (localDay(t.completedAt) || t.due || "").slice(0, 7); (byMonth[k] = byMonth[k] || []).push(t); });
+      body = done.length ? Object.keys(byMonth).sort().reverse().map(k => grp(k ? ymLabel(k) : "ไม่ระบุ", byMonth[k])).join("") : empty("ยังไม่มีงานที่เสร็จ");
+    }
   } else {
-    const arr = f === "doing" ? doing : f === "overdue" ? overdue : done;
-    body = arr.length ? cards(arr) : empty(f === "overdue" ? "ไม่มีงานเลยกำหนด" : f === "done" ? "ยังไม่มีงานที่เสร็จ" : "ไม่มีงานที่กำลังทำ");
+    const ms = monthStart();
+    const cur = routine.filter(t => taskStatus(t) !== "done" || (t.due || "") >= ms);
+    const hist = routine.filter(t => !cur.includes(t)).sort((a, b) => String(b.due || "").localeCompare(String(a.due || "")));
+    const rtab = state.routineTab === "history" ? "history" : "current";
+    tabsHtml = `<div class="cal-filters tr-tabs" role="tablist">
+      <button type="button" class="cal-filter ${rtab === "current" ? "on" : ""}" onclick="setRoutineTab('current')">รอบนี้ (${ymLabel(today.slice(0, 7))})<span class="tab-count">${cur.length}</span></button>
+      <button type="button" class="cal-filter ${rtab === "history" ? "on" : ""}" onclick="setRoutineTab('history')">ประวัติรอบก่อน<span class="tab-count">${hist.length}</span></button></div>`;
+    const prevLine = t => {
+      const base = routineBase(t.title);
+      const prev = all.filter(x => x.id !== t.id && isRoutine(x) && routineBase(x.title) === base && taskStatus(x) === "done" && (x.due || "") < (t.due || "")).sort((a, b) => String(b.due || "").localeCompare(String(a.due || ""))).slice(0, 2);
+      return prev.length ? `<div class="tr-hist">${prev.map(x => `${ymLabel((x.due || "").slice(0, 7))} ${taskResult(x)}`).join(" · ")}</div>` : "";
+    };
+    const row = t => taskRowHtml(t, prevLine(t));
+    if (rtab === "current") {
+      const srt = arr => arr.sort((a, b) => (taskStatus(a) === "done") - (taskStatus(b) === "done") || byDue(a, b));
+      body = cur.length ? grp("ทุกวัน (รอบเดือน)", srt(cur.filter(t => routineGroup(t) === "daily")), row) + grp("ทุกสัปดาห์", srt(cur.filter(t => routineGroup(t) === "weekly")), row) + grp("ทุกเดือน", srt(cur.filter(t => routineGroup(t) === "monthly")), row)
+        : empty("ยังไม่มีงานประจำรอบนี้");
+    } else {
+      const byMonth = {}; hist.forEach(t => { const k = (t.due || "").slice(0, 7); (byMonth[k] = byMonth[k] || []).push(t); });
+      body = hist.length ? Object.keys(byMonth).sort().reverse().map(k => grp(k ? ymLabel(k) : "ไม่ระบุ", byMonth[k], row)).join("") : empty("ยังไม่มีประวัติงานประจำ");
+    }
   }
 
+  const gCount = general.filter(t => taskStatus(t) !== "done").length, rCount = routine.filter(t => taskStatus(t) !== "done").length;
   vr.innerHTML = `
     <div class="view-head"><div><h2><i class="ti ti-list-check"></i> งาน</h2>
       <div style="font-size:12.5px;color:var(--txt-2);margin-top:3px">${new Date().toLocaleDateString("th-TH",{weekday:"long",day:"numeric",month:"long",year:"numeric"})}</div></div>
       <div class="cal-ctrl">${canCreateTask() ? `<button class="btn-primary btn-sm" onclick="openTaskModal()"><i class="ti ti-plus"></i> ${can("create_task")?"เพิ่มงาน":"ขอสร้างงาน"}</button>` : ""}</div></div>
-    <div class="task-toolbar">
-      <div class="cal-filters" role="tablist" aria-label="กรองงาน" style="margin:0">
-        ${tabs.map(t=>{ const alert = t.id==="mine" ? myOver.length>0 : (t.id!=='all'&&t.id!=='done'&&t.id!=='doing'&&counts[t.id]&&overdue.length); return `<button type="button" role="tab" aria-selected="${f===t.id}" class="cal-filter ${f===t.id?'on':''}" onclick="setTaskFilter('${t.id}')">${t.label}<span class="tab-count ${alert?'alert':''}">${counts[t.id]}</span></button>`; }).join("")}
-      </div>
+    <div class="tr-seg" role="tablist">
+      <button type="button" class="${kind === "general" ? "on" : ""}" onclick="setTaskKind('general')">งานทั่วไป <span>${gCount}</span></button>
+      <button type="button" class="${kind === "routine" ? "on" : ""}" onclick="setTaskKind('routine')">งานประจำ <span>${rCount}</span></button>
     </div>
-    ${body}`;
+    ${onlyMine ? "" : `<div class="tr-scope"><button type="button" class="${scope === "mine" ? "on" : ""}" onclick="setTaskScope('mine')"><i class="ti ti-user"></i> ของฉัน</button><button type="button" class="${scope === "team" ? "on" : ""}" onclick="setTaskScope('team')"><i class="ti ti-users"></i> ทั้งทีม</button></div>`}
+    ${tabsHtml}
+    <div class="tr-list">${body}</div>`;
 }
 
 /* ============ VIEW: EVENT CALENDAR ============ */
