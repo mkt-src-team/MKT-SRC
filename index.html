@@ -774,6 +774,8 @@ button{border-radius:99px;font-weight:500}
 .tr-body{border-top:1px dashed var(--stroke)}
 .tr-body .task{border:0;box-shadow:none;margin:0;border-radius:0;background:transparent}
 .tr-body .task-icon,.tr-body .task-title{display:none}
+#eventOverlay .field{min-width:0}#eventOverlay .field input{min-width:0;max-width:100%}
+@media(max-width:1024px){main{padding-bottom:84px}}
 .ctext-input{flex:1;min-width:0;font:inherit;font-size:14px;color:var(--txt);background:transparent;border:1px solid transparent;border-radius:8px;padding:5px 8px;outline:none}
 .ctext-input:hover{border-color:var(--stroke-2)}
 .ctext-input:focus,.ctext-input.editing{border-color:var(--txt);background:var(--control)}
@@ -1433,7 +1435,7 @@ const EV_ICON = { event:"ti-confetti", campaign:"ti-target-arrow", content:"ti-d
 const TASK_EMOJIS = ["🚗","📣","🎨","💻","📊","📝","📸","🎬","🛍️","📈","🔧","⭐","🔥"];
 // ไอคอนงาน: ของใหม่เก็บเป็นชื่อคลาส "ti-..." ในช่อง emoji เดิม — งานเก่าที่เก็บเป็นอีโมจิจะแปลงเป็นไอคอนตามลำดับเดียวกันตอนแสดงผล
 const TASK_ICONS = ["ti-car","ti-speakerphone","ti-palette","ti-device-laptop","ti-chart-bar","ti-notes","ti-camera","ti-video","ti-shopping-bag","ti-trending-up","ti-tool","ti-star","ti-flame"];
-function taskIco(e) { if (e && e.startsWith("ti-")) return e; const i = TASK_EMOJIS.indexOf(e); return i >= 0 ? TASK_ICONS[i] : "ti-car"; }
+function taskIco(e) { if (e && TASK_ICONS.includes(e)) return e; if (e && /^ti-[a-z0-9-]+$/.test(e)) return e; const i = TASK_EMOJIS.indexOf(e); return i >= 0 ? TASK_ICONS[i] : "ti-car"; }
 /* รูปโปรไฟล์: เก็บเป็น data URL (JPEG ย่อ 160px) ในคอลัมน์ members.avatar — โหลดแยกจาก pull() หลัก
    เพื่อให้เว็บยังทำงานได้แม้ยังไม่ได้รัน SQL เพิ่มคอลัมน์ (ข้อ 14) */
 const AVATAR_OK = /^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/;
@@ -1458,7 +1460,13 @@ async function markLoginDay() {
   markingLogin = true;
   try {
     const w = await db.from("login_days").upsert({ id: currentUser.id + "_" + today, member_id: currentUser.id, day: today }).then(x => x, () => ({ error:true }));
-    if (!w.error) { loginMarked = today + currentUser.id; clearTimeout(markRetry); markRetry = null; }
+    if (!w.error) {
+      loginMarked = today + currentUser.id; clearTimeout(markRetry); markRetry = null;
+      // อัปเดตวันเข้าล่าสุดของตัวเองด้วย (อีเมลสรุปเช้าและเครื่องอื่นจะเห็นทันที)
+      db.from("members").update({ last_login_date: today }).eq("id", currentUser.id).then(() => {}, () => {});
+      const me = state.members.find(x => x.id === currentUser.id); if (me) me.lastLoginDate = today;
+      (state.loginDays = state.loginDays || {})[currentUser.id] = [...new Set([...(state.loginDays[currentUser.id] || []), today])];
+    }
     else { console.warn("markLoginDay", w.error); clearTimeout(markRetry); markRetry = setTimeout(markLoginDay, 30000); }
   } finally { markingLogin = false; }
 }
@@ -1518,9 +1526,10 @@ async function toggleDayOff(mid, ds) {
 /* จำนวนวันทำงานที่ไม่เข้าระบบติดต่อกัน (นับวันนี้ด้วยถ้ายังไม่เข้า) — ข้ามวันหยุดของคนนั้น */
 function missedDays(m) {
   const today = todayStr();
-  if (m.lastLoginDate === today) return 0;
+  const seen = lastSeen(m);
+  if (seen === today) return 0;
   const lr = resetDate("login_reset");
-  const base = (m.lastLoginDate || "") > lr ? m.lastLoginDate : lr;
+  const base = (seen || "") > lr ? seen : lr;
   if (!base) return 99;
   let n = 0; const d = new Date(base + "T00:00:00");
   for (let i = 0; i < 400; i++) {
@@ -1536,6 +1545,13 @@ function monthWorkDays(m) {
   const ms = monthStart(), logged = new Set((state.loginDays && state.loginDays[m.id]) || []);
   const offs = (state.dayOffs || []).filter(x => x.member_id === m.id && x.day.slice(0, 7) === ms.slice(0, 7) && !logged.has(x.day)).length;
   return total - offs;
+}
+/* วันเข้าระบบล่าสุดจริง — รวมตาราง login_days ด้วย (members.last_login_date อัปเดตเฉพาะตอนล็อกอินใหม่) */
+function lastSeen(m) {
+  const days = (state.loginDays && state.loginDays[m.id]) || [];
+  let best = m.lastLoginDate || "";
+  days.forEach(d => { if (d > best) best = d; });
+  return best || null;
 }
 function missLevel(d) { return d >= 3 ? "red" : d === 2 ? "orange" : d === 1 ? "yellow" : ""; }
 const MISS_COLOR = { yellow:"var(--alert-yellow)", orange:"var(--alert-orange)", red:"var(--alert-red)" };
@@ -1747,8 +1763,13 @@ async function downloadKpi() {
   const monthEnd = ym => { const [y, m] = ym.split("-").map(Number); const l = `${ym}-${String(new Date(y, m, 0).getDate()).padStart(2, "0")}`; return l < todayStr() ? l : todayStr(); };
   const start = months[0] + "-01", end = monthEnd(months[months.length - 1]);
   let logins = null;
-  const r = await db.from("login_days").select("member_id,day").gte("day", start).lte("day", end).then(x => x, () => ({ error:true }));
-  if (!r.error) logins = r.data || [];
+  logins = [];
+  for (let from = 0; from < 50000; from += 1000) {   // Supabase คืนสูงสุด 1000 แถว/ครั้ง → ดึงเป็นหน้าๆ
+    const r = await db.from("login_days").select("member_id,day").gte("day", start).lte("day", end).order("day").range(from, from + 999).then(x => x, () => ({ error:true }));
+    if (r.error) { logins = from ? logins : null; break; }
+    logins = logins.concat(r.data || []);
+    if (!r.data || r.data.length < 1000) break;
+  }
   let rows = [];
   months.forEach(ym => { rows = rows.concat(kpiRows(ym + "-01", monthEnd(ym), logins, ymLabel(ym))); });
   if (months.length > 1) rows = rows.concat(kpiRows(start, end, logins, `รวม ${ymLabel(months[0])} – ${ymLabel(months[months.length - 1])}`));
@@ -2405,11 +2426,11 @@ function memberScore(m) {
     } else { if (isOverdue(t)) late++; else pending++; }
   });
   const graded=onTime+late;
-  const score = graded===0 ? 100 : Math.round(onTime/graded*100);
-  return {score,total:tasks.length,onTime,late,pending,hasTask:true};
+  const score = graded===0 ? 0 : Math.round(onTime/graded*100);
+  return {score,total:tasks.length,onTime,late,pending,hasTask:graded>0};   // ยังไม่มีงานครบกำหนด = ยังไม่มีคะแนน
 }
 function moodFor(s) {
-  if (!s.hasTask) return {t:"ยังไม่มีงาน",lbl:"—",cls:""};
+  if (!s.hasTask) return {t:s.total?"ยังไม่มีงานครบกำหนด":"ยังไม่มีงาน",lbl:"—",cls:""};
   if (s.late>0) return {t:`เลยกำหนด ${s.late} งาน`,lbl:"ต้องเร่ง",cls:"bad"};
   if (s.onTime>0 && s.score>=80) return {t:"ส่งงานตรงเวลา",lbl:"ดีเยี่ยม",cls:"good"};
   if (s.score>=75) return {t:"ส่งงานตรงเวลา",lbl:"ดี",cls:"good"};
@@ -2582,11 +2603,13 @@ function renderRequests() {
 }
 
 function renderStats() {
-  const tasks = visibleTasks();
+  // นับแบบเดียวกับหน้างาน: งานทั่วไป + งานประจำรอบนี้ (ไม่นับประวัติรอบก่อน)
+  const all = visibleTasks(), ms = monthStart(), today = todayStr();
+  const tasks = all.filter(t => !isRoutine(t) || taskStatus(t) !== "done" || (t.due || "") >= ms);
   const total = tasks.length;
   const done = tasks.filter(t=>taskStatus(t)==="done").length;
   const over = tasks.filter(t=>isOverdue(t)).length;
-  const doing = total - done - over;
+  const doing = all.filter(t => !isRoutine(t) && taskStatus(t) !== "done" && !isOverdue(t) && !(t.due === today || t.startDate === today)).length;
   const active = state.members.filter(m=>m.status!=="pending");
   const pend = state.members.length - active.length;
   const pct = total ? Math.round(done/total*100) : 0;
@@ -2626,7 +2649,7 @@ function renderAttention() {
   const rows = list.slice(0,5).map(t => {
     const who = memberById(t.who), over = isOverdue(t);
     const c = t.checks||[], pc = c.length ? Math.round(c.filter(x=>x.on).length/c.length*100) : 0;
-    return `<div class="dash-row" onclick="openTasks('today')"><div class="ic"><i class="ti ${taskIco(t.emoji)}"></i></div>
+    return `<div class="dash-row" onclick="openTasks('${over?"overdue":"today"}','${isRoutine(t)?"routine":"general"}')"><div class="ic"><i class="ti ${taskIco(t.emoji)}"></i></div>
       <div style="flex:1;min-width:0"><div class="t">${esc(t.title)}</div><div class="s ${over?'late':''}">${whoLabel(t)} · ${over?"เลยกำหนด "+fmtDate(t.due):"ส่ง "+fmtDate(t.due)}</div></div>
       <div class="mbar ${over?'late':''}"><i style="width:${pc}%"></i></div></div>`;
   }).join("");
@@ -2637,18 +2660,26 @@ function renderAttention() {
       ${rows || `<div style="padding:18px 6px;color:var(--txt-3);font-size:13px">ไม่มีงานเร่งด่วนวันนี้</div>`}</div>
     <div class="dash-card"><div class="dc-head"><h3>คะแนนทีม</h3><span style="font-size:12px;color:var(--txt-3)">ส่งตรงเวลา</span></div>${scores || `<div style="padding:18px 6px;color:var(--txt-3);font-size:13px">ยังไม่มีสมาชิก</div>`}</div>`;
 }
-function openTasks(filter) { state.taskKind = "general"; state.taskScope = "team"; state.filter = filter === "all" ? "doing" : filter; navigateTo("today-tasks"); }
+function openTasks(filter, kind) {
+  const f = filter === "all" ? "doing" : filter;
+  if (!kind) {   // เลือกส่วนที่มีงานจริง: ถ้างานทั่วไปไม่มี แต่งานประจำมี → เปิดงานประจำ
+    const all = visibleTasks(), genOver = all.some(t => !isRoutine(t) && isOverdue(t)), rtOver = all.some(t => isRoutine(t) && isOverdue(t));
+    kind = f === "overdue" && !genOver && rtOver ? "routine" : "general";
+  }
+  state.taskKind = kind; state.taskScope = "team"; state.filter = f; state.routineTab = "current"; navigateTo("today-tasks");
+}
 
 /* เช็คอินรายวัน: พนักงาน/เด็กฝึกงานต้องเข้าระบบอย่างน้อยวันละ 1 ครั้ง */
 function loginStatusChip(m) {
   const d = missedDays(m), lv = missLevel(d);
-  const color = lv ? MISS_COLOR[lv] : (m.lastLoginDate === todayStr() ? "var(--success)" : "var(--txt-2)");
-  const label = (!lv && m.lastLoginDate !== todayStr()) ? '<i class="ti ti-clock"></i> ยังไม่เข้าระบบวันนี้'
+  const seenToday = lastSeen(m) === todayStr();
+  const color = lv ? MISS_COLOR[lv] : (seenToday ? "var(--success)" : "var(--txt-2)");
+  const label = (!lv && !seenToday) ? '<i class="ti ti-clock"></i> ยังไม่เข้าระบบวันนี้'
     : !lv ? '<i class="ti ti-check"></i> เข้าระบบวันนี้แล้ว'
-    : !m.lastLoginDate ? '<i class="ti ti-alert-triangle"></i> ยังไม่เคยเข้าระบบ'
+    : !lastSeen(m) ? '<i class="ti ti-alert-triangle"></i> ยังไม่เคยเข้าระบบ'
     : `<i class="ti ti-alert-triangle"></i> ไม่เข้าระบบ ${d} วัน`;
   const bg = lv === "red" ? "background:rgba(210,56,43,.12);" : "";
-  const days = monthWorkDays(m), offToday = m.lastLoginDate !== todayStr() && isDayOff(m.id, todayStr());
+  const days = monthWorkDays(m), offToday = !seenToday && isDayOff(m.id, todayStr());
   const c2 = offToday ? "var(--success)" : color, l2 = offToday ? '<i class="ti ti-beach"></i> วันหยุด' : label;
   return `<div class="chip-link login-chip" style="border-color:${c2};border-width:${lv==="red"&&!offToday?2:1}px;${offToday?"":bg}"><span style="color:${c2};font-weight:700">${l2}</span><span style="color:var(--txt-2);font-size:12px"><i class="ti ti-login"></i> เดือนนี้เข้าระบบ ${monthLoginCount(m)}/${days} วันทำงาน</span></div>`;
 }
@@ -2899,15 +2930,17 @@ function renderTasksView() {
     else if (f === "doing") {
       const tm = addDays(1), wk = addDays(7);
       body = doing.length ? grp("พรุ่งนี้", doing.filter(t => t.due === tm)) + grp("ภายใน 7 วัน", doing.filter(t => t.due > tm && t.due <= wk))
-        + grp("หลังจากนั้น", doing.filter(t => t.due > wk)) + grp("ยังไม่ถึงวันเริ่ม / ไม่มีกำหนด", doing.filter(t => !t.due || t.due < tm)) : empty("ไม่มีงานที่กำลังทำ");
+        + grp("หลังจากนั้น", doing.filter(t => t.due > wk)) + grp("ไม่มีวันกำหนดส่ง / ก่อนวันเริ่มนับ KPI", doing.filter(t => !t.due || t.due < tm)) : empty("ไม่มีงานที่กำลังทำ");
     } else {
       const byMonth = {}; done.forEach(t => { const k = (localDay(t.completedAt) || t.due || "").slice(0, 7); (byMonth[k] = byMonth[k] || []).push(t); });
       body = done.length ? Object.keys(byMonth).sort().reverse().map(k => grp(k ? ymLabel(k) : "ไม่ระบุ", byMonth[k])).join("") : empty("ยังไม่มีงานที่เสร็จ");
     }
   } else {
     const ms = monthStart();
-    const cur = routine.filter(t => taskStatus(t) !== "done" || (t.due || "") >= ms);
-    const hist = routine.filter(t => !cur.includes(t)).sort((a, b) => String(b.due || "").localeCompare(String(a.due || "")));
+    const me = (() => { const d = new Date(today + "T00:00:00"); return fmtISO(new Date(d.getFullYear(), d.getMonth() + 1, 0)); })();
+    const nextR = routine.filter(t => taskStatus(t) !== "done" && (t.startDate || t.due || "") > me);
+    const cur = routine.filter(t => !nextR.includes(t) && (taskStatus(t) !== "done" || (t.due || "") >= ms));
+    const hist = routine.filter(t => !cur.includes(t) && !nextR.includes(t)).sort((a, b) => String(b.due || "").localeCompare(String(a.due || "")));
     const rtab = state.routineTab === "history" ? "history" : "current";
     tabsHtml = `<div class="cal-filters tr-tabs" role="tablist">
       <button type="button" class="cal-filter ${rtab === "current" ? "on" : ""}" onclick="setRoutineTab('current')">รอบนี้ (${ymLabel(today.slice(0, 7))})<span class="tab-count">${cur.length}</span></button>
@@ -2922,6 +2955,7 @@ function renderTasksView() {
       const srt = arr => arr.sort((a, b) => (taskStatus(a) === "done") - (taskStatus(b) === "done") || byDue(a, b));
       body = cur.length ? grp("ทุกวัน (รอบเดือน)", srt(cur.filter(t => routineGroup(t) === "daily")), row) + grp("ทุกสัปดาห์", srt(cur.filter(t => routineGroup(t) === "weekly")), row) + grp("ทุกเดือน", srt(cur.filter(t => routineGroup(t) === "monthly")), row)
         : empty("ยังไม่มีงานประจำรอบนี้");
+      body += grp("รอบถัดไป (สร้างไว้ล่วงหน้า)", nextR.sort(byDue), row);
     } else {
       const byMonth = {}; hist.forEach(t => { const k = (t.due || "").slice(0, 7); (byMonth[k] = byMonth[k] || []).push(t); });
       body = hist.length ? Object.keys(byMonth).sort().reverse().map(k => grp(k ? ymLabel(k) : "ไม่ระบุ", byMonth[k], row)).join("") : empty("ยังไม่มีประวัติงานประจำ");
@@ -3369,7 +3403,7 @@ function renderEditAttachments() {
     <div style="display:flex;align-items:center;gap:8px;padding:7px 10px;background:var(--layer-2);border:1px solid var(--stroke);border-radius:6px;margin-bottom:6px;font-size:13px">
       <span style="font-size:18px;width:24px;text-align:center;flex-shrink:0"><i class="ti ti-link"></i></span>
       <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(f.name)}</span>
-      <button type="button" class="btn-ghost btn-sm" onclick="window.open('${esc(f.url)}','_blank')" title="เปิดลิงก์"><i class="ti ti-eye"></i> เปิดดู</button>
+      <a class="btn-ghost btn-sm" href="${/^https?:\/\//i.test(f.url||"") ? esc(f.url) : "#"}" target="_blank" rel="noopener noreferrer" title="เปิดลิงก์"><i class="ti ti-eye"></i> เปิดดู</a>
       <button type="button" class="btn-ghost btn-sm" onclick="removeEditAttachment(${i})" title="ลบไฟล์แนบ"><i class="ti ti-x"></i></button>
     </div>`).join("") : `<div style="font-size:12.5px;color:var(--txt-3)">ยังไม่มีไฟล์แนบ</div>`;
 }
@@ -3457,7 +3491,12 @@ function addCheck(tid, inp) {
   if (!canEditChecklist(t)) { toast("ไม่มีสิทธิ์","🔒"); return; }
   const v = inp.value.trim(); if (!v) return;
   inp.value = "";
-  checkOp(tid, "add", { text:v });
+  checkOp(tid, "add", { text:v }).then(ok => {
+    if (!ok) return;
+    pendingRender = false; render();   // วาดใหม่ทันที (เดิมรอจนช่องพิมพ์หลุดโฟกัส ทำให้ดูเหมือนไม่บันทึก)
+    const again = document.querySelector(`.trow[open] .add-check input[data-tid="${tid}"]`) || [...document.querySelectorAll(".add-check input")].find(x => (x.getAttribute("onkeydown") || "").includes(tid));
+    if (again) again.focus();
+  });
 }
 // แก้ข้อความหัวข้อย่อยในการ์ดงาน: เปลี่ยนข้อความเป็นช่องพิมพ์ Enter/คลิกออก = บันทึก, Esc = ยกเลิก
 function startEditCheck(tid, i, btn) {
@@ -3492,6 +3531,8 @@ async function saveCheckText(tid, i, text) {
 function delCheck(tid, i) {
   const t = state.tasks.find(x=>x.id===tid);
   if (!canEditChecklist(t)) { toast("ไม่มีสิทธิ์","🔒"); return; }
+  const it = (t.checks || [])[i];
+  if (!confirm(`ลบหัวข้อย่อย "${it ? it.text : ""}"?`)) return;
   checkOp(tid, "del", { idx:i });
 }
 async function completeTask(tid) {
@@ -3513,7 +3554,12 @@ function shiftDate(ds, freq) {
   const d = new Date(ds + "T00:00:00");
   if (freq === "weekly") d.setDate(d.getDate() + 7);
   else if (freq === "daily") d.setDate(d.getDate() + 1);
-  else { const day = d.getDate(); d.setDate(1); d.setMonth(d.getMonth() + 1); d.setDate(Math.min(day, new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate())); }
+  else {
+    const day = d.getDate(), lastDay = day === new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
+    d.setDate(1); d.setMonth(d.getMonth() + 1);
+    const tLast = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
+    d.setDate(lastDay ? tLast : Math.min(day, tLast));   // วันสุดท้ายของเดือน → วันสุดท้ายของเดือนถัดไปเสมอ (31 ต.ค. → 30 พ.ย. → 31 ธ.ค.)
+  }
   return fmtISO(d);
 }
 function shiftText(txt, freq) {
@@ -3539,7 +3585,7 @@ function reuseTask(tid) {
     startDate:shiftDate(t.startDate, f), due:shiftDate(t.due, f), freq:t.freq, emoji:t.emoji, status:"doing",
     checks:(t.checks||[]).map(c => ({ text:shiftText(c.text, f), on:false })), attachments:[],
     createdAt:new Date().toISOString(), completedAt:null, createdBy:currentUser.id };
-  if (dupBlocked(nt.title, nt.startDate, nt.due, null, nt.freq)) return;
+  if (dupBlocked(nt.title, nt.startDate, nt.due)) return;   // ใช้ซ้ำ: กันกดซ้ำได้งานรอบเดียวกัน 2 ตัว
   if (!confirm(`สร้างงานรอบใหม่?\n\n"${nt.title}"\n${fmtDate(nt.startDate)} → ${fmtDate(nt.due)}\nหัวข้อย่อย ${nt.checks.length} ข้อ (ยังไม่ติ๊ก)\n\nงานเดิมเก็บไว้เป็นประวัติ KPI ไม่ถูกแก้`)) return;
   state.tasks.unshift(nt);
   dbw(db.from("tasks").insert(Object.assign({ id:nt.id, created_by:nt.createdBy }, taskRow(nt))), "สร้างงานไม่สำเร็จ");
@@ -4524,7 +4570,12 @@ if ("serviceWorker" in navigator) window.addEventListener("load", () => navigato
    โหลดใหม่เฉพาะจังหวะที่ปลอดภัย: แอปอยู่เบื้องหลัง หรือไม่ได้พิมพ์/ไม่มีหน้าต่างเปิด/ไม่ได้เล่นเกม — ไม่งั้นขึ้นแถบให้แตะเอง */
 let bootHash = null, updateReady = false;
 function strHash(t) { let h = 0; for (let i = 0; i < t.length; i++) h = (h * 31 + t.charCodeAt(i)) | 0; return h; }
+function hasUnsaved() {
+  if (document.querySelector(".overlay.show")) return true;                 // เปิดหน้าต่างแก้ไขค้าง
+  return [...document.querySelectorAll("main input:not([type=checkbox]):not([type=month]), main textarea")].some(x => x.value && x.value.trim());  // พิมพ์ค้างในหน้า
+}
 function safeToReload() {
+  if (hasUnsaved()) return false;
   if (document.hidden) return true;
   const typing = typeof isTypingInMain === "function" && isTypingInMain();
   const modal = !!document.querySelector(".overlay.show");
@@ -4550,7 +4601,7 @@ async function checkForUpdate() {
 }
 window.addEventListener("load", () => { checkForUpdate(); setInterval(checkForUpdate, 5 * 60 * 1000); });
 document.addEventListener("visibilitychange", () => {
-  if (document.hidden && updateReady) location.reload();        // สลับไปแอปอื่น → อัปเดตเงียบๆ
+  if (document.hidden && updateReady && !hasUnsaved()) location.reload();   // สลับไปแอปอื่น → อัปเดตเงียบๆ (ถ้าไม่มีงานค้าง)
   else if (!document.hidden) checkForUpdate();
 });
 /* ตัวช่วยติดตั้งแอป: Chrome/Edge/Samsung (Android) = เด้งหน้าต่างติดตั้งจริง, iPhone = สอนทีละขั้น,

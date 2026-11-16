@@ -2,7 +2,7 @@
    - หน้าเว็บ: ดึงของใหม่จากเน็ตก่อนเสมอ (network-first) → อัปเดตเว็บแล้วเห็นทันที ไม่ค้างเวอร์ชันเก่า
      ถ้าไม่มีเน็ต จึงเปิดสำเนาล่าสุดที่เก็บไว้
    - ไม่ยุ่งกับการเรียก Supabase / CDN (ข้อมูลสดเสมอ) */
-const CACHE = "mkt-src-v1";
+const CACHE = "mkt-src-v2";   // v2: ล้างแคชเก่าที่สะสมจากตัวเช็คเวอร์ชัน
 const SHELL = ["./", "assets/logo-256.png", "assets/icon-192.png"];
 
 self.addEventListener("install", e => {
@@ -15,7 +15,9 @@ self.addEventListener("activate", e => {
 });
 self.addEventListener("fetch", e => {
   const req = e.request;
-  if (req.method !== "GET" || new URL(req.url).origin !== self.location.origin) return;
+  const u = new URL(req.url);
+  if (req.method !== "GET" || u.origin !== self.location.origin) return;
+  if (u.search) return;   // URL มี ?… (เช่น ตัวเช็คเวอร์ชันใหม่) → ไม่เก็บลงแคช กันแคชบวมไม่จำกัด
   e.respondWith(
     fetch(req).then(res => {
       if (res.ok) { const copy = res.clone(); caches.open(CACHE).then(c => c.put(req, copy)); }
