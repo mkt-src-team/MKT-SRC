@@ -2830,7 +2830,7 @@ function byDue(a,b){ return (a.due||"9999") < (b.due||"9999") ? -1 : (a.due||"99
    งานทั่วไป: สถานะไม่ซ้อนกัน เลยกำหนด / วันนี้ / กำลังทำ / เสร็จ + ของฉัน/ทั้งทีม · จัดกลุ่มตามวัน
    งานประจำ: รอบนี้ / ประวัติรอบก่อน · จัดกลุ่มตามความถี่ · แสดงผลรอบก่อนของงานชื่อเดียวกัน
    ทุกงานเป็นแถวกระชับ แตะเพื่อกาง (การ์ดเดิมอยู่ข้างใน — ปุ่มทั้งหมดเหมือนเดิม) */
-const openTaskRows = new Set();
+const closedTaskRows = new Set();   // แสดงเต็มเป็นค่าเริ่มต้น — จำเฉพาะแถวที่ผู้ใช้หุบเอง
 function isRoutine(t) { const f = freqCls(t.freq); return f === "monthly" || f === "weekly"; }
 function routineBase(title) {
   return String(title || "").replace(/\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s?\d{2,4}\b/gi, "")
@@ -2852,7 +2852,7 @@ function setTaskKind(k) { state.taskKind = k; routeView(); }
 function setTaskScope(s) { state.taskScope = s; routeView(); }
 function setRoutineTab(r) { state.routineTab = r; routeView(); }
 function setTaskFilter(f) { state.filter = f; routeView(); }
-function toggleTaskRow(id, el) { if (el.open) openTaskRows.add(id); else openTaskRows.delete(id); }
+function toggleTaskRow(id, el) { if (el.open) closedTaskRows.delete(id); else closedTaskRows.add(id); }
 function taskRowHtml(t, extra) {
   const checks = t.checks || [], doneC = checks.filter(c => c.on).length;
   const st = taskStatus(t), over = isOverdue(t);
@@ -2860,7 +2860,7 @@ function taskRowHtml(t, extra) {
   const dueTxt = st === "done" ? `เสร็จ ${fmtDate(localDay(t.completedAt))}` : (t.due === todayStr() ? "ส่งวันนี้" : `ส่ง ${fmtDate(t.due)}`);
   const pill = st === "done" ? `<span class="tr-pill ok">${taskResult(t)}</span>` : over ? `<span class="tr-pill late">เลยกำหนด</span>` : "";
   const rt = isRoutine(t);
-  return `<details class="trow ${rt ? "rt" : ""} ${over ? "over" : ""} ${st === "done" ? "dn" : ""}" ${openTaskRows.has(t.id) ? "open" : ""} ontoggle="toggleTaskRow('${sid(t.id)}',this)">
+  return `<details class="trow ${rt ? "rt" : ""} ${over ? "over" : ""} ${st === "done" ? "dn" : ""}" ${closedTaskRows.has(t.id) ? "" : "open"} ontoggle="toggleTaskRow('${sid(t.id)}',this)">
     <summary><div class="tr-main"><b>${esc(t.title)}</b>
       <small>${whoLabel(t)} · ${dueTxt}${checks.length ? ` · ${doneC}/${checks.length} ข้อ` : ""}</small>
       <div class="tr-bar"><i style="width:${pct}%"></i></div>${extra || ""}</div>
@@ -2873,11 +2873,12 @@ function renderTasksView() {
   const onlyMine = !!currentUser && !can("view_all_tasks");
   const all = visibleTasks();
   const kind = state.taskKind === "routine" ? "routine" : "general";
-  const scope = onlyMine ? "mine" : (state.taskScope === "team" ? "team" : "mine");
+  const scope = onlyMine ? "mine" : (state.taskScope === "mine" || state.taskScope === "team" ? state.taskScope : (isAdmin() ? "team" : "mine"));  // Boss/Dev เริ่มที่ทั้งทีม
   const inScope = t => scope === "team" || (currentUser && isMine(t, currentUser.id));
   const general = all.filter(t => !isRoutine(t) && inScope(t));
   const routine = all.filter(t => isRoutine(t) && inScope(t));
-  const empty = msg => `<div class="empty"><div class="e-emoji"><i class="ti ti-inbox"></i></div><b>${msg}</b></div>`;
+  const teamCount = all.filter(t => (kind === "routine") === isRoutine(t)).length;
+  const empty = msg => `<div class="empty"><div class="e-emoji"><i class="ti ti-inbox"></i></div><b>${msg}</b>${scope === "mine" && !onlyMine && teamCount ? `<div style="margin-top:12px"><button class="btn-ghost btn-sm" onclick="setTaskScope('team')"><i class="ti ti-users"></i> ดูงานทั้งทีม (${teamCount})</button></div>` : ""}</div>`;
   const grp = (title, arr, fn) => arr.length ? `<div class="tr-gh">${title}<span>${arr.length}</span></div>${arr.map(fn || (t => taskRowHtml(t))).join("")}` : "";
   const addDays = n => { const d = new Date(today + "T00:00:00"); d.setDate(d.getDate() + n); return fmtISO(d); };
   let tabsHtml = "", body = "";
